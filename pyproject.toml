@@ -23,7 +23,7 @@ build-backend = "setuptools.build_meta"
 where = ["src"]
 
 [tool.setuptools.package-data]
-evidence_dossier = ["py.typed"]
+evidence_dossier = ["py.typed", "store/migrations/*.sql"]
 
 [tool.ruff]
 line-length = 100
