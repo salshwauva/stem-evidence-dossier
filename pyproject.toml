@@ -1,0 +1,47 @@
+[project]
+name = "stem-evidence-dossier"
+version = "0.1.0"
+description = "Provenance-linked evidence claims from STEM research"
+requires-python = ">=3.13"
+dependencies = [
+    "pydantic>=2.9",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "mypy>=1.10",
+    "ruff>=0.4",
+    "pip-audit>=2.7",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+evidence_dossier = ["py.typed"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM"]
+ignore = ["E501"]
+
+[tool.mypy]
+strict = true
+files = ["src", "tests"]
+plugins = ["pydantic.mypy"]
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

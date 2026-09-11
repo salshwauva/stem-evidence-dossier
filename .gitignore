@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.env
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# macOS
+.DS_Store
+
+# AI assistant and agent files, kept local and out of the repo
+/robots.md
+/CLAUDE.md
+/CLAUDE.local.md
+/AGENTS.md
+/GEMINI.md
+.claude/
+.cursor/
+.cursorrules
+.windsurfrules
+.aider*
+.continue/
+.github/copilot-instructions.md
