@@ -38,9 +38,20 @@ PUBMED_RECORDINGS = {
     "entrez/eutils/efetch.fcgi?db=pubmed&id=90001234": "pubmed_efetch_90001234.xml",
     "entrez/eutils/efetch.fcgi?db=pubmed&id=90001235": "pubmed_efetch_90001235.xml",
     "pmc/utils/idconv/v1.0?ids=90001234": "pmc_idconv_90001234.json",
+    "entrez/eutils/efetch.fcgi?db=pubmed&id=90001236": "pubmed_efetch_90001236.xml",
+    "entrez/eutils/efetch.fcgi?db=pubmed&id=90001237": "pubmed_efetch_90001237.xml",
     "pmc/utils/idconv/v1.0?ids=90001235": "pmc_idconv_90001235.json",
+    "pmc/utils/idconv/v1.0?ids=90001236": "pmc_idconv_90001236.json",
+    "pmc/utils/idconv/v1.0?ids=90001237": "pmc_idconv_90001237.json",
+    "pmc/utils/oa/oa.fcgi?id=PMC99900001": "pmc_oa_PMC99900001.xml",
+    "pmc/utils/oa/oa.fcgi?id=PMC99900002": "pmc_oa_PMC99900002.xml",
+    "pmc/utils/oa/oa.fcgi?id=PMC99900003": "pmc_oa_PMC99900003.xml",
     "entrez/eutils/efetch.fcgi?db=pmc&id=PMC99900001": "pmc_efetch_PMC99900001.xml",
 }
+
+# The key of the PMC OA record of the accepted work. A license test points it at
+# another fixture and keeps the rest of the recordings.
+OA_KEY_PMC99900001 = "pmc/utils/oa/oa.fcgi?id=PMC99900001"
 
 ARXIV_RECORDINGS = {
     "api/query?search_query=all:retrieval factual errors": "arxiv_search.xml",

@@ -1,0 +1,11 @@
+{
+  "status": "ok",
+  "responseDate": "2026-09-12 08:30:00",
+  "request": "ids=90001236;format=json",
+  "records": [
+    {
+      "pmcid": "PMC99900002",
+      "pmid": "90001236"
+    }
+  ]
+}

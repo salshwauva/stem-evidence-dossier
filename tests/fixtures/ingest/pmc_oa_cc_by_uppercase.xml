@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OA>
+  <responseDate>2026-09-12 08:30:00</responseDate>
+  <request id="PMC99900001"/>
+  <records returned-count="1" total-count="1">
+    <record id="PMC99900001" citation="Journal of Test Neuroscience. 2025 Mar 14;1(1):1-9" license="CC-BY" retracted="no">
+      <link format="tgz" updated="2025-03-20 09:00:00" href="ftp://ftp.example.invalid/pub/oa_package/PMC99900001.tar.gz"/>
+    </record>
+  </records>
+</OA>
