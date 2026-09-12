@@ -1,0 +1,118 @@
+{
+  "research_work_id": "work_cs_0001",
+  "document_id": "work_cs_0001_v1",
+  "source_level": "FULL_TEXT",
+  "claims": [
+    {
+      "gold_key": "c1",
+      "research_work_id": "work_cs_0001",
+      "study_key": "cs1-ledger",
+      "claim_type": "PERFORMANCE",
+      "claim_text": "Sparse attention improved exact match on Ledger-QA over dense attention.",
+      "subject": {
+        "original": "sparse attention",
+        "canonical": "sparse attention"
+      },
+      "predicate": "improves",
+      "outcome": "exact match",
+      "research_context": {
+        "domain": "COMPUTER_SCIENCE",
+        "benchmark": "Ledger-QA",
+        "domain_attributes": {
+          "profile": "computer_science",
+          "task": "question answering",
+          "benchmark": "Ledger-QA",
+          "evaluation_metric": "exact match"
+        }
+      },
+      "method": {
+        "name": {
+          "original": "sparse attention",
+          "canonical": "sparse attention"
+        }
+      },
+      "comparator": {
+        "name": {
+          "original": "dense attention",
+          "canonical": "dense attention"
+        },
+        "configuration": "same parameter count"
+      },
+      "measurement": {
+        "name": {
+          "original": "exact match",
+          "canonical": "exact match"
+        },
+        "unit": {
+          "original": "points"
+        }
+      },
+      "result": {
+        "direction": "IMPROVED",
+        "value": 64.8,
+        "effect_size": 3.6
+      },
+      "evidence_span": {
+        "research_work_id": "work_cs_0001",
+        "section_id": "work_cs_0001_v1_s5",
+        "start_offset": 28,
+        "end_offset": 81,
+        "source_text": "sparse attention raised exact match from 61.2 to 64.8"
+      }
+    },
+    {
+      "gold_key": "c2",
+      "research_work_id": "work_cs_0001",
+      "study_key": "cs1-ledger",
+      "claim_type": "PERFORMANCE",
+      "claim_text": "Sparse attention lowered latency per query over dense attention.",
+      "subject": {
+        "original": "sparse attention",
+        "canonical": "sparse attention"
+      },
+      "predicate": "reduces",
+      "outcome": "latency",
+      "research_context": {
+        "domain": "COMPUTER_SCIENCE",
+        "benchmark": "Ledger-QA"
+      },
+      "method": {
+        "name": {
+          "original": "sparse attention",
+          "canonical": "sparse attention"
+        }
+      },
+      "comparator": {
+        "name": {
+          "original": "dense attention",
+          "canonical": "dense attention"
+        }
+      },
+      "measurement": {
+        "name": {
+          "original": "Latency per query",
+          "canonical": "latency"
+        },
+        "unit": {
+          "original": "ms",
+          "canonical": "millisecond"
+        }
+      },
+      "result": {
+        "direction": "DECREASED",
+        "value": 47.0,
+        "unit": {
+          "original": "ms",
+          "canonical": "millisecond"
+        }
+      },
+      "evidence_span": {
+        "research_work_id": "work_cs_0001",
+        "section_id": "work_cs_0001_v1_s5",
+        "start_offset": 134,
+        "end_offset": 176,
+        "source_text": "Latency per query fell from 82 ms to 47 ms"
+      }
+    }
+  ]
+}

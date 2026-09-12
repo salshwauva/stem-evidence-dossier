@@ -1,0 +1,165 @@
+{
+  "research_work_id": "work_bio_0001",
+  "document_id": "work_bio_0001_v1",
+  "source_level": "FULL_TEXT",
+  "claims": [
+    {
+      "gold_key": "c1",
+      "research_work_id": "work_bio_0001",
+      "study_key": "bio1-cells",
+      "claim_type": "EFFECT",
+      "claim_text": "QX-12 lowered mitochondrial fragmentation in cultured cells against vehicle.",
+      "subject": {
+        "original": "compound QX-12",
+        "canonical": "QX-12"
+      },
+      "predicate": "decreased",
+      "outcome": "mitochondrial fragmentation",
+      "research_context": {
+        "domain": "BIOLOGY",
+        "system": "cultured cells",
+        "domain_attributes": {
+          "profile": "biology",
+          "cell_line": "HEK-T1 (invented)",
+          "intervention": "QX-12",
+          "assay": "confocal imaging"
+        }
+      },
+      "method": {
+        "name": {
+          "original": "QX-12 treatment",
+          "canonical": "QX-12 treatment"
+        },
+        "method_type": "small molecule"
+      },
+      "comparator": {
+        "name": {
+          "original": "vehicle",
+          "canonical": "vehicle control"
+        },
+        "comparator_type": "control group"
+      },
+      "measurement": {
+        "name": {
+          "original": "mitochondrial fragmentation"
+        },
+        "category": "morphology",
+        "unit": {
+          "original": "%"
+        }
+      },
+      "result": {
+        "direction": "DECREASED",
+        "value": 41.0,
+        "unit": {
+          "original": "%"
+        },
+        "statistical_significance": true,
+        "p_value": "< 0.001"
+      },
+      "evidence_span": {
+        "research_work_id": "work_bio_0001",
+        "section_id": "work_bio_0001_v1_s3",
+        "start_offset": 19,
+        "end_offset": 76,
+        "source_text": "compound QX-12 lowered mitochondrial fragmentation by 41%"
+      }
+    },
+    {
+      "gold_key": "c2",
+      "research_work_id": "work_bio_0001",
+      "study_key": "bio1-larvae",
+      "claim_type": "EFFECT",
+      "claim_text": "QX-12 did not change survival of zebrafish larvae at 7 days against vehicle.",
+      "subject": {
+        "original": "QX-12",
+        "canonical": "QX-12"
+      },
+      "predicate": "did not change",
+      "outcome": "survival",
+      "research_context": {
+        "domain": "BIOLOGY",
+        "system": "zebrafish larvae"
+      },
+      "method": {
+        "name": {
+          "original": "QX-12 treatment",
+          "canonical": "QX-12 treatment"
+        },
+        "method_type": "small molecule"
+      },
+      "comparator": {
+        "name": {
+          "original": "vehicle",
+          "canonical": "vehicle control"
+        },
+        "comparator_type": "control group"
+      },
+      "measurement": {
+        "name": {
+          "original": "survival",
+          "canonical": "survival"
+        },
+        "category": "viability"
+      },
+      "result": {
+        "direction": "UNCHANGED"
+      },
+      "evidence_span": {
+        "research_work_id": "work_bio_0001",
+        "section_id": "work_bio_0001_v1_s3",
+        "start_offset": 135,
+        "end_offset": 174,
+        "source_text": "QX-12 did not change survival at 7 days"
+      }
+    },
+    {
+      "gold_key": "c3",
+      "research_work_id": "work_bio_0001",
+      "study_key": "bio1-larvae",
+      "claim_type": "EFFECT",
+      "claim_text": "QX-12 reduced motor activity in zebrafish larvae.",
+      "subject": {
+        "original": "QX-12",
+        "canonical": "QX-12"
+      },
+      "predicate": "decreased",
+      "outcome": "motor activity",
+      "research_context": {
+        "domain": "BIOLOGY",
+        "system": "zebrafish larvae"
+      },
+      "method": {
+        "name": {
+          "original": "QX-12 treatment",
+          "canonical": "QX-12 treatment"
+        },
+        "method_type": "small molecule"
+      },
+      "comparator": null,
+      "measurement": {
+        "name": {
+          "original": "motor activity",
+          "canonical": "locomotor activity"
+        },
+        "unit": {
+          "original": "%"
+        }
+      },
+      "result": {
+        "direction": "DECREASED",
+        "value": 18.0,
+        "unit": {
+          "original": "%"
+        }
+      },
+      "evidence_span": {
+        "research_work_id": "work_bio_0001",
+        "section_id": "work_bio_0001_v1_s3",
+        "start_offset": 198,
+        "end_offset": 250,
+        "source_text": "Motor activity in the larvae fell by 18% under QX-12"
+      }
+    }
+  ]
+}

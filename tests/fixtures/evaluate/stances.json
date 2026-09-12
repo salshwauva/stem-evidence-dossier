@@ -1,0 +1,56 @@
+[
+  {
+    "query_id": "q1",
+    "claim_id": "work_bio_0001:c1",
+    "stance": "SUPPORTS",
+    "comparability": "HIGH"
+  },
+  {
+    "query_id": "q1",
+    "claim_id": "work_bio_0001:c2",
+    "stance": "NULL",
+    "comparability": "MODERATE"
+  },
+  {
+    "query_id": "q1",
+    "claim_id": "work_bio_0001:c3",
+    "stance": "CONTRADICTS",
+    "comparability": "MODERATE"
+  },
+  {
+    "query_id": "q1",
+    "claim_id": "work_bio_0002:c1",
+    "stance": "INSUFFICIENTLY_COMPARABLE",
+    "comparability": "INCOMPATIBLE"
+  },
+  {
+    "query_id": "q2",
+    "claim_id": "work_cs_0001:c1",
+    "stance": "SUPPORTS",
+    "comparability": "EXACT"
+  },
+  {
+    "query_id": "q2",
+    "claim_id": "work_cs_0001:c2",
+    "stance": "INDIRECT",
+    "comparability": "LOW"
+  },
+  {
+    "query_id": "q2",
+    "claim_id": "work_cs_0002:c1",
+    "stance": "INSUFFICIENTLY_COMPARABLE",
+    "comparability": "INCOMPATIBLE"
+  },
+  {
+    "query_id": "q3",
+    "claim_id": "work_cs_0002:c1",
+    "stance": "NULL",
+    "comparability": "HIGH"
+  },
+  {
+    "query_id": "q3",
+    "claim_id": "work_cs_0001:c1",
+    "stance": "MIXED",
+    "comparability": "LOW"
+  }
+]
