@@ -1,145 +1,100 @@
-"""The deterministic query parser (plan section 34).
+"""Rule based query parser: text to QueryProposition (plan section 34, ADR 0004).
 
-The parser reads three documented relations and one documented comparator
-marker. It never guesses a field that the text does not state, because an
-invented organism, dataset or baseline would change what the query asks.
+The parser calls no model. It lowercases the text, finds one relationship verb
+from a fixed table, and splits the subject, the measurement and the comparator
+around that verb and a comparator marker. Every rule that fires lands in
+parse_notes, so the API can show how the fields came about.
 """
 
 import re
-from collections.abc import Mapping
-from typing import Protocol
+import uuid
 
-from evidence_dossier.model import Domain, Term
-from evidence_dossier.query.models import EXPECTED_DIRECTIONS, QueryProposition, Relationship
-from evidence_dossier.query.text import Canonicalizer, default_canonicalizer
+from evidence_dossier.model import Domain, QueryProposition, ResultDirection
 
-PARSER_VERSION = "deterministic-1"
-
-# The relation words that the parser reads. Plan sections 7 and 34 document them.
-RELATION_WORDS: Mapping[str, Relationship] = {
-    "increases": Relationship.INCREASES,
-    "increase": Relationship.INCREASES,
-    "reduces": Relationship.REDUCES,
-    "reduce": Relationship.REDUCES,
-    "improves": Relationship.IMPROVES,
-    "improve": Relationship.IMPROVES,
-}
-
-# The comparator marker of plan section 7, in its two spellings.
-COMPARATOR_MARKERS: tuple[str, ...] = ("compared with", "compared to")
-
-_RELATION_PATTERN = re.compile(
-    r"\b(" + "|".join(sorted(RELATION_WORDS, key=len, reverse=True)) + r")\b",
-    re.IGNORECASE,
+# Relationship patterns in the order the parser tries them. A negated form comes
+# before the plain verb it contains.
+_RELATIONSHIPS: tuple[tuple[str, str, ResultDirection], ...] = (
+    (r"does not (?:change|affect|alter)", "does not change", ResultDirection.UNCHANGED),
+    (r"has no effect on", "no effect", ResultDirection.UNCHANGED),
+    (
+        r"reduces?|reduced|decreases?|decreased|lowers?|lowered",
+        "reduces",
+        ResultDirection.DECREASED,
+    ),
+    (r"increases?|increased|raises?|raised", "increases", ResultDirection.INCREASED),
+    (r"improves?|improved", "improves", ResultDirection.IMPROVED),
+    (r"worsens?|worsened", "worsens", ResultDirection.WORSENED),
 )
-_COMPARATOR_PATTERN = re.compile(
-    r"\b(" + "|".join(COMPARATOR_MARKERS) + r")\b",
-    re.IGNORECASE,
+_RELATIONSHIP_PATTERNS = tuple(
+    (re.compile(rf"\b(?:{pattern})\b"), label, direction)
+    for pattern, label, direction in _RELATIONSHIPS
 )
-_WHITESPACE = re.compile(r"\s+")
-_TRAILING = " .;,"
+_COMPARATOR_MARKER = re.compile(r"\b(?:compared (?:with|to)|versus|vs\.?|relative to|than)\b")
+# Leading question words and trailing punctuation that carry no proposition content.
+_QUESTION_PREFIX = re.compile(r"^(?:whether|does|do|is|are|can)\s+")
+_TRAILING = re.compile(r"[\s?.!]+$")
 
 
-class QueryParseError(ValueError):
-    """The parser did not find a documented proposition in the text."""
+def parse_query(
+    text: str,
+    *,
+    domain: Domain | None = None,
+    dataset: str | None = None,
+    system: str | None = None,
+    population: str | None = None,
+) -> QueryProposition:
+    """Parse a question or a statement into a QueryProposition with the same rules every time.
 
-
-class QueryParser(Protocol):
-    """The parser interface that the query service depends on."""
-
-    def parse(self, text: str, *, domain: Domain | None = None) -> QueryProposition:
-        """Return the typed proposition for one piece of query text."""
-        ...
-
-
-class FallbackParser(Protocol):
-    """A parser that runs only after the deterministic rules fail."""
-
-    def __call__(self, text: str, *, domain: Domain | None = None) -> QueryProposition:
-        """Return the typed proposition for one piece of query text."""
-        ...
-
-
-class DeterministicQueryParser:
-    """A rule parser for the documented proposition forms.
-
-    The grammar is one sentence: a subject, one relation word, a measurement and
-    an optional comparator clause. Text without a relation word raises
-    QueryParseError, or goes to the fallback parser when a caller injects one.
+    The subject is the text before the relationship verb. The measurement is
+    the text after the verb up to the comparator marker, and the comparator is
+    the text after the marker. When no verb matches, the whole text becomes the
+    subject and the relationship is "unknown".
     """
-
-    def __init__(
-        self,
-        *,
-        canonicalizer: Canonicalizer = default_canonicalizer,
-        fallback: FallbackParser | None = None,
-    ) -> None:
-        self._canonicalize = canonicalizer
-        self._fallback = fallback
-
-    def parse(self, text: str, *, domain: Domain | None = None) -> QueryProposition:
-        """Return the typed proposition for one piece of query text.
-
-        Raises QueryParseError when the text states no documented relation and
-        no fallback parser is available.
-        """
-        try:
-            return self._parse_by_rules(text, domain=domain)
-        except QueryParseError:
-            if self._fallback is None:
-                raise
-            return self._fallback(text, domain=domain)
-
-    def _parse_by_rules(self, text: str, *, domain: Domain | None) -> QueryProposition:
-        sentence = _WHITESPACE.sub(" ", text).strip().rstrip(_TRAILING)
-        head, comparator_text = _split_comparator(sentence)
-        match = _RELATION_PATTERN.search(head)
-        if match is None:
-            raise QueryParseError(
-                f"no documented relation in {text!r}. The parser reads {_documented_relations()}."
-            )
-        subject_text = head[: match.start()].strip(_TRAILING)
-        measurement_text = head[match.end() :].strip(_TRAILING)
-        if not subject_text:
-            raise QueryParseError(f"no subject before {match.group(1)!r} in {text!r}")
-        if not measurement_text:
-            raise QueryParseError(f"no measurement after {match.group(1)!r} in {text!r}")
-        relationship = RELATION_WORDS[match.group(1).lower()]
-        return QueryProposition(
-            original_text=text,
-            domain=domain,
-            subject=self._term(subject_text),
-            relationship=relationship,
-            measurement=self._term(measurement_text),
-            comparator=None if comparator_text is None else self._term(comparator_text),
-            expected_direction=EXPECTED_DIRECTIONS[relationship],
-            parser_version=PARSER_VERSION,
-            unresolved_fields=_unresolved(domain, comparator_text),
+    notes: list[str] = []
+    cleaned = _TRAILING.sub("", text.strip().lower())
+    stripped = _QUESTION_PREFIX.sub("", cleaned)
+    if stripped != cleaned:
+        notes.append("question: dropped the leading question word")
+    relationship = "unknown"
+    direction: ResultDirection | None = None
+    subject = stripped
+    remainder = ""
+    for pattern, label, candidate in _RELATIONSHIP_PATTERNS:
+        found = pattern.search(stripped)
+        if found is None:
+            continue
+        relationship, direction = label, candidate
+        subject = stripped[: found.start()].strip()
+        remainder = stripped[found.end() :].strip()
+        notes.append(f"relationship: matched '{found.group(0)}' as {label}, expected {candidate}")
+        break
+    else:
+        notes.append(
+            "relationship: no verb from the table matched, so the whole text is the subject"
         )
-
-    def _term(self, text: str) -> Term:
-        return Term(original=text, canonical=self._canonicalize(text))
-
-
-def _split_comparator(sentence: str) -> tuple[str, str | None]:
-    """Split a sentence at its comparator marker. The marker itself falls away."""
-    match = _COMPARATOR_PATTERN.search(sentence)
-    if match is None:
-        return sentence, None
-    comparator = sentence[match.end() :].strip(_TRAILING)
-    return sentence[: match.start()].strip(_TRAILING), comparator or None
-
-
-def _unresolved(domain: Domain | None, comparator_text: str | None) -> tuple[str, ...]:
-    """Name the fields that the text left open. The parser fills none of them."""
-    fields = ["method", "context"]
+    measurement: str | None = None
+    comparator: str | None = None
+    marker = _COMPARATOR_MARKER.search(remainder)
+    if marker is not None:
+        measurement = remainder[: marker.start()].strip() or None
+        comparator = remainder[marker.end() :].strip() or None
+        notes.append(f"comparator: split on '{marker.group(0)}'")
+    else:
+        measurement = remainder or None
+        notes.append("comparator: no comparator marker found")
     if domain is None:
-        fields.append("domain")
-    if comparator_text is None:
-        fields.append("comparator")
-    return tuple(sorted(fields))
-
-
-def _documented_relations() -> str:
-    names = sorted({word for word in RELATION_WORDS if word.endswith("s")})
-    return ", ".join(names)
+        notes.append("domain: none given, so retrieval searches every domain")
+    return QueryProposition(
+        id=f"query_{uuid.uuid4().hex[:16]}",
+        text=text,
+        domain=domain,
+        subject=subject,
+        relationship=relationship,
+        measurement=measurement,
+        comparator=comparator,
+        expected_direction=direction,
+        dataset=dataset,
+        system=system,
+        population=population,
+        parse_notes=tuple(notes),
+    )

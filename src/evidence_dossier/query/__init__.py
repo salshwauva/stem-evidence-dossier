@@ -1,48 +1,46 @@
-"""Query parsing, retrieval, comparability and stance (plan sections 34 to 39).
+"""Query parser, retrieval, comparability and stance (plan sections 34 to 39).
 
-This package imports model, profiles and store. It imports no sibling
-subpackage. Canonical names reach it through an injected canonicalizer.
+This package imports model, profiles and store, and nothing else from
+evidence_dossier.
 """
 
-from evidence_dossier.query.models import (
-    EXPECTED_DIRECTIONS,
+from evidence_dossier.model import Dossier, QueryProposition, StanceAssessment
+from evidence_dossier.query.comparability import (
+    MATCH_THRESHOLD,
     ComparabilityAssessment,
-    DimensionComparison,
-    EvidenceFilters,
-    EvidenceHit,
-    EvidenceSearchResult,
-    QueryProposition,
-    Relationship,
-    StanceAssessment,
+    ComparabilityEngine,
+    DimensionResult,
 )
-from evidence_dossier.query.parser import (
-    COMPARATOR_MARKERS,
-    PARSER_VERSION,
-    RELATION_WORDS,
-    DeterministicQueryParser,
-    FallbackParser,
-    QueryParseError,
-    QueryParser,
+from evidence_dossier.query.parser import parse_query
+from evidence_dossier.query.retrieval import Candidate, Retriever
+from evidence_dossier.query.search import (
+    STANCE_ORDER,
+    EvidenceItem,
+    EvidenceResults,
+    Provenance,
+    StanceGroup,
+    build_dossier,
+    search_evidence,
 )
-from evidence_dossier.query.text import Canonicalizer, default_canonicalizer
+from evidence_dossier.query.stance import StanceClassifier
 
 __all__ = [
-    "COMPARATOR_MARKERS",
-    "EXPECTED_DIRECTIONS",
-    "PARSER_VERSION",
-    "RELATION_WORDS",
-    "Canonicalizer",
+    "MATCH_THRESHOLD",
+    "STANCE_ORDER",
+    "Candidate",
     "ComparabilityAssessment",
-    "DeterministicQueryParser",
-    "DimensionComparison",
-    "EvidenceFilters",
-    "EvidenceHit",
-    "EvidenceSearchResult",
-    "FallbackParser",
-    "QueryParseError",
-    "QueryParser",
+    "ComparabilityEngine",
+    "DimensionResult",
+    "Dossier",
+    "EvidenceItem",
+    "EvidenceResults",
+    "Provenance",
     "QueryProposition",
-    "Relationship",
+    "Retriever",
     "StanceAssessment",
-    "default_canonicalizer",
+    "StanceClassifier",
+    "StanceGroup",
+    "build_dossier",
+    "parse_query",
+    "search_evidence",
 ]
