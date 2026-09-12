@@ -35,6 +35,13 @@ from evidence_dossier.model.enums import (
 )
 from evidence_dossier.model.extraction import ExtractionRun
 from evidence_dossier.model.ids import make_document_id, make_section_id, make_work_id
+from evidence_dossier.model.query import (
+    CorpusScope,
+    Dossier,
+    DossierCounts,
+    QueryProposition,
+    StanceAssessment,
+)
 from evidence_dossier.model.work import Author, ResearchWork, WorkLink
 
 __all__ = [
@@ -45,14 +52,18 @@ __all__ = [
     "ComparabilityLevel",
     "Comparator",
     "ComputerScienceAttributes",
+    "CorpusScope",
     "Domain",
     "DomainAttributes",
+    "Dossier",
+    "DossierCounts",
     "EvidenceClaim",
     "EvidenceSpan",
     "ExtractionRun",
     "FrozenModel",
     "Measurement",
     "Method",
+    "QueryProposition",
     "ResearchContext",
     "ResearchWork",
     "Result",
@@ -62,6 +73,7 @@ __all__ = [
     "SourceDocument",
     "SourceLevel",
     "Stance",
+    "StanceAssessment",
     "Study",
     "Term",
     "ValidationStatus",

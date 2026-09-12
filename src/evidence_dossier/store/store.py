@@ -12,16 +12,20 @@ from evidence_dossier.model import (
     ClaimType,
     Comparator,
     Domain,
+    Dossier,
     EvidenceClaim,
     EvidenceSpan,
     ExtractionRun,
     Measurement,
     Method,
+    QueryProposition,
     ResearchContext,
     ResearchWork,
     Result,
     Section,
     SourceDocument,
+    SourceLevel,
+    StanceAssessment,
     Study,
     Term,
     WorkLink,
@@ -31,6 +35,8 @@ from evidence_dossier.store.migrate import apply_migrations
 # Record fields that the tables hold as JSON text.
 _WORK_JSON = ("authors", "external_identifiers")
 _RUN_JSON = ("errors",)
+_QUERY_JSON = ("parse_notes",)
+_DOSSIER_JSON = ("corpus_scope", "counts")
 
 
 class ClaimRejectedError(ValueError):
@@ -185,6 +191,62 @@ class Store:
             sql += " WHERE " + " AND ".join(f"{column} = :{column}" for column in params)
         rows = self._conn.execute(sql + " ORDER BY id", params).fetchall()
         return [_claim_from_row(row) for row in rows]
+
+    def search_claims(
+        self,
+        match: str,
+        *,
+        domain: Domain | None = None,
+        source_level: SourceLevel | None = None,
+        limit: int = 20,
+    ) -> list[tuple[EvidenceClaim, float]]:
+        """Return the claims whose text matches an FTS5 query, best bm25 rank first.
+
+        The caller builds the match expression with quoted tokens (plan section 36).
+        The rank is the bm25 score, where a lower value is a better match.
+        """
+        params: dict[str, Any] = {"match": match, "limit": limit}
+        sql = (
+            "SELECT claims.*, bm25(claims_fts) AS rank FROM claims_fts"
+            " JOIN claims ON claims.rowid = claims_fts.rowid WHERE claims_fts MATCH :match"
+        )
+        if domain is not None:
+            sql += " AND claims.domain = :domain"
+            params["domain"] = domain.value
+        if source_level is not None:
+            sql += " AND claims.source_level = :source_level"
+            params["source_level"] = source_level.value
+        rows = self._conn.execute(sql + " ORDER BY rank, claims.id LIMIT :limit", params).fetchall()
+        return [(_claim_from_row(row), row["rank"]) for row in rows]
+
+    def count_claims_by_source_level(self) -> dict[SourceLevel, int]:
+        """Return how many stored claims come from each source level (plan section 45)."""
+        rows = self._conn.execute(
+            "SELECT source_level, COUNT(*) AS n FROM claims GROUP BY source_level"
+        ).fetchall()
+        return {SourceLevel(row["source_level"]): row["n"] for row in rows}
+
+    def add_query_proposition(self, proposition: QueryProposition) -> None:
+        self._insert("query_propositions", _dump(proposition, _QUERY_JSON))
+
+    def get_query_proposition(self, query_id: str) -> QueryProposition | None:
+        return _load(QueryProposition, self._fetch("query_propositions", query_id), _QUERY_JSON)
+
+    def add_stance_assessment(self, assessment: StanceAssessment) -> None:
+        self._insert("stance_assessments", _dump(assessment))
+
+    def list_stance_assessments(self, query_id: str) -> list[StanceAssessment]:
+        """Return the stance assessments for a proposition, ordered by claim ID."""
+        rows = self._conn.execute(
+            "SELECT * FROM stance_assessments WHERE query_id = ? ORDER BY claim_id", (query_id,)
+        ).fetchall()
+        return [StanceAssessment.model_validate(dict(row)) for row in rows]
+
+    def add_dossier(self, dossier: Dossier) -> None:
+        self._insert("dossiers", _dump(dossier, _DOSSIER_JSON))
+
+    def get_dossier(self, dossier_id: str) -> Dossier | None:
+        return _load(Dossier, self._fetch("dossiers", dossier_id), _DOSSIER_JSON)
 
     # Table and column names in the SQL below come from this module and from
     # the model fields, never from caller input.
