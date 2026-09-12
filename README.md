@@ -57,7 +57,9 @@ from evidence_dossier.query import search_evidence
 from evidence_dossier.store import Store
 
 with Store("dossier.db") as store:
-    results = search_evidence(store, "MAPT knockdown increases neuronal survival compared with a scrambled control")
+    results = search_evidence(
+        store, "MAPT knockdown increases neuronal survival compared with a scrambled control"
+    )
     for group in results.groups:
         for item in group.items:
             print(group.stance, item.comparability, item.provenance.source_text)
