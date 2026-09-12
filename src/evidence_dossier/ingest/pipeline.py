@@ -2,9 +2,10 @@
 
 The pipeline fetches the metadata, tries the full text, and falls back to the
 abstract and then to metadata alone. It stores the work, one source document
-and its sections. A repeat ingestion with the same text writes nothing. A
-change to the text writes the next document version, because evidence
-offsets of the earlier version must stay valid.
+and its sections. The result carries the license of an accepted full text,
+which the store does not hold (ADR 0009). A repeat ingestion with the same
+text writes nothing. A change to the text writes the next document version,
+because evidence offsets of the earlier version must stay valid.
 """
 
 import hashlib
@@ -34,6 +35,10 @@ class IngestResult(FrozenModel):
     section_count: int
     # False when the store held this text already and nothing was written.
     stored: bool
+    # The license that permitted the full text, such as "CC BY". None for an
+    # abstract and for metadata alone. SourceDocument has no license column, so
+    # the license travels on the result instead of into the store (ADR 0009).
+    license: str | None = None
 
 
 def ingest_work(
@@ -57,6 +62,7 @@ def ingest_work(
             source_level=latest.source_level,
             section_count=_section_count(store, latest.id),
             stored=False,
+            license=fetched.license,
         )
     version = 1 if latest is None else latest.version + 1
     document = SourceDocument(
@@ -80,6 +86,7 @@ def ingest_work(
         source_level=fetched.source_level,
         section_count=len(sections),
         stored=True,
+        license=fetched.license,
     )
 
 

@@ -2,9 +2,10 @@
 
 Metadata comes from the E-utilities: esearch for identifiers and efetch for
 one PubmedArticle record. Full text comes from PMC: the id converter maps a
-PMID to a PMCID, and efetch on the pmc database returns the JATS XML. A work
-outside PMC open access gets no full text, and the caller falls back to the
-abstract.
+PMID to a PMCID, the OA web service reports the license, and efetch on the pmc
+database returns the JATS XML. A work outside PMC open access, or one under a
+license that the allow list does not hold, gets no full text, and the caller
+falls back to the abstract (plan section 51).
 """
 
 import json
@@ -21,6 +22,15 @@ EUTILS_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
 ESEARCH_URL = f"{EUTILS_URL}/esearch.fcgi"
 EFETCH_URL = f"{EUTILS_URL}/efetch.fcgi"
 IDCONV_URL = "https://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/"
+OA_URL = "https://www.ncbi.nlm.nih.gov/pmc/utils/oa/oa.fcgi"
+
+# The licenses that let the store keep and serve the article body. CC BY-NC and
+# CC BY-ND stay out: the dossier is a public evidence store, so it redistributes
+# the stored full text, and those two terms restrict redistribution. NC bars
+# commercial reuse and ND bars a modified form, and a section split plus a
+# quoted span is a modified form. A comparison folds case and hyphens, so
+# "cc-by" and "CC-BY" match "CC BY".
+FULL_TEXT_LICENSES = frozenset({"ccby", "cc0"})
 
 _MONTHS = {
     name: number
@@ -83,7 +93,7 @@ class PubMedAdapter:
         )
 
     def fetch_full_text(self, identifier: str) -> FetchedText | None:
-        """Return the PMC JATS XML, or None when PMC has no open access body for the PMID."""
+        """Return the PMC JATS XML, or None when the license does not permit the full text."""
         records = json.loads(self._http.get(IDCONV_URL, {"ids": identifier, "format": "json"}))
         pmcid = next(
             (record.get("pmcid") for record in records.get("records", []) if record.get("pmcid")),
@@ -91,12 +101,31 @@ class PubMedAdapter:
         )
         if pmcid is None:
             return None
+        license_name = self._permitted_license(pmcid)
+        if license_name is None:
+            return None
         body = self._http.get(EFETCH_URL, {"db": "pmc", "id": pmcid, "retmode": "xml"})
         if parse_xml(body).find("article/body") is None:
             return None
         return FetchedText(
-            text=body.decode(), source_level=SourceLevel.FULL_TEXT, source_format="jats_xml"
+            text=body.decode(),
+            source_level=SourceLevel.FULL_TEXT,
+            source_format="jats_xml",
+            license=license_name,
         )
+
+    def _permitted_license(self, pmcid: str) -> str | None:
+        """Return the OA service license of the PMCID when the allow list holds it, else None.
+
+        The service answers with an error element for an article outside the
+        open access subset, and the method then returns None.
+        """
+        record = parse_xml(self._http.get(OA_URL, {"id": pmcid})).find("records/record")
+        if record is None:
+            return None
+        license_name = (record.get("license") or "").strip()
+        folded = license_name.lower().replace("-", "").replace(" ", "")
+        return license_name if folded in FULL_TEXT_LICENSES else None
 
 
 def _text(element: ET.Element | None) -> str:

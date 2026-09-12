@@ -4,7 +4,12 @@ import pytest
 
 from evidence_dossier.ingest import ArxivAdapter, PubMedAdapter
 from evidence_dossier.model import Author, Domain, SourceLevel, make_work_id
-from tests.recorded_http import ARXIV_RECORDINGS, PUBMED_RECORDINGS, RecordedHttpClient
+from tests.recorded_http import (
+    ARXIV_RECORDINGS,
+    OA_KEY_PMC99900001,
+    PUBMED_RECORDINGS,
+    RecordedHttpClient,
+)
 
 
 def test_pubmed_search_returns_pmids_in_source_order() -> None:
@@ -58,9 +63,11 @@ def test_pubmed_full_text_comes_from_pmc_as_jats() -> None:
     assert fetched is not None
     assert fetched.source_level == SourceLevel.FULL_TEXT
     assert fetched.source_format == "jats_xml"
+    assert fetched.license == "CC BY"
     assert "<article-title>MAPT knockdown" in fetched.text
     assert http.calls == [
         "pmc/utils/idconv/v1.0?ids=90001234",
+        "pmc/utils/oa/oa.fcgi?id=PMC99900001",
         "entrez/eutils/efetch.fcgi?db=pmc&id=PMC99900001",
     ]
 
@@ -69,6 +76,47 @@ def test_pubmed_full_text_is_none_when_pmc_has_no_record() -> None:
     http = RecordedHttpClient(PUBMED_RECORDINGS)
     assert PubMedAdapter(http).fetch_full_text("90001235") is None
     assert http.calls == ["pmc/utils/idconv/v1.0?ids=90001235"]
+
+
+def test_pubmed_full_text_is_none_for_a_noncommercial_license() -> None:
+    """A CC BY-NC record stops the fetch before the PMC efetch call."""
+    http = RecordedHttpClient(PUBMED_RECORDINGS)
+    assert PubMedAdapter(http).fetch_full_text("90001236") is None
+    assert http.calls == [
+        "pmc/utils/idconv/v1.0?ids=90001236",
+        "pmc/utils/oa/oa.fcgi?id=PMC99900002",
+    ]
+
+
+def test_pubmed_full_text_is_none_when_the_oa_service_reports_an_error() -> None:
+    http = RecordedHttpClient(PUBMED_RECORDINGS)
+    assert PubMedAdapter(http).fetch_full_text("90001237") is None
+    assert http.calls == [
+        "pmc/utils/idconv/v1.0?ids=90001237",
+        "pmc/utils/oa/oa.fcgi?id=PMC99900003",
+    ]
+
+
+@pytest.mark.parametrize(
+    ("fixture", "expected_license"),
+    [
+        ("pmc_oa_cc_by_lowercase.xml", "cc-by"),
+        ("pmc_oa_cc_by_uppercase.xml", "CC-BY"),
+        ("pmc_oa_cc_by_nd.xml", None),
+    ],
+)
+def test_pubmed_license_comparison_folds_case_and_hyphens(
+    fixture: str, expected_license: str | None
+) -> None:
+    recordings = dict(PUBMED_RECORDINGS)
+    recordings[OA_KEY_PMC99900001] = fixture
+    fetched = PubMedAdapter(RecordedHttpClient(recordings)).fetch_full_text("90001234")
+    if expected_license is None:
+        assert fetched is None
+    else:
+        assert fetched is not None
+        assert fetched.source_level == SourceLevel.FULL_TEXT
+        assert fetched.license == expected_license
 
 
 def test_arxiv_search_strips_the_version_from_each_identifier() -> None:

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE PubmedArticleSet PUBLIC "-//NLM//DTD PubMedArticle, 1st January 2024//EN" "https://dtd.nlm.nih.gov/ncbi/pubmed/out/pubmed_240101.dtd">
+<PubmedArticleSet>
+  <PubmedArticle>
+    <MedlineCitation Status="MEDLINE" Owner="NLM">
+      <PMID Version="1">90001237</PMID>
+      <Article PubModel="Print">
+        <Journal>
+          <Title>Test Reports in Cell Biology</Title>
+          <JournalIssue CitedMedium="Print">
+            <PubDate>
+              <Year>2025</Year>
+              <Month>Feb</Month>
+            </PubDate>
+          </JournalIssue>
+        </Journal>
+        <ArticleTitle>MAPT knockdown outside the open access subset in test organoids.</ArticleTitle>
+        <Abstract>
+          <AbstractText>MAPT knockdown lowered phosphorylated tau by 19% in test cortical organoids after 30 days.</AbstractText>
+        </Abstract>
+        <AuthorList CompleteYN="Y">
+          <Author ValidYN="Y">
+            <LastName>Sorensen</LastName>
+            <ForeName>Mia</ForeName>
+          </Author>
+        </AuthorList>
+      </Article>
+    </MedlineCitation>
+    <PubmedData>
+      <ArticleIdList>
+        <ArticleId IdType="pubmed">90001237</ArticleId>
+        <ArticleId IdType="pmc">PMC99900003</ArticleId>
+      </ArticleIdList>
+    </PubmedData>
+  </PubmedArticle>
+</PubmedArticleSet>

@@ -21,12 +21,15 @@ class FetchedText(FrozenModel):
     """The content that a source returned for one work, before section parsing.
 
     source_format names the syntax of the text: "jats_xml" for PMC full text
-    and "plain_text" for an abstract.
+    and "plain_text" for an abstract. license names the terms that let the
+    store keep the text, such as "CC BY". It stays None for an abstract and
+    for a source that reports no license.
     """
 
     text: str
     source_level: SourceLevel
     source_format: str
+    license: str | None = None
 
 
 class LiteratureSourceAdapter(Protocol):
