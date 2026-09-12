@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Provenance-linked evidence claims from STEM research"
 requires-python = ">=3.13"
 dependencies = [
+    "httpx>=0.27",
     "pydantic>=2.9",
 ]
 

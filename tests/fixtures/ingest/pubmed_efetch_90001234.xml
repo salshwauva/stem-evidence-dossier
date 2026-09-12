@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE PubmedArticleSet PUBLIC "-//NLM//DTD PubMedArticle, 1st January 2024//EN" "https://dtd.nlm.nih.gov/ncbi/pubmed/out/pubmed_240101.dtd">
+<PubmedArticleSet>
+  <PubmedArticle>
+    <MedlineCitation Status="MEDLINE" Owner="NLM">
+      <PMID Version="1">90001234</PMID>
+      <Article PubModel="Print">
+        <Journal>
+          <ISOAbbreviation>J Test Neurosci</ISOAbbreviation>
+          <Title>Journal of Test Neuroscience</Title>
+          <JournalIssue CitedMedium="Internet">
+            <PubDate>
+              <Year>2025</Year>
+              <Month>03</Month>
+              <Day>14</Day>
+            </PubDate>
+          </JournalIssue>
+        </Journal>
+        <ArticleTitle>MAPT knockdown and neuronal survival in a test dementia model.</ArticleTitle>
+        <Abstract>
+          <AbstractText Label="BACKGROUND">Tau accumulation is a feature of the test dementia model.</AbstractText>
+          <AbstractText Label="RESULTS">Knockdown of MAPT raised neuronal survival by 32% relative to a scrambled control (p &lt; 0.01).</AbstractText>
+        </Abstract>
+        <AuthorList CompleteYN="Y">
+          <Author ValidYN="Y">
+            <LastName>Rivera</LastName>
+            <ForeName>Ana</ForeName>
+            <Initials>A</Initials>
+            <AffiliationInfo>
+              <Affiliation>Neurodegeneration Lab, Test University, Testville.</Affiliation>
+            </AffiliationInfo>
+          </Author>
+          <Author ValidYN="Y">
+            <LastName>Okafor</LastName>
+            <ForeName>Bem</ForeName>
+            <Initials>B</Initials>
+            <AffiliationInfo>
+              <Affiliation>Neurodegeneration Lab, Test University, Testville.</Affiliation>
+            </AffiliationInfo>
+            <AffiliationInfo>
+              <Affiliation>Test Institute, Testville.</Affiliation>
+            </AffiliationInfo>
+          </Author>
+        </AuthorList>
+      </Article>
+    </MedlineCitation>
+    <PubmedData>
+      <ArticleIdList>
+        <ArticleId IdType="pubmed">90001234</ArticleId>
+        <ArticleId IdType="doi">10.5555/bio.90001234</ArticleId>
+        <ArticleId IdType="pmc">PMC9900001</ArticleId>
+      </ArticleIdList>
+    </PubmedData>
+  </PubmedArticle>
+</PubmedArticleSet>

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pmc-articleset PUBLIC "-//NLM//DTD ARTICLE SET 2.0//EN" "https://dtd.nlm.nih.gov/ncbi/pmc/articleset/nlm-articleset-2.0.dtd">
+<pmc-articleset>
+<article xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:mml="http://www.w3.org/1998/Math/MathML" article-type="research-article">
+  <front>
+    <journal-meta>
+      <journal-title-group>
+        <journal-title>Journal of Test Neuroscience</journal-title>
+      </journal-title-group>
+    </journal-meta>
+    <article-meta>
+      <article-id pub-id-type="pmid">90001234</article-id>
+      <article-id pub-id-type="pmc">PMC9900001</article-id>
+      <article-id pub-id-type="doi">10.5555/bio.90001234</article-id>
+      <title-group>
+        <article-title>MAPT knockdown and neuronal survival in a test dementia model</article-title>
+      </title-group>
+      <abstract>
+        <p>Tau accumulation is a feature of the test dementia model. Knockdown of <italic>MAPT</italic> raised neuronal survival by 32% relative to a scrambled control (p &lt; 0.01).</p>
+      </abstract>
+    </article-meta>
+  </front>
+  <body>
+    <sec id="s1">
+      <title>Introduction</title>
+      <p>The test dementia model accumulates tau in cortical neurons. Earlier work in this model measured survival over 7 days.</p>
+      <p>This study extends the window to 14 days and adds a scrambled control.</p>
+    </sec>
+    <sec id="s2">
+      <title>Materials and Methods</title>
+      <sec id="s2a">
+        <title>Cell culture</title>
+        <p>iPSC-derived cortical neurons were kept in Test Medium at 37 degrees C.</p>
+      </sec>
+      <sec id="s2b">
+        <title>Knockdown</title>
+        <p>An antisense oligonucleotide against <italic>MAPT</italic> was added at 5 uM for 14 days. The scrambled control used the same dose.</p>
+      </sec>
+    </sec>
+    <sec id="s3">
+      <title>Results</title>
+      <p>Knockdown of <italic>MAPT</italic> raised neuronal survival by 32% relative to a scrambled control (p &lt; 0.01). Survival was measured by live-cell imaging on day 14.</p>
+      <fig id="f1">
+        <label>Figure 1</label>
+        <caption>
+          <p>Neuronal survival on day 14 for MAPT knockdown and scrambled control.</p>
+        </caption>
+        <graphic xlink:href="f1.tif"/>
+      </fig>
+      <table-wrap id="t1">
+        <label>Table 1</label>
+        <caption>
+          <p>Survival by condition.</p>
+        </caption>
+        <table>
+          <thead>
+            <tr><th>Condition</th><th>Survival (%)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>MAPT knockdown</td><td>84</td></tr>
+            <tr><td>Scrambled control</td><td>52</td></tr>
+          </tbody>
+        </table>
+      </table-wrap>
+    </sec>
+    <sec id="s4">
+      <title>Discussion</title>
+      <p>The survival gain matches the 7 day result and holds at 14 days.</p>
+    </sec>
+    <sec id="s5">
+      <title>Conclusions</title>
+      <p>MAPT knockdown protects cortical neurons in the test dementia model.</p>
+    </sec>
+  </body>
+  <back>
+    <app-group>
+      <app id="app1">
+        <title>Appendix A</title>
+        <p>Oligonucleotide sequences are listed in the supplementary file.</p>
+      </app>
+    </app-group>
+  </back>
+</article>
+</pmc-articleset>
