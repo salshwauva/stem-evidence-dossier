@@ -1,4 +1,4 @@
-# ADR 0004: The extraction pipeline takes the normalizer as an argument
+# ADR 0005: The extraction pipeline takes the normalizer as an argument
 
 ## Status
 Accepted, 2026-09-12
