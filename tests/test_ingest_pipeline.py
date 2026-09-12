@@ -35,6 +35,7 @@ def test_full_text_ingestion_stores_the_work_document_and_sections(store: Store)
     assert result.source_level == SourceLevel.FULL_TEXT
     assert result.section_count == 10
     assert result.stored is True
+    assert result.license == "CC BY"
     work = store.get_work(result.work_id)
     assert work is not None
     assert work.title == "MAPT knockdown and neuronal survival in a test dementia model"
@@ -73,6 +74,27 @@ def test_abstract_fallback_when_pmc_returns_nothing(store: Store) -> None:
     assert section.section_type == SectionType.ABSTRACT
     assert section.text.startswith("MAPT knockdown lowered phosphorylated tau by 41%")
     assert "entrez/eutils/efetch.fcgi?db=pmc&id=PMC99900001" not in http.calls
+
+
+def test_abstract_fallback_for_a_noncommercial_license(store: Store) -> None:
+    http = RecordedHttpClient(PUBMED_RECORDINGS)
+    result = ingest_work(store, PubMedAdapter(http), "90001236", fetched_at=FETCHED_AT)
+    assert result.source_level == SourceLevel.ABSTRACT_ONLY
+    assert result.section_count == 1
+    assert result.license is None
+    section = store.get_section(f"{result.document_id}_s0")
+    assert section is not None
+    assert section.section_type == SectionType.ABSTRACT
+    assert section.text.startswith("MAPT knockdown lowered phosphorylated tau by 27%")
+    assert "entrez/eutils/efetch.fcgi?db=pmc&id=PMC99900002" not in http.calls
+
+
+def test_abstract_fallback_when_the_oa_service_reports_an_error(store: Store) -> None:
+    http = RecordedHttpClient(PUBMED_RECORDINGS)
+    result = ingest_work(store, PubMedAdapter(http), "90001237", fetched_at=FETCHED_AT)
+    assert result.source_level == SourceLevel.ABSTRACT_ONLY
+    assert result.license is None
+    assert "entrez/eutils/efetch.fcgi?db=pmc&id=PMC99900003" not in http.calls
 
 
 def test_arxiv_ingestion_is_abstract_only(store: Store) -> None:
