@@ -16,17 +16,32 @@ The dev fixture shows the rule: the sentence about zebrafish larvae in `work_bio
 
 ## Absent values
 
-A field is absent when the passage and its section do not state the value. The annotator leaves the field null and does not guess from domain knowledge. A comparator is absent when the finding has no baseline in the text. A measurement is absent when the text names no measured quantity, which is common for EXISTENCE and MECHANISM claims. The result direction is never absent: UNKNOWN is the direction when the text states a result without a direction.
+A field is absent when the passage and its section do not state the value. The annotator leaves the field null and does not guess from domain knowledge.
+
+- A comparator is absent when the finding has no baseline in the text.
+- A measurement is absent when the text names no measured quantity, which is common for EXISTENCE and MECHANISM claims.
+- The result direction is never absent. UNKNOWN is the direction when the text states a result without a direction.
+- A value is absent when the text gives a direction and no number.
 
 Scoring treats null as a value of its own. A predicted value where the gold is null counts as a false positive. A predicted null where the gold has a value counts as a false negative.
 
 ## Ambiguous cases
 
-When two readings of a passage are both defensible, the annotator picks the more literal one and records the reason in the claim text. When the direction of a result is unclear, the direction is UNKNOWN, never a guess. When a passage can belong to two studies, the study is the one the surrounding paragraph describes. When the annotator cannot decide whether a statement is a finding, the statement gets no claim.
+- When two readings of a passage are both defensible, the annotator picks the more literal one and records the reason in the claim text.
+- When the direction of a result is unclear, the direction is UNKNOWN, never a guess.
+- When a passage can belong to two studies, the study is the one the surrounding paragraph describes.
+- When the annotator cannot decide whether a statement is a finding, the statement gets no claim.
+- When a sentence reports a result and its statistical test, the span covers both, and the claim records the p value as text.
 
 ## Normalization equivalence
 
-Names carry the original text and a canonical form. Two values are equal for scoring when their canonical forms are equal after case folding and removal of surrounding whitespace. When a value has no canonical form, its original text takes its place under the same comparison. The rule applies to the subject, the method name, the comparator name and the measurement name. Predicates and outcomes compare as plain text under the same case folding.
+Names carry the original text and a canonical form. Two values are equal for scoring when their canonical forms are equal after case folding and removal of surrounding whitespace.
+
+- When a value has no canonical form, its original text takes its place under the same comparison.
+- The rule applies to the subject, the method name, the comparator name and the measurement name.
+- Predicates and outcomes compare as plain text under the same case folding.
+- Claim types and result directions compare as enum values.
+- Units are not scored in this increment.
 
 Normalization rules are fixed before scoring (plan section 50). The annotator writes the canonical form that the normalization rules of the extraction branch produce for the same original text. Where no rule exists yet, the canonical form is the most common name in the field, in lower case, singular. The gold canonical form does not add information that the text lacks.
 
@@ -42,7 +57,13 @@ When the source level is ABSTRACT_ONLY, the annotator labels only what the abstr
 
 The span is the shortest run of text that states the finding, and it stays inside one section. The span holds the direction and, when present, the value. It leaves out the sentence subject when the subject sits in another clause, so two claims from one sentence get two spans that do not cover each other.
 
-A predicted claim matches a gold claim when both spans name the same section and the Jaccard index of their character ranges is at least 0.5. The Jaccard index is the length of the intersection of the two ranges divided by the length of their union. Matching is one to one and greedy on the highest index. An exact match has the same start and end offsets. A report gives the exact rate and the overlap rate separately, with the offsets of every overlap that is not exact.
+A predicted claim matches a gold claim under the overlap rule:
+
+- Both spans name the same section.
+- The Jaccard index of their character ranges is at least 0.5. The index is the length of the intersection divided by the length of the union.
+- Matching is one to one and greedy on the highest index.
+
+An exact match has the same start and end offsets. A report gives the exact rate and the overlap rate separately, with the offsets of every overlap that is not exact. Two spans that cover different halves of one sentence do not match each other, because their index is 0.
 
 ## Query labels
 
