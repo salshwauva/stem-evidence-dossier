@@ -20,14 +20,15 @@ STEM Evidence Dossier is one Python package, `evidence_dossier`, in a src layout
 
 - `model` imports nothing from the other `evidence_dossier` subpackages. Imports inside `model` are fine.
 - `profiles` imports `model`.
-- `store` imports `model` and `profiles`.
+- `store` imports `model`.
 - Each planned subpackage imports `model`, `profiles` and `store`. It never imports a sibling. The one exception is that `api` imports `query`.
+
+Store may import profiles under these rules, but does not today.
 
 ```mermaid
 flowchart BT
     profiles --> model
     store --> model
-    store --> profiles
     ingest --> store
     extract --> store
     normalize --> store

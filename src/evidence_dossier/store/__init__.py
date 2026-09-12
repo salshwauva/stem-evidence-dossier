@@ -1,6 +1,6 @@
 """SQLite store for the core records.
 
-This package imports nothing from evidence_dossier except model and profiles.
+This package imports nothing from evidence_dossier except model.
 """
 
 from evidence_dossier.store.migrate import MIGRATIONS_DIR, apply_migrations
