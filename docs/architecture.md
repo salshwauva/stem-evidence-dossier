@@ -7,21 +7,21 @@ STEM Evidence Dossier is one Python package, `evidence_dossier`, in a src layout
 | Subpackage | Holds | Status |
 | --- | --- | --- |
 | `model` | Core records, enums, domain attribute classes and ID helpers | Built in the schema and profiles increment |
-| `profiles` | `DomainProfile`, `BiologyProfile`, `ComputerScienceProfile`, `GenericProfile` and `get_profile` | Built in the schema and profiles increment |
-| `store` | `Store`, `ClaimRejectedError`, `apply_migrations` and the SQL migration files | Built in the schema and profiles increment |
-| `ingest` | Literature source adapters and the section parser | Planned for the ingestion branch |
-| `extract` | The extractor and relationship validation | Planned for the extraction branch |
-| `normalize` | Canonical names and units | Planned for the extraction branch |
-| `evaluate` | Gold labels, dataset splits and scoring | Planned for the evaluation branch |
-| `query` | Query parser, retrieval, comparability and stance | Planned for the query branch |
-| `api` | FastAPI routes | Planned for the query branch |
+| `profiles` | `DomainProfile`, `BiologyProfile`, `ChemistryProfile`, `ComputerScienceProfile`, `GenericProfile` and `get_profile` | Built in the schema and profiles increment |
+| `store` | `Store`, `ClaimRejectedError`, `apply_migrations`, the SQL migration files and the FTS5 index | Built in the schema and profiles increment, extended by the query increment |
+| `ingest` | Literature source adapters and the section parser | Built in the ingestion increment |
+| `extract` | Prompt, providers, validation and the extraction pipeline | Built in the extraction increment |
+| `normalize` | Canonical names and units | Built in the extraction increment |
+| `evaluate` | Gold labels, dataset splits and scoring | Built in the evaluation increment |
+| `query` | Query parser, retrieval, comparability, stance and search | Built in the query increment |
+| `api` | FastAPI routes | Built in the query increment |
 
 ## Import direction
 
 - `model` imports nothing from the other `evidence_dossier` subpackages. Imports inside `model` are fine.
 - `profiles` imports `model`.
 - `store` imports `model` and `profiles`.
-- Each planned subpackage imports `model`, `profiles` and `store`. It never imports a sibling. The one exception is that `api` imports `query`.
+- Each other subpackage imports `model`, `profiles` and `store`. It never imports a sibling. The one exception is that `api` imports `query`. `extract` takes its normalizer as an argument (ADR 0005), and `evaluate` scores plain records that the caller passes in.
 
 ```mermaid
 flowchart BT
@@ -36,22 +36,22 @@ flowchart BT
     api --> query
 ```
 
-An arrow means "imports". The diagram leaves out the direct imports of `model` and `profiles` from the planned subpackages.
+An arrow means "imports". The diagram leaves out the direct imports of `model` and `profiles` from the other subpackages.
 
-## Contract for the later branches
+## Contract between the subpackages
 
 ### Core model
 
 - `evidence_dossier.model` exports every public type. The records are frozen Pydantic models, and they reject unknown fields.
 - `EvidenceClaim` is the central record. It holds a `ResearchContext`, an optional `Method`, `Comparator` and `Measurement`, a `Result` and one `EvidenceSpan`.
 - A name that normalization touches is a `Term`, with the `original` text and an optional `canonical` value. The claim subject, the method, comparator and measurement names, and units use `Term`.
-- `domain_attributes` on `ResearchContext`, `Method` and `Comparator` takes `BiologyAttributes`, `ComputerScienceAttributes` or None. The `profile` tag picks the class (ADR 0003).
+- `domain_attributes` on `ResearchContext`, `Method` and `Comparator` takes `BiologyAttributes`, `ChemistryAttributes`, `ComputerScienceAttributes` or None. The `profile` tag picks the class (ADR 0003).
 - `EvidenceSpan.matches(section)` is True only when the span names the section and `section.text[start_offset:end_offset] == source_text`, with `0 <= start_offset < end_offset <= len(section.text)`.
 - `make_work_id(scheme, value)`, `make_document_id(work_id, version)` and `make_section_id(document_id, ordinal)` give the same IDs for the same source identity.
 
 ### Profiles
 
-`get_profile(domain)` returns `BiologyProfile` for BIOLOGY, `ComputerScienceProfile` for COMPUTER_SCIENCE and a `GenericProfile` for every other domain. A profile holds plain data: its domain, its attribute model, expected entities, common methods, common measurement types, evidence gap dimensions and comparability features. Normalization rules belong in `normalize`.
+`get_profile(domain)` returns `BiologyProfile` for BIOLOGY, `ChemistryProfile` for CHEMISTRY, `ComputerScienceProfile` for COMPUTER_SCIENCE and a `GenericProfile` for every other domain. A profile holds plain data: its domain, its attribute model, expected entities, common methods, common measurement types, evidence gap dimensions and comparability features. Normalization rules belong in `normalize`.
 
 ### Store
 
@@ -64,7 +64,23 @@ An arrow means "imports". The diagram leaves out the direct imports of `model` a
 
 ### Migrations
 
-The schema lives in `src/evidence_dossier/store/migrations/`. The runner applies each `.sql` file once, in filename order, and records it in `schema_version`. A branch adds the next numbered file, for example `0002_query.sql`, with no code change. A migration file holds no BEGIN or COMMIT, because the runner wraps each file in one transaction. ADR 0002 describes the table layout.
+The schema lives in `src/evidence_dossier/store/migrations/`. The runner applies each `.sql` file once, in filename order, and records it in `schema_version`. A branch adds the next numbered file, for example `0002_query.sql`, with no code change. A migration file holds no transaction control of its own (no BEGIN TRANSACTION or COMMIT), because the runner wraps each file in one transaction. The BEGIN and END that open and close a trigger body are fine. `0002_query.sql` adds the FTS5 index, the query propositions, the stance assessments and the dossiers. ADR 0002 describes the table layout.
+
+### Ingest
+
+`ingest_work(store, adapter, identifier, *, fetched_at)` fetches metadata and text through a `LiteratureSourceAdapter`, falls back from full text to the abstract to metadata only, and stores the work, the document and its sections. The same text yields no second version. Changed text yields the next version number.
+
+### Extract and normalize
+
+`extract_document(store, document_id, provider, *, normalizer, ...)` builds one prompt from the sections, sends it through an `ExtractionProvider`, validates the response, and stores an `ExtractionRun`. A VALID run stores the studies and the claims. An INVALID run stores the raw response and the errors and no claim. Offsets come from the section text, never from the provider. `normalize_claim(claim, profile)` fills canonical values and keeps every original.
+
+### Query
+
+`parse_query(text)` gives a `QueryProposition` with the rules that fired. `Retriever` combines column filters with FTS5 MATCH. `ComparabilityEngine` returns a level and a reason per dimension. `StanceClassifier` returns one of the six stances with a reason. `search_evidence` chains them and groups the results in the plan order. Retrieval and stance stay separate results.
+
+### Evaluate
+
+The scorers take gold records and predicted records and return counts, precision, recall and F1. An empty denominator gives None. `EvaluationReport.to_markdown()` renders one deterministic report.
 
 ## Vocabulary
 
