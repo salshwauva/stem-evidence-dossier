@@ -95,6 +95,13 @@ class Store:
     def get_section(self, section_id: str) -> Section | None:
         return _load(Section, self._fetch("sections", section_id))
 
+    def list_sections(self, document_id: str) -> list[Section]:
+        """Return the sections of a document in ordinal order."""
+        rows = self._conn.execute(
+            "SELECT * FROM sections WHERE document_id = ? ORDER BY ordinal", (document_id,)
+        ).fetchall()
+        return [Section.model_validate(dict(row)) for row in rows]
+
     def add_study(self, study: Study) -> None:
         self._insert("studies", _dump(study))
 
