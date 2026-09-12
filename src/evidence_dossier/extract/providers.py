@@ -7,7 +7,9 @@ repository never handles an API key.
 """
 
 import hashlib
+import json
 import subprocess
+import tempfile
 from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Protocol
@@ -70,9 +72,16 @@ type CommandRunner = Callable[[list[str], str], str]
 
 
 def run_command(args: list[str], stdin: str) -> str:
-    """Run a command and return its stdout. A missing command or a failure raises ProviderError."""
+    """Run a command and return its stdout. A missing command or a failure raises ProviderError.
+
+    The command runs in an empty temporary directory, so a tool call that
+    slips through the flags below still finds no repository files.
+    """
     try:
-        completed = subprocess.run(args, input=stdin, capture_output=True, text=True, check=True)
+        with tempfile.TemporaryDirectory() as cwd:
+            completed = subprocess.run(
+                args, input=stdin, capture_output=True, text=True, check=True, cwd=cwd
+            )
     except FileNotFoundError as error:
         raise ProviderError(f"{args[0]} is not on PATH") from error
     except subprocess.CalledProcessError as error:
@@ -81,12 +90,33 @@ def run_command(args: list[str], stdin: str) -> str:
     return completed.stdout
 
 
+# Tools that the extractor must never reach. The prompt carries untrusted paper
+# text (plan section 51), so the command line grants no tool, denies these by
+# name, ignores the user's settings files, and loads no MCP server.
+DENIED_TOOLS: tuple[str, ...] = (
+    "Bash",
+    "Write",
+    "Edit",
+    "MultiEdit",
+    "NotebookEdit",
+    "WebFetch",
+    "WebSearch",
+    "Agent",
+    "Task",
+)
+ISOLATION_SETTINGS = json.dumps({"permissions": {"allow": [], "deny": list(DENIED_TOOLS)}})
+
+
 class ClaudeCliProvider:
-    """Runs "claude -p --output-format text --model <model>" with the prompt on stdin.
+    """Runs the claude command line tool in print mode with the prompt on stdin.
 
     The command needs a logged in claude command line tool on PATH. The
-    repository holds no API key. Tests inject a fake runner in place of
-    run_command.
+    repository holds no API key. The prompt carries paper text, so the
+    command grants no tool: an empty --tools list, --disallowed-tools for the
+    tools in DENIED_TOOLS, a --settings document that allows nothing,
+    --strict-mcp-config, and an empty working directory. Its stdout is
+    untrusted input that validation checks before anything is stored. Tests
+    inject a fake runner in place of run_command.
     """
 
     def __init__(self, model: str, runner: CommandRunner = run_command) -> None:
@@ -94,6 +124,20 @@ class ClaudeCliProvider:
         self._runner = runner
 
     def complete(self, prompt: str) -> ProviderResponse:
-        args = ["claude", "-p", "--output-format", "text", "--model", self._model]
+        args = [
+            "claude",
+            "-p",
+            "--output-format",
+            "text",
+            "--model",
+            self._model,
+            "--tools",
+            "",
+            "--disallowed-tools",
+            *DENIED_TOOLS,
+            "--strict-mcp-config",
+            "--settings",
+            ISOLATION_SETTINGS,
+        ]
         text = self._runner(args, prompt)
         return ProviderResponse(model_identifier=f"claude-cli/{self._model}", text=text)

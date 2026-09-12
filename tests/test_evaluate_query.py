@@ -45,10 +45,11 @@ def test_stance_per_class_macro_and_confusion() -> None:
         0.0,
         0.0,
     )
-    assert per["MIXED"].f1 is None
+    # The one MIXED pair has no prediction, so it is a false negative and MIXED scores 0.
+    assert (per["MIXED"].precision, per["MIXED"].recall, per["MIXED"].f1) == (None, 0.0, 0.0)
     assert per["INDIRECT"].f1 == pytest.approx(2 / 3)
     assert per["INSUFFICIENTLY_COMPARABLE"].recall == 0.5
-    assert result.macro_f1 == pytest.approx((0.8 + 1 + 0 + 2 / 3 + 2 / 3) / 5)
+    assert result.macro_f1 == pytest.approx((0.8 + 1 + 0 + 0 + 2 / 3 + 2 / 3) / 6)
     assert result.confusion["CONTRADICTS"]["SUPPORTS"] == 1
     assert result.confusion["INSUFFICIENTLY_COMPARABLE"] == {
         "SUPPORTS": 0, "CONTRADICTS": 0, "NULL": 0, "MIXED": 0, "INDIRECT": 1, "INSUFFICIENTLY_COMPARABLE": 1,
@@ -69,9 +70,10 @@ def test_comparability_accuracy_and_incompatible_misses() -> None:
     assert B1 in RANKINGS["q1"][0]
 
 
-def test_stance_without_predictions_is_not_assessable() -> None:
+def test_stance_without_predictions_scores_zero_recall() -> None:
+    """Silence is not a pass: every labeled pair is a false negative for its class."""
     result = run_stance_evaluation(fixture_dataset(), [])
     assert result.missing == 9
-    assert result.macro_f1 is None
+    assert result.macro_f1 == 0.0
     assert result.comparability_accuracy is None
-    assert all(p.f1 is None for p in result.per_class.values())
+    assert all(p.recall == 0.0 and p.precision is None for p in result.per_class.values())

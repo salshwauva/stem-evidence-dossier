@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pytest
@@ -9,7 +10,7 @@ from evidence_dossier.extract import (
     RecordedProvider,
     prompt_key,
 )
-from evidence_dossier.extract.providers import run_command
+from evidence_dossier.extract.providers import DENIED_TOOLS, run_command
 
 PROMPT = "Extract the claims of document x."
 RESPONSE = ProviderResponse(
@@ -45,10 +46,31 @@ def test_claude_cli_provider_sends_the_prompt_on_stdin_to_the_claude_command() -
 
     response = ClaudeCliProvider("claude-test-1", runner=fake_runner).complete(PROMPT)
 
-    assert calls == [
-        (["claude", "-p", "--output-format", "text", "--model", "claude-test-1"], PROMPT)
-    ]
+    ((args, stdin),) = calls
+    assert stdin == PROMPT
+    assert args[:6] == ["claude", "-p", "--output-format", "text", "--model", "claude-test-1"]
     assert response == ProviderResponse(model_identifier="claude-cli/claude-test-1", text="  {}\n")
+
+
+def test_claude_cli_provider_grants_no_tool_and_loads_no_settings() -> None:
+    """The prompt carries paper text (plan section 51), so the command line isolates the run."""
+    calls: list[list[str]] = []
+
+    def fake_runner(args: list[str], stdin: str) -> str:
+        calls.append(args)
+        return "{}"
+
+    ClaudeCliProvider("claude-test-1", runner=fake_runner).complete(PROMPT)
+
+    (args,) = calls
+    assert args[args.index("--tools") + 1] == ""
+    start = args.index("--disallowed-tools") + 1
+    assert tuple(args[start : start + len(DENIED_TOOLS)]) == DENIED_TOOLS
+    assert {"Bash", "Write", "Edit", "WebFetch", "Agent"} <= set(DENIED_TOOLS)
+    assert "--strict-mcp-config" in args
+    settings = json.loads(args[args.index("--settings") + 1])
+    assert settings["permissions"]["allow"] == []
+    assert set(settings["permissions"]["deny"]) == set(DENIED_TOOLS)
 
 
 def test_run_command_reports_a_missing_command() -> None:

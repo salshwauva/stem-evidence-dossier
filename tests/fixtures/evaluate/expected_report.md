@@ -5,6 +5,8 @@
 - Schema version: core-1
 - Split: dev
 - Created at: 2026-09-12T06:00:00+00:00
+- Note: The papers, the gold labels and the predictions are invented test fixtures.
+- Note: The predictions were written by hand from the gold labels with deliberate errors.
 
 ## Extraction
 
@@ -132,14 +134,14 @@
 - Labeled pairs: 9
 - Pairs without a prediction: 1
 - Predictions without a label: 1
-- Macro F1: 0.627
+- Macro F1: 0.522
 
 | class | precision | recall | f1 | support |
 | --- | --- | --- | --- | --- |
 | SUPPORTS | 0.667 | 1.000 | 0.800 | 2 |
 | CONTRADICTS | not assessable | 0.000 | 0.000 | 1 |
 | NULL | 1.000 | 1.000 | 1.000 | 2 |
-| MIXED | not assessable | not assessable | not assessable | 0 |
+| MIXED | not assessable | 0.000 | 0.000 | 1 |
 | INDIRECT | 0.500 | 1.000 | 0.667 | 1 |
 | INSUFFICIENTLY_COMPARABLE | 1.000 | 0.500 | 0.667 | 2 |
 

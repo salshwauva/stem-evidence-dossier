@@ -7,6 +7,8 @@ EVALUATE_REPORT_WRITE=1 and read the diff before the commit.
 import os
 from datetime import UTC, datetime
 
+import pytest
+
 from evidence_dossier.evaluate import (
     NOT_ASSESSABLE,
     Dataset,
@@ -38,14 +40,25 @@ def _report(dataset: Dataset, predict: bool = True) -> EvaluationReport:
         extraction=run_extraction_evaluation(dataset, predicted, study_map=STUDY_MAP),
         retrieval=run_retrieval_evaluation(dataset, RANKINGS),
         stance=run_stance_evaluation(dataset, STANCE_PREDICTIONS),
+        notes=(
+            "The papers, the gold labels and the predictions are invented test fixtures.",
+            "The predictions were written by hand from the gold labels with deliberate errors.",
+        ),
     )
+
+
+@pytest.mark.skipif(
+    os.environ.get("EVALUATE_REPORT_WRITE") != "1",
+    reason="set EVALUATE_REPORT_WRITE=1 to regenerate",
+)
+def test_regenerate_the_expected_file() -> None:
+    """Rewrites the snapshot. It never asserts, so the comparison test below stays honest."""
+    (FIXTURE_DIR / "expected_report.md").write_text(_report(fixture_dataset()).to_markdown())
 
 
 def test_markdown_matches_the_expected_file() -> None:
     expected_path = FIXTURE_DIR / "expected_report.md"
     markdown = _report(fixture_dataset()).to_markdown()
-    if os.environ.get("EVALUATE_REPORT_WRITE") == "1":
-        expected_path.write_text(markdown)
     assert markdown == expected_path.read_text()
 
 

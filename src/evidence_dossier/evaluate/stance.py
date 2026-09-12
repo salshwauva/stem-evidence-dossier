@@ -1,8 +1,10 @@
 """Stance and comparability scoring over labeled query and claim pairs (plan section 50).
 
 A prediction joins a gold label on (query_id, claim_id). A gold pair without a
-prediction counts as missing, and a prediction without a gold pair is ignored.
-Both counts appear in the result.
+prediction is a false negative for its gold class, so silence lowers recall
+and macro F1. It has no predicted class, so it adds nothing to the confusion
+matrix, and comparability accuracy covers only the pairs with a prediction.
+A prediction without a gold pair is ignored. Both counts appear in the result.
 """
 
 from collections.abc import Sequence
@@ -55,6 +57,7 @@ def run_stance_evaluation(
     for label in labels:
         prediction = predicted.get((label.query_id, label.claim_id))
         if prediction is None:
+            counts[label.stance] += Counts(false_negatives=1)
             continue
         scored += 1
         confusion[label.stance][prediction.stance] += 1

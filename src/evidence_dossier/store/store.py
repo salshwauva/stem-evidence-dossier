@@ -198,14 +198,15 @@ class Store:
         *,
         domain: Domain | None = None,
         source_level: SourceLevel | None = None,
-        limit: int = 20,
+        limit: int | None = 20,
     ) -> list[tuple[EvidenceClaim, float]]:
         """Return the claims whose text matches an FTS5 query, best bm25 rank first.
 
         The caller builds the match expression with quoted tokens (plan section 36).
-        The rank is the bm25 score, where a lower value is a better match.
+        The rank is the bm25 score, where a lower value is a better match. A
+        limit of None returns every match.
         """
-        params: dict[str, Any] = {"match": match, "limit": limit}
+        params: dict[str, Any] = {"match": match}
         sql = (
             "SELECT claims.*, bm25(claims_fts) AS rank FROM claims_fts"
             " JOIN claims ON claims.rowid = claims_fts.rowid WHERE claims_fts MATCH :match"
@@ -216,7 +217,11 @@ class Store:
         if source_level is not None:
             sql += " AND claims.source_level = :source_level"
             params["source_level"] = source_level.value
-        rows = self._conn.execute(sql + " ORDER BY rank, claims.id LIMIT :limit", params).fetchall()
+        sql += " ORDER BY rank, claims.id"
+        if limit is not None:
+            sql += " LIMIT :limit"
+            params["limit"] = limit
+        rows = self._conn.execute(sql, params).fetchall()
         return [(_claim_from_row(row), row["rank"]) for row in rows]
 
     def count_claims_by_source_level(self) -> dict[SourceLevel, int]:

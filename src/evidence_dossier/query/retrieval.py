@@ -49,14 +49,20 @@ class Retriever:
 
         The domain and the source level filter on real claim columns. The
         context filters (dataset, system, population) compare against the
-        research context after the search, case insensitive.
+        research context after the search, case insensitive. When a context
+        filter is set, the search runs without a limit and the limit applies
+        after the filter, so an excluded match cannot hide a qualifying claim.
         """
         terms = query_terms(proposition)
         if not terms:
             return []
         domain: Domain | None = proposition.domain
+        filtered = any((proposition.dataset, proposition.system, proposition.population))
         hits = self._store.search_claims(
-            fts_match(terms), domain=domain, source_level=source_level, limit=limit
+            fts_match(terms),
+            domain=domain,
+            source_level=source_level,
+            limit=None if filtered else limit,
         )
         candidates: list[Candidate] = []
         for claim, rank in hits:
@@ -70,7 +76,7 @@ class Retriever:
                     matched_terms=tuple(term for term in terms if term in held),
                 )
             )
-        return candidates
+        return candidates[:limit]
 
 
 def _indexed_text(claim: EvidenceClaim) -> str:

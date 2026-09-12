@@ -53,6 +53,9 @@ class EvaluationReport(FrozenModel):
     extraction: ExtractionEvaluation | None = None
     retrieval: RetrievalEvaluation | None = None
     stance: StanceEvaluation | None = None
+    # Where the predictions and the gold labels came from. A reader sees the
+    # scores here, so the provenance of the inputs belongs here too.
+    notes: tuple[str, ...] = ()
 
     def to_markdown(self) -> str:
         lines = [
@@ -63,6 +66,7 @@ class EvaluationReport(FrozenModel):
             f"- Schema version: {self.schema_version}",
             f"- Split: {self.split}",
             f"- Created at: {self.created_at.isoformat()}",
+            *(f"- Note: {note}" for note in self.notes),
             "",
         ]
         lines.extend(self._extraction_lines())
