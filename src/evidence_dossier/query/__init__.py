@@ -12,6 +12,7 @@ from evidence_dossier.query.comparability import (
     DimensionResult,
 )
 from evidence_dossier.query.parser import parse_query
+from evidence_dossier.query.polarity import POLARITY_VERSION, Polarity, polarity_of
 from evidence_dossier.query.retrieval import Candidate, Retriever
 from evidence_dossier.query.search import (
     STANCE_ORDER,
@@ -26,6 +27,7 @@ from evidence_dossier.query.stance import StanceClassifier
 
 __all__ = [
     "MATCH_THRESHOLD",
+    "POLARITY_VERSION",
     "STANCE_ORDER",
     "Candidate",
     "ComparabilityAssessment",
@@ -34,6 +36,7 @@ __all__ = [
     "Dossier",
     "EvidenceItem",
     "EvidenceResults",
+    "Polarity",
     "Provenance",
     "QueryProposition",
     "Retriever",
@@ -42,5 +45,6 @@ __all__ = [
     "StanceGroup",
     "build_dossier",
     "parse_query",
+    "polarity_of",
     "search_evidence",
 ]
