@@ -62,10 +62,10 @@ def test_every_core_record_round_trips(store_path: str | Path) -> None:
     biology = biology_paper()
     computer_science = computer_science_paper()
     published = ResearchWork(
-        id=make_work_id("doi", "10.5555/cs.2401.01234"),
+        id=make_work_id("doi", "10.5555/cs.9901.00001"),
         title=computer_science.work.title,
         domain=Domain.COMPUTER_SCIENCE,
-        doi="10.5555/cs.2401.01234",
+        doi="10.5555/cs.9901.00001",
     )
     link = WorkLink(
         source_work_id=computer_science.work.id,
@@ -199,7 +199,7 @@ def test_list_claims_filters_by_domain_claim_type_work_and_study(store: Store) -
     _add_paper(store, biology)
     _add_paper(store, computer_science)
 
-    # Claims come back ordered by ID: "claim-12345678" sorts before "claim-2401.01234".
+    # Claims come back ordered by ID: "claim-12345678" sorts before "claim-9901.00001".
     assert store.list_claims() == [biology.claim, computer_science.claim]
     assert store.list_claims(domain=Domain.BIOLOGY) == [biology.claim]
     assert store.list_claims(claim_type=ClaimType.PERFORMANCE) == [computer_science.claim]

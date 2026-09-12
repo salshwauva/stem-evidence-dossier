@@ -23,7 +23,7 @@ These checks establish where a passage is. They do not establish that a scientif
 
 The core path exists: ingest, extract, normalize, query, and evaluate, with 233 automated tests. The parts that remain from the plan are the conflict pairs and evidence gap dimensions of the advanced dossier, a live evaluation route, and unit value conversion.
 
-Every test runs on recorded fixtures with invented papers. No extraction precision or recall on a real corpus is available yet, and no live provider call runs in CI.
+Every test runs on recorded fixtures with invented papers and identifiers outside the real ranges. The PubMed and arXiv adapters have parsed only that invented XML, not a real API response, so real JATS markup with nested sections, inline tags, tables and footnotes is untested. No extraction precision or recall on a real corpus is available yet, and no live provider call runs in CI.
 
 ## Setup
 

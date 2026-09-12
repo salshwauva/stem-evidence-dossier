@@ -28,7 +28,7 @@ def _ids(store: Store, text: str, *, domain: Domain | None = None, limit: int = 
 def test_the_rag_proposition_retrieves_the_computer_science_claim_first(store: Store) -> None:
     candidates = Retriever(store).retrieve(parse_query(RAG_TEXT), limit=5)
 
-    assert candidates[0].claim.id == "claim-2401.01234"
+    assert candidates[0].claim.id == "claim-9901.00001"
     assert "retrieval" in candidates[0].matched_terms
     assert "hallucination" not in candidates[0].matched_terms
 

@@ -4,7 +4,7 @@
     {
       "text": "retrieval-augmented generation reduces factual hallucination compared with the same model without retrieval",
       "domain": null,
-      "relevant_claim_ids": ["claim-2401.01234"]
+      "relevant_claim_ids": ["claim-9901.00001"]
     },
     {
       "text": "MAPT knockdown increases neuronal survival compared with a scrambled control",

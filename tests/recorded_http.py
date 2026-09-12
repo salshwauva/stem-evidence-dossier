@@ -39,11 +39,11 @@ PUBMED_RECORDINGS = {
     "entrez/eutils/efetch.fcgi?db=pubmed&id=90001235": "pubmed_efetch_90001235.xml",
     "pmc/utils/idconv/v1.0?ids=90001234": "pmc_idconv_90001234.json",
     "pmc/utils/idconv/v1.0?ids=90001235": "pmc_idconv_90001235.json",
-    "entrez/eutils/efetch.fcgi?db=pmc&id=PMC9900001": "pmc_efetch_PMC9900001.xml",
+    "entrez/eutils/efetch.fcgi?db=pmc&id=PMC99900001": "pmc_efetch_PMC99900001.xml",
 }
 
 ARXIV_RECORDINGS = {
     "api/query?search_query=all:retrieval factual errors": "arxiv_search.xml",
-    "api/query?id_list=2401.01234": "arxiv_entry_2401.01234.xml",
+    "api/query?id_list=9901.00001": "arxiv_entry_9901.00001.xml",
     "api/query?id_list=9999.99999": "arxiv_entry_missing.xml",
 }

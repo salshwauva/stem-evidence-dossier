@@ -108,7 +108,7 @@ def invalid_run(document_id: str) -> ExtractionRun:
     )
 
 
-def biology_paper(pmid: str = "12345678") -> Paper:
+def biology_paper(pmid: str = "90000001") -> Paper:
     work_id = make_work_id("pmid", pmid)
     work = ResearchWork(
         id=work_id,
@@ -195,7 +195,7 @@ def biology_paper(pmid: str = "12345678") -> Paper:
     return Paper(work, document, section, study, run, claim)
 
 
-def computer_science_paper(arxiv_id: str = "2401.01234") -> Paper:
+def computer_science_paper(arxiv_id: str = "9901.00001") -> Paper:
     work_id = make_work_id("arxiv", arxiv_id)
     work = ResearchWork(
         id=work_id,

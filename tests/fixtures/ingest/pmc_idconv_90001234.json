@@ -4,7 +4,7 @@
   "request": "ids=90001234;format=json",
   "records": [
     {
-      "pmcid": "PMC9900001",
+      "pmcid": "PMC99900001",
       "pmid": "90001234",
       "doi": "10.5555/bio.90001234"
     }

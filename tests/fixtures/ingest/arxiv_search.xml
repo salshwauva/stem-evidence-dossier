@@ -4,14 +4,14 @@
   <id>http://arxiv.org/api/query-test-search</id>
   <opensearch:totalResults>2</opensearch:totalResults>
   <entry>
-    <id>http://arxiv.org/abs/2401.01234v2</id>
+    <id>http://arxiv.org/abs/9901.00001v2</id>
     <title>Retrieval and factual errors in a test language model</title>
     <summary>With retrieval, the factual error rate fell from 18.2% to 11.5% on Benchmark X.</summary>
     <author><name>C. Lindqvist</name></author>
     <arxiv:primary_category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
   </entry>
   <entry>
-    <id>http://arxiv.org/abs/2402.05678v1</id>
+    <id>http://arxiv.org/abs/9901.00002v1</id>
     <title>Rerankers and hallucination on a test benchmark</title>
     <summary>A cross-encoder reranker lowered the hallucination rate on Benchmark Y.</summary>
     <author><name>D. Mensah</name></author>

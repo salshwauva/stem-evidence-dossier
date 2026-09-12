@@ -42,7 +42,7 @@ def test_full_text_ingestion_stores_the_work_document_and_sections(store: Store)
     assert document is not None
     assert document.source_format == "jats_xml"
     assert document.fetched_at == FETCHED_AT
-    assert document.raw_text == (FIXTURES_DIR / "pmc_efetch_PMC9900001.xml").read_text()
+    assert document.raw_text == (FIXTURES_DIR / "pmc_efetch_PMC99900001.xml").read_text()
 
 
 def test_a_fixture_passage_sits_at_the_same_offsets_in_the_stored_section(store: Store) -> None:
@@ -72,17 +72,17 @@ def test_abstract_fallback_when_pmc_returns_nothing(store: Store) -> None:
     assert section is not None
     assert section.section_type == SectionType.ABSTRACT
     assert section.text.startswith("MAPT knockdown lowered phosphorylated tau by 41%")
-    assert "entrez/eutils/efetch.fcgi?db=pmc&id=PMC9900001" not in http.calls
+    assert "entrez/eutils/efetch.fcgi?db=pmc&id=PMC99900001" not in http.calls
 
 
 def test_arxiv_ingestion_is_abstract_only(store: Store) -> None:
     result = ingest_work(
         store,
         ArxivAdapter(RecordedHttpClient(ARXIV_RECORDINGS)),
-        "2401.01234",
+        "9901.00001",
         fetched_at=FETCHED_AT,
     )
-    assert result.work_id == make_work_id("arxiv", "2401.01234")
+    assert result.work_id == make_work_id("arxiv", "9901.00001")
     assert result.source_level == SourceLevel.ABSTRACT_ONLY
     assert result.section_count == 1
 
@@ -93,9 +93,9 @@ def test_metadata_only_when_the_source_has_no_abstract(store: Store) -> None:
             return None
 
     adapter = NoTextAdapter(RecordedHttpClient(ARXIV_RECORDINGS))
-    work = adapter.fetch_metadata("2401.01234").model_copy(update={"abstract": None})
+    work = adapter.fetch_metadata("9901.00001").model_copy(update={"abstract": None})
     adapter.fetch_metadata = lambda identifier: work  # type: ignore[method-assign]
-    result = ingest_work(store, adapter, "2401.01234", fetched_at=FETCHED_AT)
+    result = ingest_work(store, adapter, "9901.00001", fetched_at=FETCHED_AT)
     assert result.source_level == SourceLevel.METADATA_ONLY
     assert result.section_count == 0
     document = store.get_source_document(result.document_id)

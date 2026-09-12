@@ -9,7 +9,7 @@ import hashlib
 
 
 def make_work_id(scheme: str, value: str) -> str:
-    """Return the ID of the work with this source identifier, such as ("pmid", "12345678").
+    """Return the ID of the work with this source identifier, such as ("pmid", "90000001").
 
     The function does no normalization, so the ingest code passes the
     identifier exactly as the source returns it.

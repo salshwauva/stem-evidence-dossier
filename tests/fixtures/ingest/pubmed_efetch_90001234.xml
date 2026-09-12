@@ -48,7 +48,7 @@
       <ArticleIdList>
         <ArticleId IdType="pubmed">90001234</ArticleId>
         <ArticleId IdType="doi">10.5555/bio.90001234</ArticleId>
-        <ArticleId IdType="pmc">PMC9900001</ArticleId>
+        <ArticleId IdType="pmc">PMC99900001</ArticleId>
       </ArticleIdList>
     </PubmedData>
   </PubmedArticle>

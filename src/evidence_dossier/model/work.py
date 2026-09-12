@@ -30,7 +30,7 @@ class ResearchWork(FrozenModel):
     venue: str | None = None
     # Source order, so the first and senior authors stay identifiable.
     authors: tuple[Author, ...] = ()
-    # Identifier scheme to value, for example {"pmid": "12345678"}.
+    # Identifier scheme to value, for example {"pmid": "90000001"}.
     external_identifiers: dict[str, str] = Field(default_factory=dict)
 
 

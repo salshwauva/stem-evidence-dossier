@@ -6,7 +6,7 @@ from tests.recorded_http import FIXTURES_DIR
 
 
 def jats_fixture() -> FetchedText:
-    text = (FIXTURES_DIR / "pmc_efetch_PMC9900001.xml").read_text()
+    text = (FIXTURES_DIR / "pmc_efetch_PMC99900001.xml").read_text()
     return FetchedText(text=text, source_level=SourceLevel.FULL_TEXT, source_format="jats_xml")
 
 

@@ -41,7 +41,7 @@ def test_pubmed_metadata_parses_the_article_record() -> None:
     assert work.external_identifiers == {
         "pmid": "90001234",
         "doi": "10.5555/bio.90001234",
-        "pmc": "PMC9900001",
+        "pmc": "PMC99900001",
     }
 
 
@@ -61,7 +61,7 @@ def test_pubmed_full_text_comes_from_pmc_as_jats() -> None:
     assert "<article-title>MAPT knockdown" in fetched.text
     assert http.calls == [
         "pmc/utils/idconv/v1.0?ids=90001234",
-        "entrez/eutils/efetch.fcgi?db=pmc&id=PMC9900001",
+        "entrez/eutils/efetch.fcgi?db=pmc&id=PMC99900001",
     ]
 
 
@@ -76,28 +76,28 @@ def test_arxiv_search_strips_the_version_from_each_identifier() -> None:
         "retrieval factual errors", limit=2
     )
     assert [(hit.identifier, hit.title) for hit in hits] == [
-        ("2401.01234", "Retrieval and factual errors in a test language model"),
-        ("2402.05678", "Rerankers and hallucination on a test benchmark"),
+        ("9901.00001", "Retrieval and factual errors in a test language model"),
+        ("9901.00002", "Rerankers and hallucination on a test benchmark"),
     ]
 
 
 def test_arxiv_metadata_parses_the_atom_entry() -> None:
-    work = ArxivAdapter(RecordedHttpClient(ARXIV_RECORDINGS)).fetch_metadata("2401.01234")
-    assert work.id == make_work_id("arxiv", "2401.01234")
+    work = ArxivAdapter(RecordedHttpClient(ARXIV_RECORDINGS)).fetch_metadata("9901.00001")
+    assert work.id == make_work_id("arxiv", "9901.00001")
     assert work.title == "Retrieval and factual errors in a test language model"
     assert work.domain == Domain.COMPUTER_SCIENCE
-    assert work.doi == "10.5555/cs.2401.01234"
+    assert work.doi == "10.5555/cs.9901.00001"
     assert work.publication_date == date(2024, 1, 5)
     assert work.venue == "Proceedings of the Test Language Conference 2024"
     assert work.authors == (
         Author(name="C. Lindqvist", affiliations=("Test Systems Group",)),
         Author(name="E. Novak"),
     )
-    assert work.external_identifiers == {"arxiv": "2401.01234", "doi": "10.5555/cs.2401.01234"}
+    assert work.external_identifiers == {"arxiv": "9901.00001", "doi": "10.5555/cs.9901.00001"}
 
 
 def test_arxiv_full_text_is_the_abstract_with_its_inner_newlines() -> None:
-    fetched = ArxivAdapter(RecordedHttpClient(ARXIV_RECORDINGS)).fetch_full_text("2401.01234")
+    fetched = ArxivAdapter(RecordedHttpClient(ARXIV_RECORDINGS)).fetch_full_text("9901.00001")
     assert fetched is not None
     assert fetched.source_level == SourceLevel.ABSTRACT_ONLY
     assert fetched.source_format == "plain_text"
@@ -114,4 +114,4 @@ def test_arxiv_unknown_identifier_raises_lookup_error() -> None:
 
 def test_a_request_without_a_recording_fails_instead_of_going_live() -> None:
     with pytest.raises(KeyError):
-        ArxivAdapter(RecordedHttpClient({})).fetch_metadata("2401.01234")
+        ArxivAdapter(RecordedHttpClient({})).fetch_metadata("9901.00001")

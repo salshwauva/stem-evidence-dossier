@@ -37,9 +37,9 @@ def test_search_returns_groups_in_the_plan_order_with_matching_provenance(
         stance.value for stance in STANCE_ORDER
     ]
     assert body["proposition"]["subject"] == "retrieval-augmented generation"
-    assert body["candidates"][0]["claim"]["id"] == "claim-2401.01234"
+    assert body["candidates"][0]["claim"]["id"] == "claim-9901.00001"
     supports = body["groups"][0]["items"]
-    assert [item["claim"]["id"] for item in supports] == ["claim-2401.01234"]
+    assert [item["claim"]["id"] for item in supports] == ["claim-9901.00001"]
     provenance = supports[0]["provenance"]
     with Store(db_path) as store:
         section = store.get_section(provenance["section_id"])
@@ -68,16 +68,16 @@ def test_dossier_create_and_get_round_trip(client: TestClient) -> None:
     assert fetched.status_code == 200
     assert fetched.json()["dossier"] == dossier
     assert fetched.json()["proposition"]["id"] == dossier["query_id"]
-    assert [a["claim_id"] for a in fetched.json()["assessments"]] == ["claim-2401.01234"]
+    assert [a["claim_id"] for a in fetched.json()["assessments"]] == ["claim-9901.00001"]
 
 
 def test_claim_and_work_routes_expose_the_records(client: TestClient) -> None:
-    claim = client.get("/claims/claim-2401.01234")
+    claim = client.get("/claims/claim-9901.00001")
     assert claim.status_code == 200
     work = client.get(f"/works/{claim.json()['research_work_id']}")
 
     assert work.status_code == 200
-    assert work.json()["claim_ids"] == ["claim-2401.01234"]
+    assert work.json()["claim_ids"] == ["claim-9901.00001"]
     assert work.json()["links"] == []
 
 
