@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE PubmedArticleSet PUBLIC "-//NLM//DTD PubMedArticle, 1st January 2024//EN" "https://dtd.nlm.nih.gov/ncbi/pubmed/out/pubmed_240101.dtd">
+<PubmedArticleSet>
+  <PubmedArticle>
+    <MedlineCitation Status="MEDLINE" Owner="NLM">
+      <PMID Version="1">90001238</PMID>
+      <Article PubModel="Print">
+        <Journal>
+          <Title>Test Letters in Synthesis</Title>
+          <JournalIssue CitedMedium="Print">
+            <PubDate>
+              <Year>2025</Year>
+              <Month>Feb</Month>
+            </PubDate>
+          </JournalIssue>
+        </Journal>
+        <ArticleTitle>A nickel catalyst for a test cross coupling at room temperature.</ArticleTitle>
+        <Abstract>
+          <AbstractText>The nickel catalyst raised the yield of the test cross coupling from 52% to 84% at room temperature.</AbstractText>
+        </Abstract>
+        <AuthorList CompleteYN="Y">
+          <Author ValidYN="Y">
+            <LastName>Novak</LastName>
+            <ForeName>Petra</ForeName>
+          </Author>
+        </AuthorList>
+      </Article>
+      <MeshHeadingList>
+        <MeshHeading><DescriptorName UI="D000000" MajorTopicYN="N">Catalysis</DescriptorName></MeshHeading>
+        <MeshHeading><DescriptorName UI="D000000" MajorTopicYN="N">Nickel</DescriptorName></MeshHeading>
+        <MeshHeading><DescriptorName UI="D000000" MajorTopicYN="N">Chemistry Techniques, Synthetic</DescriptorName></MeshHeading>
+      </MeshHeadingList>
+    </MedlineCitation>
+    <PubmedData>
+      <ArticleIdList>
+        <ArticleId IdType="pubmed">90001238</ArticleId>
+      </ArticleIdList>
+    </PubmedData>
+  </PubmedArticle>
+</PubmedArticleSet>

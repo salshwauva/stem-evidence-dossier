@@ -7,7 +7,7 @@ recorded fixtures.
 
 from evidence_dossier.ingest.adapter import FetchedText, LiteratureSourceAdapter, SourceHit
 from evidence_dossier.ingest.arxiv import ArxivAdapter
-from evidence_dossier.ingest.domains import PUBMED_DOMAIN, arxiv_category_domain
+from evidence_dossier.ingest.domains import PUBMED_DOMAIN, arxiv_category_domain, pubmed_domain
 from evidence_dossier.ingest.http import HttpClient, HttpxClient
 from evidence_dossier.ingest.pipeline import IngestResult, ingest_work
 from evidence_dossier.ingest.pubmed import PubMedAdapter
@@ -26,6 +26,7 @@ __all__ = [
     "SectionParser",
     "SourceHit",
     "arxiv_category_domain",
+    "pubmed_domain",
     "ingest_work",
     "section_type_for_heading",
 ]

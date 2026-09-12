@@ -40,6 +40,8 @@ PUBMED_RECORDINGS = {
     "pmc/utils/idconv/v1.0?ids=90001234": "pmc_idconv_90001234.json",
     "entrez/eutils/efetch.fcgi?db=pubmed&id=90001236": "pubmed_efetch_90001236.xml",
     "entrez/eutils/efetch.fcgi?db=pubmed&id=90001237": "pubmed_efetch_90001237.xml",
+    "entrez/eutils/efetch.fcgi?db=pubmed&id=90001238": "pubmed_efetch_90001238.xml",
+    "entrez/eutils/efetch.fcgi?db=pubmed&id=90001239": "pubmed_efetch_90001239.xml",
     "pmc/utils/idconv/v1.0?ids=90001235": "pmc_idconv_90001235.json",
     "pmc/utils/idconv/v1.0?ids=90001236": "pmc_idconv_90001236.json",
     "pmc/utils/idconv/v1.0?ids=90001237": "pmc_idconv_90001237.json",

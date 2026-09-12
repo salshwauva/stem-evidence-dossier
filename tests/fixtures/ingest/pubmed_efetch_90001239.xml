@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE PubmedArticleSet PUBLIC "-//NLM//DTD PubMedArticle, 1st January 2024//EN" "https://dtd.nlm.nih.gov/ncbi/pubmed/out/pubmed_240101.dtd">
+<PubmedArticleSet>
+  <PubmedArticle>
+    <MedlineCitation Status="MEDLINE" Owner="NLM">
+      <PMID Version="1">90001239</PMID>
+      <Article PubModel="Print">
+        <Journal>
+          <Title>Test Chemical Neuroscience</Title>
+          <JournalIssue CitedMedium="Print">
+            <PubDate>
+              <Year>2025</Year>
+              <Month>Feb</Month>
+            </PubDate>
+          </JournalIssue>
+        </Journal>
+        <ArticleTitle>A photocatalytic probe for tau aggregates in test neurons.</ArticleTitle>
+        <Abstract>
+          <AbstractText>The probe labeled tau aggregates in cultured test neurons after 2 hours.</AbstractText>
+        </Abstract>
+        <AuthorList CompleteYN="Y">
+          <Author ValidYN="Y">
+            <LastName>Novak</LastName>
+            <ForeName>Petra</ForeName>
+          </Author>
+        </AuthorList>
+      </Article>
+      <MeshHeadingList>
+        <MeshHeading><DescriptorName UI="D000000" MajorTopicYN="N">Photochemistry</DescriptorName></MeshHeading>
+        <MeshHeading><DescriptorName UI="D000000" MajorTopicYN="N">Cells, Cultured</DescriptorName></MeshHeading>
+        <MeshHeading><DescriptorName UI="D000000" MajorTopicYN="N">Humans</DescriptorName></MeshHeading>
+      </MeshHeadingList>
+    </MedlineCitation>
+    <PubmedData>
+      <ArticleIdList>
+        <ArticleId IdType="pubmed">90001239</ArticleId>
+      </ArticleIdList>
+    </PubmedData>
+  </PubmedArticle>
+</PubmedArticleSet>

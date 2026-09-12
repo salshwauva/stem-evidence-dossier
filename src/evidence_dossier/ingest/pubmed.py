@@ -13,7 +13,7 @@ import xml.etree.ElementTree as ET
 from datetime import date
 
 from evidence_dossier.ingest.adapter import FetchedText, SourceHit
-from evidence_dossier.ingest.domains import PUBMED_DOMAIN
+from evidence_dossier.ingest.domains import pubmed_domain
 from evidence_dossier.ingest.http import HttpClient
 from evidence_dossier.ingest.xml import parse_xml
 from evidence_dossier.model import Author, ResearchWork, SourceLevel, make_work_id
@@ -75,10 +75,16 @@ class PubMedAdapter:
             _text(part)
             for part in article.iterfind("MedlineCitation/Article/Abstract/AbstractText")
         ]
+        headings = [
+            _text(name)
+            for name in article.iterfind(
+                "MedlineCitation/MeshHeadingList/MeshHeading/DescriptorName"
+            )
+        ]
         return ResearchWork(
             id=make_work_id(self.scheme, identifier),
             title=_text(article.find("MedlineCitation/Article/ArticleTitle")).rstrip("."),
-            domain=PUBMED_DOMAIN,
+            domain=pubmed_domain(headings),
             doi=identifiers.get("doi"),
             abstract="\n\n".join(part for part in abstract_parts if part) or None,
             publication_date=_pub_date(

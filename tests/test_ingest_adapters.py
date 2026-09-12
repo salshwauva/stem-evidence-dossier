@@ -163,3 +163,16 @@ def test_arxiv_unknown_identifier_raises_lookup_error() -> None:
 def test_a_request_without_a_recording_fails_instead_of_going_live() -> None:
     with pytest.raises(KeyError):
         ArxivAdapter(RecordedHttpClient({})).fetch_metadata("9901.00001")
+
+
+def test_pubmed_chemistry_headings_give_the_chemistry_domain() -> None:
+    work = PubMedAdapter(RecordedHttpClient(PUBMED_RECORDINGS)).fetch_metadata("90001238")
+
+    assert work.domain == Domain.CHEMISTRY
+    assert work.title == "A nickel catalyst for a test cross coupling at room temperature"
+
+
+def test_pubmed_mixed_headings_keep_the_biology_domain() -> None:
+    work = PubMedAdapter(RecordedHttpClient(PUBMED_RECORDINGS)).fetch_metadata("90001239")
+
+    assert work.domain == Domain.BIOLOGY
