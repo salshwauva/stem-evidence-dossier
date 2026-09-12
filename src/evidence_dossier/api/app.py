@@ -6,13 +6,21 @@ thread pool.
 """
 
 from collections.abc import Iterator
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from pydantic import Field
 
+from evidence_dossier.evaluate import (
+    Dataset,
+    EvaluationReport,
+    SearchHit,
+    Split,
+    evaluate_store,
+    load_dataset,
+)
 from evidence_dossier.model import (
     Domain,
     Dossier,
@@ -71,6 +79,68 @@ class ConflictsResponse(FrozenModel):
     note: str
 
 
+class EvaluationResponse(EvaluationReport):
+    """The report with its rendered markdown, so one response serves both readers."""
+
+    markdown: str
+
+
+def _search_hits(store: Store, query_text: str) -> list[SearchHit]:
+    """Run the query package for one gold query and return its results in rank order.
+
+    The adapter lives here because api may import query and evaluate, while
+    evaluate imports neither (ADR 0008). The groups carry the stance and the
+    comparability, and the candidates carry the rank order.
+    """
+    results = search_evidence(store, query_text, limit=MAX_LIMIT)
+    items = {item.claim.id: item for group in results.groups for item in group.items}
+    hits: list[SearchHit] = []
+    for candidate in results.candidates:
+        item = items.get(candidate.claim.id)
+        if item is None:
+            continue
+        hits.append(
+            SearchHit(
+                claim_id=item.claim.id,
+                stance=item.stance,
+                comparability=item.comparability,
+                reason=item.stance_reason,
+            )
+        )
+    return hits
+
+
+def _configuration(store: Store, dataset: Dataset) -> tuple[str, str, str]:
+    """Return the model, prompt and schema version of the claims under evaluation.
+
+    The versions come from the extraction runs of the stored claims, because
+    plan section 50 asks every report to name them. A value that the runs do
+    not agree on reads "mixed", and a claim set without a run reads "unknown".
+    """
+    models: set[str] = set()
+    prompts: set[str] = set()
+    schemas: set[str] = set()
+    for document in dataset.documents:
+        for claim in store.list_claims(research_work_id=document.research_work_id):
+            if claim.extraction_run_id is None:
+                continue
+            run = store.get_extraction_run(claim.extraction_run_id)
+            if run is None:
+                continue
+            models.add(run.model_identifier)
+            prompts.add(run.prompt_version)
+            schemas.add(run.schema_version)
+    return _one(models), _one(prompts), _one(schemas)
+
+
+def _one(values: set[str]) -> str:
+    if not values:
+        return "unknown"
+    if len(values) > 1:
+        return "mixed"
+    return values.pop()
+
+
 def _open_store(request: Request) -> Iterator[Store]:
     with Store(request.app.state.store_path) as store:
         yield store
@@ -79,10 +149,16 @@ def _open_store(request: Request) -> Iterator[Store]:
 StoreDep = Annotated[Store, Depends(_open_store)]
 
 
-def create_app(store_path: str | Path) -> FastAPI:
-    """Return the app. Every route opens the store at store_path for its own request."""
+def create_app(store_path: str | Path, *, gold_dir: str | Path | None = None) -> FastAPI:
+    """Return the app. Every route opens the store at store_path for its own request.
+
+    gold_dir holds the gold labels that GET /evaluation scores against. Without
+    it that route answers 404, because there is nothing to score.
+    """
     app = FastAPI(title="STEM Evidence Dossier", version="0.1.0")
     app.state.store_path = store_path
+    gold_path = None if gold_dir is None else Path(gold_dir)
+    app.state.gold_dir = gold_path
 
     @app.post("/search/evidence")
     def search(body: SearchRequest, store: StoreDep) -> EvidenceResults:
@@ -147,13 +223,25 @@ def create_app(store_path: str | Path) -> FastAPI:
         )
 
     @app.get("/evaluation")
-    def evaluation() -> JSONResponse:
-        return JSONResponse(
-            status_code=501,
-            content={
-                "detail": "The evaluate package on the evaluation branch produces the report."
-                " A later commit wires this route to it."
-            },
+    def evaluation(store: StoreDep, split: Annotated[Split, Query()] = "dev") -> EvaluationResponse:
+        """Score the stored claims of the gold works, plus search on the gold queries."""
+        if gold_path is None:
+            raise HTTPException(
+                status_code=404, detail="no gold directory is configured for this app"
+            )
+        dataset = load_dataset(gold_path, split)
+        model_identifier, prompt_version, schema_version = _configuration(store, dataset)
+        report = evaluate_store(
+            store,
+            dataset,
+            model_identifier=model_identifier,
+            prompt_version=prompt_version,
+            schema_version=schema_version,
+            now=datetime.now(UTC),
+            search=_search_hits,
+        )
+        return EvaluationResponse.model_validate(
+            {**report.model_dump(), "markdown": report.to_markdown()}
         )
 
     return app
