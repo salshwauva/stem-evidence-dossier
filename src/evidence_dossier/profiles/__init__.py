@@ -10,6 +10,7 @@ from evidence_dossier.profiles.base import (
     DomainProfile,
 )
 from evidence_dossier.profiles.biology import BiologyProfile
+from evidence_dossier.profiles.chemistry import ChemistryProfile
 from evidence_dossier.profiles.computer_science import ComputerScienceProfile
 from evidence_dossier.profiles.generic import GenericProfile
 from evidence_dossier.profiles.registry import get_profile
@@ -19,6 +20,7 @@ __all__ = [
     "GENERIC_EVIDENCE_GAP_DIMENSIONS",
     "AttributeModel",
     "BiologyProfile",
+    "ChemistryProfile",
     "ComputerScienceProfile",
     "DomainProfile",
     "GenericProfile",

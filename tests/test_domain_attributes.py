@@ -11,6 +11,7 @@ import evidence_dossier.model
 from evidence_dossier.model import (
     Author,
     BiologyAttributes,
+    ChemistryAttributes,
     Comparator,
     ComputerScienceAttributes,
     EvidenceClaim,
@@ -70,7 +71,7 @@ def _attribute_classes() -> set[type[BaseModel]]:
 def test_context_method_and_comparator_share_one_attribute_union() -> None:
     attribute_classes = _attribute_classes()
 
-    assert attribute_classes == {BiologyAttributes, ComputerScienceAttributes}
+    assert attribute_classes == {BiologyAttributes, ChemistryAttributes, ComputerScienceAttributes}
     for cls in (Method, Comparator):
         assert _union_members(cls.model_fields["domain_attributes"].annotation) == attribute_classes
 
@@ -119,7 +120,7 @@ def test_biomedical_fields_exist_only_on_biology_attributes() -> None:
 def test_unknown_profile_tag_fails_validation(
     model_class: type[BaseModel], payload: dict[str, Any]
 ) -> None:
-    attributes = {"profile": "chemistry", "catalyst": "nickel"}
+    attributes = {"profile": "geology", "mineral": "olivine"}
 
     with pytest.raises(ValidationError) as caught:
         model_class.model_validate({**payload, "domain_attributes": attributes})

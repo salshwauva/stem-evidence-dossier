@@ -48,7 +48,23 @@ class ComputerScienceAttributes(FrozenModel):
     compute_budget: str | None = None
 
 
+class ChemistryAttributes(FrozenModel):
+    """Chemistry attributes from plan section 27. Values keep the text the paper used."""
+
+    profile: Literal["chemistry"] = "chemistry"
+    compound: str | None = None
+    catalyst: str | None = None
+    solvent: str | None = None
+    temperature: str | None = None
+    pressure: str | None = None
+    concentration: str | None = None
+    reaction_time: str | None = None
+    yield_: str | None = Field(default=None, alias="yield")
+    selectivity: str | None = None
+
+
 # The profile tag picks the attribute class. An unknown tag fails validation.
 DomainAttributes = Annotated[
-    BiologyAttributes | ComputerScienceAttributes, Field(discriminator="profile")
+    BiologyAttributes | ComputerScienceAttributes | ChemistryAttributes,
+    Field(discriminator="profile"),
 ]

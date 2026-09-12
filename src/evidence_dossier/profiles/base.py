@@ -2,9 +2,16 @@
 
 from dataclasses import dataclass
 
-from evidence_dossier.model import BiologyAttributes, ComputerScienceAttributes, Domain
+from evidence_dossier.model import (
+    BiologyAttributes,
+    ChemistryAttributes,
+    ComputerScienceAttributes,
+    Domain,
+)
 
-type AttributeModel = type[BiologyAttributes] | type[ComputerScienceAttributes]
+type AttributeModel = (
+    type[BiologyAttributes] | type[ComputerScienceAttributes] | type[ChemistryAttributes]
+)
 
 # Generic evidence gap dimensions (plan section 43).
 GENERIC_EVIDENCE_GAP_DIMENSIONS: tuple[str, ...] = (

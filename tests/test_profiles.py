@@ -2,18 +2,20 @@ import pytest
 
 from evidence_dossier.model import (
     BiologyAttributes,
+    ChemistryAttributes,
     ComputerScienceAttributes,
     Domain,
     ResearchContext,
 )
 from evidence_dossier.profiles import (
     BiologyProfile,
+    ChemistryProfile,
     ComputerScienceProfile,
     GenericProfile,
     get_profile,
 )
 
-PROFILED_DOMAINS = {Domain.BIOLOGY, Domain.COMPUTER_SCIENCE}
+PROFILED_DOMAINS = {Domain.BIOLOGY, Domain.CHEMISTRY, Domain.COMPUTER_SCIENCE}
 
 
 def test_biology_profile_holds_the_biology_attribute_model() -> None:
@@ -30,6 +32,21 @@ def test_computer_science_profile_holds_the_computer_science_attribute_model() -
     assert isinstance(profile, ComputerScienceProfile)
     assert profile.domain is Domain.COMPUTER_SCIENCE
     assert profile.attribute_model is ComputerScienceAttributes
+
+
+def test_chemistry_profile_holds_the_chemistry_attribute_model() -> None:
+    profile = get_profile(Domain.CHEMISTRY)
+
+    assert isinstance(profile, ChemistryProfile)
+    assert profile.domain is Domain.CHEMISTRY
+    assert profile.attribute_model is ChemistryAttributes
+
+
+def test_chemistry_attributes_accept_yield_by_its_plan_name() -> None:
+    attributes = ChemistryAttributes.model_validate({"yield": "84%"})
+
+    assert attributes.yield_ == "84%"
+    assert attributes.model_dump(by_alias=True)["yield"] == "84%"
 
 
 @pytest.mark.parametrize("domain", [domain for domain in Domain if domain not in PROFILED_DOMAINS])

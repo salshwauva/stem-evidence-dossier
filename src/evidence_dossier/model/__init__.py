@@ -5,6 +5,7 @@ This package imports nothing from the other evidence_dossier subpackages.
 
 from evidence_dossier.model.attributes import (
     BiologyAttributes,
+    ChemistryAttributes,
     ComputerScienceAttributes,
     DomainAttributes,
 )
@@ -39,6 +40,7 @@ from evidence_dossier.model.work import Author, ResearchWork, WorkLink
 __all__ = [
     "Author",
     "BiologyAttributes",
+    "ChemistryAttributes",
     "ClaimType",
     "ComparabilityLevel",
     "Comparator",
