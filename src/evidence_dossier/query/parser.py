@@ -1,4 +1,4 @@
-"""Rule based query parser: text to QueryProposition (plan section 34, ADR 0004).
+"""Rule based query parser: text to QueryProposition (plan section 34, ADR 0006).
 
 The parser calls no model. It lowercases the text, finds one relationship verb
 from a fixed table, and splits the subject, the measurement and the comparator
