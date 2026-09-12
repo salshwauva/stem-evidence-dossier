@@ -4,11 +4,18 @@ The classifier runs after the comparability engine and never changes the
 candidate list. Every assessment carries a reason sentence and no probability.
 
 Two rules follow the plan lists rather than the worked example in plan section 7.
-A null family direction is NULL, because plan section 39 lists NULL next to
-CONTRADICTS and plan section 21 keeps UNCHANGED and NOT_OBSERVED apart from the
-opposite directions. A quality direction from plan section 21 (IMPROVED or
-WORSENED) lines up with a magnitude direction (INCREASED or DECREASED) only
-through the measurement polarity table in query.polarity (ADR 0007).
+UNCHANGED and NOT_OBSERVED are NULL, because plan section 39 lists NULL next to
+CONTRADICTS and plan section 21 keeps the two directions apart from the opposite
+ones.
+
+The second rule reads the plan section 21 directions in two groups. INCREASED and
+DECREASED are raw directions: they say which way the number moved. IMPROVED and
+WORSENED are judgments: they say the move was good or bad for the measurement,
+and which raw direction that means depends on the measurement. The classifier
+translates every judgment into a raw direction through the polarity table in
+query.polarity, on both the expected side and the reported side, and then
+compares raw against raw (ADR 0007). A judgment on either side with no polarity
+in the table gives INDIRECT.
 """
 
 from datetime import UTC, datetime
@@ -24,10 +31,9 @@ from evidence_dossier.model import (
 from evidence_dossier.query.comparability import ComparabilityAssessment
 from evidence_dossier.query.polarity import POLARITY_VERSION, Polarity, polarity_of
 
-_DOWN = frozenset({ResultDirection.DECREASED, ResultDirection.WORSENED})
-_UP = frozenset({ResultDirection.INCREASED, ResultDirection.IMPROVED})
 _NULL = frozenset({ResultDirection.UNCHANGED, ResultDirection.NOT_OBSERVED})
-_QUALITY = frozenset({ResultDirection.IMPROVED, ResultDirection.WORSENED})
+# Directions that judge the move instead of naming it. They need the polarity table.
+_JUDGMENT = frozenset({ResultDirection.IMPROVED, ResultDirection.WORSENED})
 _TOO_LOW = frozenset({ComparabilityLevel.LOW, ComparabilityLevel.INCOMPATIBLE})
 
 
@@ -77,45 +83,47 @@ def _decide(
         )
     if actual in (ResultDirection.UNKNOWN, ResultDirection.OBSERVED):
         return Stance.INDIRECT, f"The claim reports {actual}, which gives no direction to compare."
-    if (expected in _QUALITY) != (actual in _QUALITY):
-        return _across_families(proposition, claim, expected, actual)
-    if _family(actual) is _family(expected):
-        return Stance.SUPPORTS, (
-            f"The claim direction {actual} is in the same direction family as the expected {expected}."
-        )
+    if expected in _JUDGMENT or actual in _JUDGMENT:
+        return _through_polarity(proposition, claim, expected, actual)
+    if expected is actual:
+        return Stance.SUPPORTS, f"The claim direction {actual} matches the expected {expected}."
     return Stance.CONTRADICTS, (
         f"The claim direction {actual} is opposite to the expected {expected}."
     )
 
 
-def _across_families(
+def _through_polarity(
     proposition: QueryProposition,
     claim: EvidenceClaim,
     expected: ResultDirection,
     actual: ResultDirection,
 ) -> tuple[Stance, str]:
-    """Compare a quality direction with a magnitude direction through the polarity table."""
+    """Translate each judgment into a raw direction, then compare the two raw directions."""
     name = _measurement_name(proposition, claim)
     polarity = polarity_of(name)
     if polarity is None:
         return Stance.INDIRECT, (
-            f"The expected {expected} and the reported {actual} need the polarity of the"
-            f" measurement '{name}', and that measurement is not in table {POLARITY_VERSION}."
+            f"The expected {expected} or the reported {actual} judges the measurement"
+            f" '{name}', and that measurement is not in table {POLARITY_VERSION},"
+            " so the two directions cannot be compared."
         )
-    if _translate(expected, polarity) is _translate(actual, polarity):
+    expected_raw = _translate(expected, polarity)
+    actual_raw = _translate(actual, polarity)
+    if expected_raw is actual_raw:
         return Stance.SUPPORTS, (
-            f"The claim direction {actual} agrees with the expected {expected} because the"
-            f" measurement '{name}' is {polarity}."
+            f"The claim direction {actual} matches the expected {expected}, both as"
+            f" {actual_raw}, because the measurement '{name}' is {polarity}."
         )
     return Stance.CONTRADICTS, (
-        f"The claim direction {actual} opposes the expected {expected} because the"
-        f" measurement '{name}' is {polarity}."
+        f"The claim direction {actual} is opposite to the expected {expected}, as"
+        f" {actual_raw} against {expected_raw}, because the measurement '{name}'"
+        f" is {polarity}."
     )
 
 
 def _translate(direction: ResultDirection, polarity: Polarity) -> ResultDirection:
-    """Restate a quality direction as the magnitude direction that the polarity gives it."""
-    if direction not in _QUALITY:
+    """Restate a judgment as the raw direction that the polarity gives it."""
+    if direction not in _JUDGMENT:
         return direction
     lower_is_better = polarity is Polarity.LOWER_IS_BETTER
     if direction is ResultDirection.IMPROVED:
@@ -136,11 +144,3 @@ def _significance(claim: EvidenceClaim) -> str:
     if claim.result.statistical_significance:
         return "reported as significant"
     return "no significance reported"
-
-
-def _family(direction: ResultDirection) -> frozenset[ResultDirection] | None:
-    if direction in _DOWN:
-        return _DOWN
-    if direction in _UP:
-        return _UP
-    return None
