@@ -8,6 +8,9 @@ from fastapi.testclient import TestClient
 from evidence_dossier.api import create_app
 from evidence_dossier.query import STANCE_ORDER
 from evidence_dossier.store import Store
+from tests.evaluate_corpus import dev_dataset
+from tests.evaluate_corpus import seed as seed_gold
+from tests.evaluate_predictions import FIXTURE_DIR
 from tests.query_corpus import retrieval_papers, seed
 from tests.test_query_parser import RAG_TEXT
 
@@ -23,6 +26,17 @@ def db_path(tmp_path: Path) -> Path:
 @pytest.fixture
 def client(db_path: Path) -> Iterator[TestClient]:
     with TestClient(create_app(db_path)) as opened:
+        yield opened
+
+
+@pytest.fixture
+def evaluation_client(tmp_path: Path) -> Iterator[TestClient]:
+    """A client whose store holds the gold works, next to the gold directory itself."""
+    path = tmp_path / "evaluation.db"
+    with Store(path) as store:
+        seed(store, retrieval_papers())
+        seed_gold(store, dev_dataset())
+    with TestClient(create_app(path, gold_dir=FIXTURE_DIR)) as opened:
         yield opened
 
 
@@ -93,11 +107,48 @@ def test_the_limit_is_bounded(client: TestClient, limit: int) -> None:
     )
 
 
-def test_conflicts_and_evaluation_placeholders(client: TestClient) -> None:
+def test_conflicts_is_still_a_placeholder(client: TestClient) -> None:
     conflicts = client.get("/conflicts")
-    evaluation = client.get("/evaluation")
 
     assert conflicts.status_code == 200
     assert conflicts.json()["conflicts"] == []
-    assert evaluation.status_code == 501
-    assert "evaluate package" in evaluation.json()["detail"]
+
+
+def test_evaluation_without_a_gold_directory_gives_404(client: TestClient) -> None:
+    response = client.get("/evaluation")
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "no gold directory is configured for this app"
+
+
+def test_evaluation_scores_the_store_against_the_gold_directory(
+    evaluation_client: TestClient,
+) -> None:
+    response = evaluation_client.get("/evaluation")
+
+    assert response.status_code == 200
+    body: dict[str, Any] = response.json()
+    assert body["split"] == "dev"
+    assert body["markdown"].startswith("# Evaluation report")
+    assert body["model_identifier"] == "extractor-model-a"
+    assert body["extraction"]["fields"]["micro"]["f1"] == 1.0
+    assert body["retrieval"]["per_query"][0]["query_id"] == "q1"
+    assert body["stance"]["labeled"] == 9
+    assert body["notes"] == []
+
+
+def test_the_test_split_reads_the_same_directory(evaluation_client: TestClient) -> None:
+    """load_dataset takes the split as a label, not as a subdirectory (plan section 49).
+
+    A gold directory without a test split therefore scores its files again
+    under the name "test". A per-split directory is the caller's job.
+    """
+    response = evaluation_client.get("/evaluation", params={"split": "test"})
+
+    assert response.status_code == 200
+    assert response.json()["split"] == "test"
+    assert response.json()["extraction"]["fields"]["micro"]["f1"] == 1.0
+
+
+def test_an_unknown_split_gives_422(evaluation_client: TestClient) -> None:
+    assert evaluation_client.get("/evaluation", params={"split": "holdout"}).status_code == 422

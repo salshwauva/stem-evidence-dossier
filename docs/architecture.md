@@ -21,7 +21,7 @@ STEM Evidence Dossier is one Python package, `evidence_dossier`, in a src layout
 - `model` imports nothing from the other `evidence_dossier` subpackages. Imports inside `model` are fine.
 - `profiles` imports `model`.
 - `store` imports `model` and `profiles`.
-- Each other subpackage imports `model`, `profiles` and `store`. It never imports a sibling. The one exception is that `api` imports `query`. `extract` takes its normalizer as an argument (ADR 0005), and `evaluate` scores plain records that the caller passes in.
+- Each other subpackage imports `model`, `profiles` and `store`. It never imports a sibling. The one exception is `api`, which imports `query` and `evaluate`. `extract` takes its normalizer as an argument (ADR 0005), and `evaluate` takes its search as an argument (ADR 0008), so neither imports a sibling.
 
 ```mermaid
 flowchart BT
@@ -34,6 +34,7 @@ flowchart BT
     evaluate --> store
     query --> store
     api --> query
+    api --> evaluate
 ```
 
 An arrow means "imports". The diagram leaves out the direct imports of `model` and `profiles` from the other subpackages.

@@ -1,7 +1,8 @@
 """Gold labels, dataset splits and scoring (plan sections 49 and 50).
 
 This package imports model, profiles and store only. It scores plain data that
-the caller passes in, so it never imports the extract or query packages.
+the caller passes in, and it takes the search as a callable (ADR 0008), so it
+never imports the extract or query packages.
 """
 
 from evidence_dossier.evaluate.extraction import (
@@ -38,6 +39,13 @@ from evidence_dossier.evaluate.retrieval import (
     RetrievalEvaluation,
     run_retrieval_evaluation,
 )
+from evidence_dossier.evaluate.run import (
+    SearchCallable,
+    SearchHit,
+    evaluate_store,
+    gold_keys,
+    stored_claims,
+)
 from evidence_dossier.evaluate.scores import PRF, Counts
 from evidence_dossier.evaluate.split import DatasetSplitter
 from evidence_dossier.evaluate.stance import (
@@ -69,11 +77,15 @@ __all__ = [
     "RelationshipError",
     "RelationshipScore",
     "RetrievalEvaluation",
+    "SearchCallable",
+    "SearchHit",
     "SpanMismatch",
     "SpanScore",
     "Split",
     "StanceEvaluation",
     "StancePrediction",
+    "evaluate_store",
+    "gold_keys",
     "load_dataset",
     "match_claims",
     "run_extraction_evaluation",
@@ -81,5 +93,6 @@ __all__ = [
     "run_stance_evaluation",
     "span_jaccard",
     "spans_overlap",
+    "stored_claims",
     "term_value",
 ]

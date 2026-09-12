@@ -1,7 +1,8 @@
-"""Run the API with uvicorn: python -m evidence_dossier.api [store path].
+"""Run the API with uvicorn: python -m evidence_dossier.api [store path] [gold directory].
 
-The store path defaults to dossier.db in the working directory. uvicorn is a
-dev dependency, so the module reports a missing install instead of failing on import.
+The store path defaults to dossier.db in the working directory. Without a gold
+directory, GET /evaluation answers 404. uvicorn is a dev dependency, so the
+module reports a missing install instead of failing on import.
 """
 
 import sys
@@ -16,7 +17,8 @@ def main(argv: list[str]) -> int:
     from evidence_dossier.api import create_app
 
     store_path = argv[1] if len(argv) > 1 else "dossier.db"
-    uvicorn.run(create_app(store_path), host="127.0.0.1", port=8000)
+    gold_dir = argv[2] if len(argv) > 2 else None
+    uvicorn.run(create_app(store_path, gold_dir=gold_dir), host="127.0.0.1", port=8000)
     return 0
 
 
