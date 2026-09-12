@@ -24,7 +24,7 @@ The store rejects a claim if its study or source section belongs to another rese
 
 The core model, profiles, and store are implemented. The current version has no paper import command or extraction service.
 
-The remaining plan covers corpus adapters, extraction and normalization, labeled evaluation, and a query API. Those parts do not exist in this version.
+The remaining plan covers corpus adapters, extraction and normalization, labeled evaluation, and a query API. Those parts do not exist in this version. No extraction precision or recall results are available.
 
 ## Setup
 
