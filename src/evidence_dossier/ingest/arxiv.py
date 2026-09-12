@@ -12,6 +12,7 @@ from datetime import date
 from evidence_dossier.ingest.adapter import FetchedText, SourceHit
 from evidence_dossier.ingest.domains import arxiv_category_domain
 from evidence_dossier.ingest.http import HttpClient
+from evidence_dossier.ingest.xml import parse_xml
 from evidence_dossier.model import Author, Domain, ResearchWork, SourceLevel, make_work_id
 
 QUERY_URL = "https://export.arxiv.org/api/query"
@@ -31,7 +32,7 @@ class ArxivAdapter:
         body = self._http.get(
             QUERY_URL, {"search_query": f"all:{query}", "max_results": str(limit), "start": "0"}
         )
-        root = ET.fromstring(body)
+        root = parse_xml(body)
         return [
             SourceHit(
                 source="arxiv",
@@ -82,7 +83,7 @@ class ArxivAdapter:
 
     def _entry(self, identifier: str) -> ET.Element:
         body = self._http.get(QUERY_URL, {"id_list": identifier, "max_results": "1"})
-        entry = ET.fromstring(body).find("atom:entry", _NS)
+        entry = parse_xml(body).find("atom:entry", _NS)
         if entry is None:
             raise LookupError(f"arXiv has no entry with identifier {identifier}")
         return entry

@@ -14,6 +14,7 @@ from datetime import date
 from evidence_dossier.ingest.adapter import FetchedText, SourceHit
 from evidence_dossier.ingest.domains import PUBMED_DOMAIN
 from evidence_dossier.ingest.http import HttpClient
+from evidence_dossier.ingest.xml import parse_xml
 from evidence_dossier.model import Author, ResearchWork, SourceLevel, make_work_id
 
 EUTILS_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
@@ -43,7 +44,7 @@ class PubMedAdapter:
         body = self._http.get(
             ESEARCH_URL, {"db": "pubmed", "term": query, "retmax": str(limit), "retmode": "xml"}
         )
-        root = ET.fromstring(body)
+        root = parse_xml(body)
         return [
             SourceHit(source="pubmed", identifier=element.text.strip())
             for element in root.iterfind("IdList/Id")
@@ -52,7 +53,7 @@ class PubMedAdapter:
 
     def fetch_metadata(self, identifier: str) -> ResearchWork:
         body = self._http.get(EFETCH_URL, {"db": "pubmed", "id": identifier, "retmode": "xml"})
-        article = ET.fromstring(body).find("PubmedArticle")
+        article = parse_xml(body).find("PubmedArticle")
         if article is None:
             raise LookupError(f"PubMed has no article with PMID {identifier}")
         identifiers = {"pmid": identifier}
@@ -91,7 +92,7 @@ class PubMedAdapter:
         if pmcid is None:
             return None
         body = self._http.get(EFETCH_URL, {"db": "pmc", "id": pmcid, "retmode": "xml"})
-        if ET.fromstring(body).find("article/body") is None:
+        if parse_xml(body).find("article/body") is None:
             return None
         return FetchedText(
             text=body.decode(), source_level=SourceLevel.FULL_TEXT, source_format="jats_xml"

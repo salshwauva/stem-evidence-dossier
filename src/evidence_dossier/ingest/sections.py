@@ -12,6 +12,7 @@ import xml.etree.ElementTree as ET
 from collections.abc import Iterator
 
 from evidence_dossier.ingest.adapter import FetchedText
+from evidence_dossier.ingest.xml import parse_xml
 from evidence_dossier.model import Section, SectionType, make_section_id
 
 JATS_FORMAT = "jats_xml"
@@ -66,7 +67,7 @@ class SectionParser:
         text gives no section.
         """
         if fetched.source_format == JATS_FORMAT:
-            parts = list(_jats_parts(ET.fromstring(fetched.text)))
+            parts = list(_jats_parts(parse_xml(fetched.text)))
         else:
             parts = [(SectionType.ABSTRACT, None, fetched.text.strip())]
         return [
