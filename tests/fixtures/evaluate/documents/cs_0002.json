@@ -1,0 +1,53 @@
+{
+  "research_work_id": "work_cs_0002",
+  "document_id": "work_cs_0002_v1",
+  "source_level": "ABSTRACT_ONLY",
+  "claims": [
+    {
+      "gold_key": "c1",
+      "research_work_id": "work_cs_0002",
+      "study_key": "cs2-corvid",
+      "claim_type": "COMPARISON",
+      "claim_text": "Byte-level input did not change perplexity on the Corvid corpus against the tokenizer.",
+      "subject": {
+        "original": "byte-level input",
+        "canonical": "byte-level tokenization"
+      },
+      "predicate": "did not change",
+      "outcome": "perplexity",
+      "research_context": {
+        "domain": "COMPUTER_SCIENCE",
+        "dataset": "Corvid corpus"
+      },
+      "method": {
+        "name": {
+          "original": "byte-level input",
+          "canonical": "byte-level tokenization"
+        }
+      },
+      "comparator": {
+        "name": {
+          "original": "the tokenizer",
+          "canonical": "subword tokenizer"
+        }
+      },
+      "measurement": {
+        "name": {
+          "original": "perplexity",
+          "canonical": "perplexity"
+        }
+      },
+      "result": {
+        "direction": "UNCHANGED",
+        "uncertainty": "within noise"
+      },
+      "evidence_span": {
+        "research_work_id": "work_cs_0002",
+        "section_id": "work_cs_0002_v1_s0",
+        "start_offset": 46,
+        "end_offset": 92,
+        "source_text": "did not change perplexity on the Corvid corpus"
+      }
+    }
+  ]
+}

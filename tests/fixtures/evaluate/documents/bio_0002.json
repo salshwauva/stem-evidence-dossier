@@ -1,0 +1,68 @@
+{
+  "research_work_id": "work_bio_0002",
+  "document_id": "work_bio_0002_v1",
+  "source_level": "ABSTRACT_ONLY",
+  "claims": [
+    {
+      "gold_key": "c1",
+      "research_work_id": "work_bio_0002",
+      "study_key": "bio2-flies",
+      "claim_type": "EFFECT",
+      "claim_text": "TRL9 knockout increased heat tolerance in fruit flies against wild type.",
+      "subject": {
+        "original": "Knockout of the gene TRL9",
+        "canonical": "TRL9 knockout"
+      },
+      "predicate": "increased",
+      "outcome": "heat tolerance",
+      "research_context": {
+        "domain": "BIOLOGY",
+        "system": "whole organism",
+        "domain_attributes": {
+          "profile": "biology",
+          "organism": "Drosophila melanogaster",
+          "intervention": "gene knockout"
+        }
+      },
+      "method": {
+        "name": {
+          "original": "knockout",
+          "canonical": "gene knockout"
+        },
+        "method_type": "genetic"
+      },
+      "comparator": {
+        "name": {
+          "original": "wild type",
+          "canonical": "wild type"
+        },
+        "comparator_type": "control group"
+      },
+      "measurement": {
+        "name": {
+          "original": "heat tolerance",
+          "canonical": "heat tolerance"
+        },
+        "unit": {
+          "original": "degrees",
+          "canonical": "degree Celsius"
+        }
+      },
+      "result": {
+        "direction": "INCREASED",
+        "value": 2.3,
+        "unit": {
+          "original": "degrees",
+          "canonical": "degree Celsius"
+        }
+      },
+      "evidence_span": {
+        "research_work_id": "work_bio_0002",
+        "section_id": "work_bio_0002_v1_s0",
+        "start_offset": 26,
+        "end_offset": 77,
+        "source_text": "raised heat tolerance in fruit flies by 2.3 degrees"
+      }
+    }
+  ]
+}

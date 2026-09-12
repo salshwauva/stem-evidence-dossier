@@ -1,0 +1,25 @@
+[
+  {
+    "query_id": "q1",
+    "query_text": "Does QX-12 protect cells or animals in test models?",
+    "relevant_claim_ids": [
+      "work_bio_0001:c1",
+      "work_bio_0001:c2",
+      "work_bio_0001:c3"
+    ]
+  },
+  {
+    "query_id": "q2",
+    "query_text": "Does sparse attention improve question answering accuracy?",
+    "relevant_claim_ids": [
+      "work_cs_0001:c1"
+    ]
+  },
+  {
+    "query_id": "q3",
+    "query_text": "Does tokenization choice change language model perplexity?",
+    "relevant_claim_ids": [
+      "work_cs_0002:c1"
+    ]
+  }
+]
