@@ -1,0 +1,57 @@
+{
+  "studies": [
+    {"key": "accuracy", "description": "Top-1 accuracy of ResNet50 and VGG-16 on Benchmark X"},
+    {"key": "throughput", "description": "Inference throughput of ResNet50 on A100 and V100 GPUs"}
+  ],
+  "claims": [
+    {
+      "study_key": "accuracy",
+      "claim_type": "PERFORMANCE",
+      "claim_text": "ResNet50 reached 76.1 percent top-1 accuracy on Benchmark X.",
+      "subject": "ResNet50",
+      "predicate": "reaches",
+      "outcome": "top-1 accuracy",
+      "research_context": {
+        "benchmark": "Benchmark X",
+        "model": "ResNet50",
+        "domain_attributes": {"profile": "computer_science", "task": "image classification", "benchmark": "Benchmark X"}
+      },
+      "method": {"name": "ResNet50", "method_type": "architecture"},
+      "comparator": {"name": "VGG-16 baseline", "comparator_type": "baseline model"},
+      "measurement": {"name": "top-1 accuracy", "category": "accuracy", "unit": "percent"},
+      "result": {"direction": "OBSERVED", "value": 76.1, "unit": "percent", "result_text": "reached 76.1 percent top-1 accuracy"},
+      "evidence": {"section_id": "work_abfd464f1528bd4e_v1_s0", "source_text": "ResNet50 reached 76.1 percent top-1 accuracy"}
+    },
+    {
+      "study_key": "throughput",
+      "claim_type": "PERFORMANCE",
+      "claim_text": "ResNet50 ran at 2100 images per second on an A100 GPU.",
+      "subject": "ResNet50",
+      "predicate": "runs at",
+      "outcome": "throughput",
+      "research_context": {
+        "hardware": "A100 GPU",
+        "domain_attributes": {"profile": "computer_science", "hardware": "A100 GPU"}
+      },
+      "method": {"name": "ResNet50", "method_type": "architecture"},
+      "comparator": {"name": "V100", "comparator_type": "hardware"},
+      "measurement": {"name": "throughput", "category": "throughput", "unit": "images/s"},
+      "result": {"direction": "OBSERVED", "value": 2100, "unit": "images/s"},
+      "evidence": {"section_id": "work_abfd464f1528bd4e_v1_s0", "source_text": "ran at 2100 images per second"}
+    },
+    {
+      "study_key": "accuracy",
+      "claim_type": "EFFECT",
+      "claim_text": "Label smoothing raised top-1 accuracy by 0.8 points on Benchmark X.",
+      "subject": "Label smoothing",
+      "predicate": "raises",
+      "outcome": "top-1 accuracy",
+      "research_context": {"benchmark": "Benchmark X"},
+      "method": {"name": "label smoothing", "method_type": "training procedure"},
+      "comparator": {"name": "run without label smoothing", "comparator_type": "ablation"},
+      "measurement": {"name": "top-1 accuracy", "unit": "percent"},
+      "result": {"direction": "IMPROVED", "effect_size": 0.8, "result_text": "raised top-1 accuracy by 0.8 points"},
+      "evidence": {"section_id": "work_abfd464f1528bd4e_v1_s1", "source_text": "raised top-1 accuracy by 0.8 points"}
+    }
+  ]
+}
