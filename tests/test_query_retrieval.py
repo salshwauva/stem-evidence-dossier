@@ -34,7 +34,7 @@ def test_the_rag_proposition_retrieves_the_computer_science_claim_first(store: S
 
 
 def test_a_biology_proposition_retrieves_the_biology_claim(store: Store) -> None:
-    assert _ids(store, MAPT_TEXT)[0] == "claim-12345678"
+    assert _ids(store, MAPT_TEXT)[0] == "claim-90000001"
 
 
 def test_a_nonsense_proposition_retrieves_nothing(store: Store) -> None:
@@ -44,7 +44,7 @@ def test_a_nonsense_proposition_retrieves_nothing(store: Store) -> None:
 def test_a_domain_filter_excludes_the_other_domain(store: Store) -> None:
     assert _ids(store, RAG_TEXT, domain=Domain.BIOLOGY) == []
     assert _ids(store, MAPT_TEXT, domain=Domain.COMPUTER_SCIENCE) == []
-    assert _ids(store, MAPT_TEXT, domain=Domain.BIOLOGY) == ["claim-12345678"]
+    assert _ids(store, MAPT_TEXT, domain=Domain.BIOLOGY) == ["claim-90000001"]
 
 
 def test_the_limit_bounds_the_candidates(store: Store) -> None:

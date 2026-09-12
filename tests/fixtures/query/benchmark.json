@@ -9,7 +9,7 @@
     {
       "text": "MAPT knockdown increases neuronal survival compared with a scrambled control",
       "domain": "BIOLOGY",
-      "relevant_claim_ids": ["claim-12345678"]
+      "relevant_claim_ids": ["claim-90000001"]
     },
     {
       "text": "prompt caching reduces latency",
