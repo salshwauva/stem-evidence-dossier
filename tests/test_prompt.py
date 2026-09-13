@@ -45,6 +45,8 @@ def test_prompt_wraps_every_section_as_data_in_document_order() -> None:
         (Domain.COMPUTER_SCIENCE, "evaluation metric", "compute_budget"),
         (Domain.BIOLOGY, "cell line", "disease_model"),
         (Domain.CHEMISTRY, "reaction time", "yield"),
+        (Domain.PHYSICS, "field strength", "simulation_code"),
+        (Domain.ENGINEERING, "duty cycle", "operating_conditions"),
     ],
 )
 def test_profile_adds_its_entities_and_attribute_fields(

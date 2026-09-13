@@ -13,8 +13,10 @@ from evidence_dossier.model import (
     ClaimType,
     ComparabilityLevel,
     ComputerScienceAttributes,
+    EngineeringAttributes,
     EvidenceClaim,
     FrozenModel,
+    PhysicsAttributes,
     QueryProposition,
     Term,
 )
@@ -254,10 +256,16 @@ def _condition_value(claim: EvidenceClaim, field: str) -> str | None:
     generic = getattr(context, field, None)
     if isinstance(generic, str):
         return generic
+    # Every member of the closed union, or a new profile's fields stay unread here.
     for holder in (context, claim.method, claim.comparator):
         attributes = None if holder is None else holder.domain_attributes
         if isinstance(
-            attributes, BiologyAttributes | ComputerScienceAttributes | ChemistryAttributes
+            attributes,
+            BiologyAttributes
+            | ComputerScienceAttributes
+            | ChemistryAttributes
+            | PhysicsAttributes
+            | EngineeringAttributes,
         ):
             value = getattr(attributes, field, None)
             if isinstance(value, str):
