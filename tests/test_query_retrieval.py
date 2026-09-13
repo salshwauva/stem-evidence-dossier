@@ -63,3 +63,16 @@ def test_recall_at_five_over_the_query_benchmark_is_one(store: Store) -> None:
 
     assert len(cases) == 6
     assert sum(recalls) / len(recalls) == 1.0
+
+
+def test_a_context_filter_applies_before_the_limit(store: Store) -> None:
+    """A match that the context filter excludes must not use up the limit (review finding)."""
+    proposition = parse_query(RAG_TEXT)
+    unfiltered = Retriever(store).retrieve(proposition, limit=1)
+    filtered = Retriever(store).retrieve(
+        proposition.model_copy(update={"dataset": "benchmark x"}), limit=1
+    )
+
+    assert len(unfiltered) == 1
+    assert [candidate.claim.id for candidate in filtered] == ["claim-9901.00001"]
+    assert filtered[0].claim.research_context.dataset == "Benchmark X"

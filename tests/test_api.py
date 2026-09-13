@@ -134,7 +134,7 @@ def test_evaluation_scores_the_store_against_the_gold_directory(
     assert body["extraction"]["fields"]["micro"]["f1"] == 1.0
     assert body["retrieval"]["per_query"][0]["query_id"] == "q1"
     assert body["stance"]["labeled"] == 9
-    assert body["notes"] == []
+    assert len(body["notes"]) == 2
 
 
 def test_the_test_split_reads_the_same_directory(evaluation_client: TestClient) -> None:
@@ -152,3 +152,16 @@ def test_the_test_split_reads_the_same_directory(evaluation_client: TestClient) 
 
 def test_an_unknown_split_gives_422(evaluation_client: TestClient) -> None:
     assert evaluation_client.get("/evaluation", params={"split": "holdout"}).status_code == 422
+
+
+def test_evaluation_carries_the_gold_directory_notes(evaluation_client: TestClient) -> None:
+    """The route that serves scores to a stranger must say where its inputs came from."""
+    body = evaluation_client.get("/evaluation").json()
+
+    assert body["notes"] == [
+        "The papers, the gold labels and the stored claims are invented test fixtures.",
+        "The fixture checks the report arithmetic and measures nothing about the pipeline.",
+    ]
+    assert (
+        "- Note: The papers, the gold labels and the stored claims are invented" in body["markdown"]
+    )

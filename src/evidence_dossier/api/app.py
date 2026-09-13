@@ -149,6 +149,25 @@ def _open_store(request: Request) -> Iterator[Store]:
 StoreDep = Annotated[Store, Depends(_open_store)]
 
 
+class _GoldNotes(FrozenModel):
+    """The notes.json sidecar of a gold directory: sentences about where its inputs came from."""
+
+    notes: tuple[str, ...]
+
+
+def _gold_notes(gold_path: Path) -> tuple[str, ...]:
+    """Return the notes that a gold directory declares about itself, or none.
+
+    A reader meets the scores on the evaluation route, so the provenance of
+    the inputs travels with them (plan section 50: no example score becomes a
+    claimed achievement).
+    """
+    path = gold_path / "notes.json"
+    if not path.is_file():
+        return ()
+    return _GoldNotes.model_validate_json(path.read_text(encoding="utf-8")).notes
+
+
 def create_app(store_path: str | Path, *, gold_dir: str | Path | None = None) -> FastAPI:
     """Return the app. Every route opens the store at store_path for its own request.
 
@@ -230,6 +249,7 @@ def create_app(store_path: str | Path, *, gold_dir: str | Path | None = None) ->
                 status_code=404, detail="no gold directory is configured for this app"
             )
         dataset = load_dataset(gold_path, split)
+        notes = _gold_notes(gold_path)
         model_identifier, prompt_version, schema_version = _configuration(store, dataset)
         report = evaluate_store(
             store,
@@ -239,6 +259,7 @@ def create_app(store_path: str | Path, *, gold_dir: str | Path | None = None) ->
             schema_version=schema_version,
             now=datetime.now(UTC),
             search=_search_hits,
+            notes=notes,
         )
         return EvaluationResponse.model_validate(
             {**report.model_dump(), "markdown": report.to_markdown()}

@@ -1,0 +1,6 @@
+{
+  "notes": [
+    "The papers, the gold labels and the stored claims are invented test fixtures.",
+    "The fixture checks the report arithmetic and measures nothing about the pipeline."
+  ]
+}
