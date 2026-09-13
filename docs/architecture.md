@@ -7,7 +7,7 @@ STEM Evidence Dossier is one Python package, `evidence_dossier`, in a src layout
 | Subpackage | Holds | Status |
 | --- | --- | --- |
 | `model` | Core records, enums, domain attribute classes and ID helpers | Built in the schema and profiles increment |
-| `profiles` | `DomainProfile`, `BiologyProfile`, `ChemistryProfile`, `ComputerScienceProfile`, `GenericProfile` and `get_profile` | Built in the schema and profiles increment |
+| `profiles` | `DomainProfile`, `BiologyProfile`, `ChemistryProfile`, `ComputerScienceProfile`, `PhysicsProfile`, `EngineeringProfile`, `GenericProfile` and `get_profile` | Built in the schema and profiles increment, extended by ADR 0011 |
 | `store` | `Store`, `ClaimRejectedError`, `apply_migrations`, the SQL migration files and the FTS5 index | Built in the schema and profiles increment, extended by the query increment |
 | `ingest` | Literature source adapters and the section parser | Built in the ingestion increment |
 | `extract` | Prompt, providers, validation and the extraction pipeline | Built in the extraction increment |
@@ -46,13 +46,13 @@ An arrow means "imports". The diagram leaves out the direct imports of `model` a
 - `evidence_dossier.model` exports every public type. The records are frozen Pydantic models, and they reject unknown fields.
 - `EvidenceClaim` is the central record. It holds a `ResearchContext`, an optional `Method`, `Comparator` and `Measurement`, a `Result` and one `EvidenceSpan`.
 - A name that normalization touches is a `Term`, with the `original` text and an optional `canonical` value. The claim subject, the method, comparator and measurement names, and units use `Term`.
-- `domain_attributes` on `ResearchContext`, `Method` and `Comparator` takes `BiologyAttributes`, `ChemistryAttributes`, `ComputerScienceAttributes` or None. The `profile` tag picks the class (ADR 0003).
+- `domain_attributes` on `ResearchContext`, `Method` and `Comparator` takes `BiologyAttributes`, `ChemistryAttributes`, `ComputerScienceAttributes`, `PhysicsAttributes`, `EngineeringAttributes` or None. The `profile` tag picks the class (ADR 0003).
 - `EvidenceSpan.matches(section)` is True only when the span names the section and `section.text[start_offset:end_offset] == source_text`, with `0 <= start_offset < end_offset <= len(section.text)`.
 - `make_work_id(scheme, value)`, `make_document_id(work_id, version)` and `make_section_id(document_id, ordinal)` give the same IDs for the same source identity.
 
 ### Profiles
 
-`get_profile(domain)` returns `BiologyProfile` for BIOLOGY, `ChemistryProfile` for CHEMISTRY, `ComputerScienceProfile` for COMPUTER_SCIENCE and a `GenericProfile` for every other domain. A profile holds plain data: its domain, its attribute model, expected entities, common methods, common measurement types, evidence gap dimensions and comparability features. Normalization rules belong in `normalize`.
+`get_profile(domain)` returns `BiologyProfile` for BIOLOGY, `ChemistryProfile` for CHEMISTRY, `ComputerScienceProfile` for COMPUTER_SCIENCE, `PhysicsProfile` for PHYSICS, `EngineeringProfile` for ENGINEERING and a `GenericProfile` for every other domain. A profile holds plain data: its domain, its attribute model, expected entities, common methods, common measurement types, evidence gap dimensions and comparability features. Normalization rules belong in `normalize`. A profile's comparability features reach the engine through `_FEATURE_FIELDS` in `query/comparability.py`, which maps a feature name to the claim field that reports it (ADR 0011).
 
 ### Store
 

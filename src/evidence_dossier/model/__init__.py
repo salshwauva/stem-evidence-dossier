@@ -8,6 +8,8 @@ from evidence_dossier.model.attributes import (
     ChemistryAttributes,
     ComputerScienceAttributes,
     DomainAttributes,
+    EngineeringAttributes,
+    PhysicsAttributes,
 )
 from evidence_dossier.model.base import FrozenModel
 from evidence_dossier.model.claim import (
@@ -57,12 +59,14 @@ __all__ = [
     "DomainAttributes",
     "Dossier",
     "DossierCounts",
+    "EngineeringAttributes",
     "EvidenceClaim",
     "EvidenceSpan",
     "ExtractionRun",
     "FrozenModel",
     "Measurement",
     "Method",
+    "PhysicsAttributes",
     "QueryProposition",
     "ResearchContext",
     "ResearchWork",

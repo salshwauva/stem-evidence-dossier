@@ -13,8 +13,10 @@ from evidence_dossier.model import (
     ClaimType,
     ComparabilityLevel,
     ComputerScienceAttributes,
+    EngineeringAttributes,
     EvidenceClaim,
     FrozenModel,
+    PhysicsAttributes,
     QueryProposition,
     Term,
 )
@@ -41,6 +43,21 @@ _FEATURE_FIELDS: dict[str, str] = {
     "catalyst": "catalyst",
     "substrate": "compound",
     "conditions": "temperature",
+    # Physics and engineering (ADR 0011). system and material name a generic
+    # ResearchContext field that holds a string, so they read the generic value first
+    # and the attribute value second. theoretical_assumptions names a generic field
+    # too, but that one holds a tuple, and _condition_value takes a string, so this
+    # key always reads the attribute value. The rest name no generic field at all and
+    # read the attribute value.
+    "system": "system",
+    "sample": "sample",
+    "apparatus": "apparatus",
+    "theoretical assumptions": "theoretical_assumptions",
+    "component": "component",
+    "material": "material",
+    "load": "load",
+    "operating conditions": "operating_conditions",
+    "standard": "standard",
 }
 
 
@@ -254,10 +271,16 @@ def _condition_value(claim: EvidenceClaim, field: str) -> str | None:
     generic = getattr(context, field, None)
     if isinstance(generic, str):
         return generic
+    # Every member of the closed union, or a new profile's fields stay unread here.
     for holder in (context, claim.method, claim.comparator):
         attributes = None if holder is None else holder.domain_attributes
         if isinstance(
-            attributes, BiologyAttributes | ComputerScienceAttributes | ChemistryAttributes
+            attributes,
+            BiologyAttributes
+            | ComputerScienceAttributes
+            | ChemistryAttributes
+            | PhysicsAttributes
+            | EngineeringAttributes,
         ):
             value = getattr(attributes, field, None)
             if isinstance(value, str):

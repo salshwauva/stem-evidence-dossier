@@ -17,7 +17,7 @@ from evidence_dossier.query.text import tokens
 
 # Version of the table below. The stance reason names it, so a stored assessment
 # says which table decided the stance. A new or changed entry needs a new version.
-POLARITY_VERSION = "polarity-v1"
+POLARITY_VERSION = "polarity-v2"
 
 
 class Polarity(StrEnum):
@@ -38,6 +38,10 @@ def fold(name: str) -> str:
 
 
 # Seed entries, from the measurements that the plan examples and the test corpus name.
+# Each key is written folded, because the lookup folds the name it receives.
+# A measurement whose better direction depends on the context stays out. Temperature,
+# pressure and wavelength are measurements of that kind, so the physics profile adds
+# no entry here and the stance classifier reports the missing polarity instead.
 _SEED: dict[Polarity, tuple[str, ...]] = {
     Polarity.LOWER_IS_BETTER: (
         "error rate",
@@ -49,6 +53,7 @@ _SEED: dict[Polarity, tuple[str, ...]] = {
         "energy consumption",
         "memory use",
         "defect rate",
+        "cycle time",
     ),
     Polarity.HIGHER_IS_BETTER: (
         "accuracy",
@@ -62,6 +67,8 @@ _SEED: dict[Polarity, tuple[str, ...]] = {
         "neuronal survival",
         "protein abundance",
         "tensile strength",
+        "yield strength",
+        "efficiency",
     ),
 }
 

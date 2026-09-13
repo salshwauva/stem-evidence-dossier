@@ -63,8 +63,65 @@ class ChemistryAttributes(FrozenModel):
     selectivity: str | None = None
 
 
+class PhysicsAttributes(FrozenModel):
+    """Physics attributes. Plan section 23 names a PhysicsProfile and lists no fields for it.
+
+    The fields come from the physics parts of the plan: a measurement on a physical
+    system (section 14), the context fields system, material, environment, simulation
+    and theoretical_assumptions (section 17), the measurement examples temperature and
+    pressure (section 20), and the microwave frequency in the physics query (section 4).
+    ADR 0011 records the choice. apparatus holds the system, and sample holds the
+    material, so neither name shadows the generic context field (plan section 28).
+
+    theoretical_assumptions does repeat a generic ResearchContext name. The generic
+    field lists the assumptions of the study as a tuple. Every attribute field is one
+    optional string (ADR 0003), so this field holds the assumption that the claim
+    rests on, in the words of the paper. The generic list stays authoritative for the
+    study. The comparability engine reads a generic field only when it holds a string,
+    so for this name it reads the physics field and never the generic tuple.
+    """
+
+    profile: Literal["physics"] = "physics"
+    apparatus: str | None = None
+    sample: str | None = None
+    temperature: str | None = None
+    pressure: str | None = None
+    field_strength: str | None = None
+    wavelength: str | None = None
+    instrument: str | None = None
+    simulation_code: str | None = None
+    theoretical_assumptions: str | None = None
+
+
+class EngineeringAttributes(FrozenModel):
+    """Engineering attributes. Plan section 23 names an EngineeringProfile and lists no fields.
+
+    The fields come from the engineering parts of the plan: the domain scope in
+    section 3, the context fields system, material and environment in section 17,
+    the tensile strength example in section 20, and the systems extension in section
+    26, which lists hardware, workload, concurrency and network conditions. ADR 0011
+    records the choice. system and material repeat generic ResearchContext fields, and
+    the generic field stays authoritative (plan section 28).
+    """
+
+    profile: Literal["engineering"] = "engineering"
+    system: str | None = None
+    component: str | None = None
+    material: str | None = None
+    load: str | None = None
+    operating_conditions: str | None = None
+    standard: str | None = None
+    test_method: str | None = None
+    duty_cycle: str | None = None
+    tolerance: str | None = None
+
+
 # The profile tag picks the attribute class. An unknown tag fails validation.
 DomainAttributes = Annotated[
-    BiologyAttributes | ComputerScienceAttributes | ChemistryAttributes,
+    BiologyAttributes
+    | ComputerScienceAttributes
+    | ChemistryAttributes
+    | PhysicsAttributes
+    | EngineeringAttributes,
     Field(discriminator="profile"),
 ]

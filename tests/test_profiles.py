@@ -5,17 +5,27 @@ from evidence_dossier.model import (
     ChemistryAttributes,
     ComputerScienceAttributes,
     Domain,
+    EngineeringAttributes,
+    PhysicsAttributes,
     ResearchContext,
 )
 from evidence_dossier.profiles import (
     BiologyProfile,
     ChemistryProfile,
     ComputerScienceProfile,
+    EngineeringProfile,
     GenericProfile,
+    PhysicsProfile,
     get_profile,
 )
 
-PROFILED_DOMAINS = {Domain.BIOLOGY, Domain.CHEMISTRY, Domain.COMPUTER_SCIENCE}
+PROFILED_DOMAINS = {
+    Domain.BIOLOGY,
+    Domain.CHEMISTRY,
+    Domain.COMPUTER_SCIENCE,
+    Domain.ENGINEERING,
+    Domain.PHYSICS,
+}
 
 
 def test_biology_profile_holds_the_biology_attribute_model() -> None:
@@ -40,6 +50,34 @@ def test_chemistry_profile_holds_the_chemistry_attribute_model() -> None:
     assert isinstance(profile, ChemistryProfile)
     assert profile.domain is Domain.CHEMISTRY
     assert profile.attribute_model is ChemistryAttributes
+
+
+def test_physics_profile_holds_the_physics_attribute_model() -> None:
+    profile = get_profile(Domain.PHYSICS)
+
+    assert isinstance(profile, PhysicsProfile)
+    assert profile.domain is Domain.PHYSICS
+    assert profile.attribute_model is PhysicsAttributes
+
+
+def test_engineering_profile_holds_the_engineering_attribute_model() -> None:
+    profile = get_profile(Domain.ENGINEERING)
+
+    assert isinstance(profile, EngineeringProfile)
+    assert profile.domain is Domain.ENGINEERING
+    assert profile.attribute_model is EngineeringAttributes
+
+
+@pytest.mark.parametrize("domain", sorted(PROFILED_DOMAINS))
+def test_a_profile_carries_data_in_every_list(domain: Domain) -> None:
+    """A profile with an empty list would reach the prompt and the engine with nothing."""
+    profile = get_profile(domain)
+
+    assert profile.expected_entities
+    assert profile.common_methods
+    assert profile.common_measurement_types
+    assert profile.evidence_gap_dimensions
+    assert profile.comparability_features
 
 
 def test_chemistry_attributes_accept_yield_by_its_plan_name() -> None:
