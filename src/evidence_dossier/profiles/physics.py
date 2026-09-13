@@ -12,9 +12,10 @@ from evidence_dossier.profiles.base import (
 
 @dataclass(frozen=True)
 class PhysicsProfile(DomainProfile):
-    """Physics profile. Plan section 23 names the profile and lists no values for it.
+    """Physics profile. The values come from plan sections 4, 14, 17, 20 and 38.
 
-    Each list below cites the plan section it comes from. ADR 0011 records the choice.
+    Plan section 23 names the profile and lists no values for it, so each list
+    below cites the section it reads. ADR 0011 records the choice.
     """
 
     domain: Domain = Domain.PHYSICS

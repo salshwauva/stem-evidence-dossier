@@ -12,11 +12,12 @@ from evidence_dossier.profiles.base import (
 
 @dataclass(frozen=True)
 class EngineeringProfile(DomainProfile):
-    """Engineering profile. Plan section 23 names the profile and lists no values for it.
+    """Engineering profile. The values come from plan sections 3, 17, 18, 20, 26 and 38.
 
-    Each list below cites the plan section it comes from. Ingestion gives this
-    domain to the arXiv eess archive, which covers signal processing, image and
-    video, audio and speech, and systems and control. ADR 0011 records the choice.
+    Plan section 23 names the profile and lists no values for it, so each list
+    below cites the section it reads. Ingestion gives this domain to the arXiv
+    eess archive, which covers signal processing, image and video, audio and
+    speech, and systems and control. ADR 0011 records the choice.
     """
 
     domain: Domain = Domain.ENGINEERING
