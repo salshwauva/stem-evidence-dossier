@@ -145,6 +145,30 @@ def test_an_unknown_direction_falls_back_to_the_rules() -> None:
     assert "expected_direction" in _fallback_notes(proposition.parse_notes)[0]
 
 
+def test_a_reply_with_an_extra_field_falls_back_to_the_rules() -> None:
+    """ModelParse forbids a field the proposition does not hold, so the whole reply fails."""
+    model = FakeModel(
+        json.dumps(
+            {
+                "subject": "caching of prompts",
+                "relationship": "reduces",
+                "measurement": "median latency",
+                "comparator": None,
+                "expected_direction": "DECREASED",
+                "explanation": "I added this field to show my reasoning.",
+            }
+        )
+    )
+    parser = ModelQueryParser(model, DeterministicQueryParser())
+
+    proposition = parser.parse("prompt caching reduces median latency")
+
+    assert proposition.subject == "prompt caching"
+    assert MODEL_NOTE not in proposition.parse_notes
+    assert RULES_NOTE in proposition.parse_notes
+    assert "explanation" in _fallback_notes(proposition.parse_notes)[0]
+
+
 def test_the_prompt_names_its_version_and_wraps_the_query_as_data() -> None:
     prompt = build_prompt(PLANTED_TEXT)
 
