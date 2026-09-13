@@ -80,11 +80,16 @@ def _claim(
     )
 
 
-def _physics_context(*, typed: bool) -> ResearchContext:
-    """The same physics context with and without its typed attributes."""
+def _physics_context(*, typed: bool, system: bool = True) -> ResearchContext:
+    """The same physics context with and without its typed attributes.
+
+    system also drops out on request. The physics profile reads that feature off
+    the generic record, not off the attribute class, so the two switches separate
+    what each source contributes.
+    """
     return ResearchContext(
         domain=Domain.PHYSICS,
-        system="rectangular waveguide",
+        system="rectangular waveguide" if system else None,
         material="split ring metamaterial",
         domain_attributes=PhysicsAttributes(
             apparatus="rectangular waveguide",
@@ -93,17 +98,18 @@ def _physics_context(*, typed: bool) -> ResearchContext:
             field_strength="0.2 T",
             wavelength="30 mm",
             instrument="vector network analyser",
+            theoretical_assumptions="effective medium below 15 GHz",
         )
         if typed
         else None,
     )
 
 
-def _physics_claim(*, typed: bool = True) -> EvidenceClaim:
+def _physics_claim(*, typed: bool = True, system: bool = True) -> EvidenceClaim:
     return _claim(
         "metamaterial",
         passage=PHYSICS_PASSAGE,
-        context=_physics_context(typed=typed),
+        context=_physics_context(typed=typed, system=system),
         subject="split ring metamaterial",
         outcome="refractive index",
         measurement="refractive index",
@@ -231,20 +237,28 @@ def test_an_engineering_claim_carries_engineering_attributes_through_the_core_mo
 
 
 def test_the_engine_reads_physics_fields_because_the_physics_profile_names_them() -> None:
-    """The claim carries sample, apparatus and temperature on PhysicsAttributes.
+    """Every mapped physics feature reports, and every one of them drops out on demand.
 
-    The context carries system. Take the attributes away and only system survives,
-    so the three that disappear came off the attribute class.
+    Four come off PhysicsAttributes: sample, apparatus, temperature for the conditions
+    feature, and theoretical assumptions. The fifth, system, comes off the generic
+    record. Removing the attributes leaves system alone. Removing the generic value
+    too leaves nothing, so all five are accounted for and none reports by accident.
     """
     proposition = _physics_proposition()
     physics = get_profile(Domain.PHYSICS)
+    mapped = tuple(
+        feature for feature in physics.comparability_features if feature in _FEATURE_FIELDS
+    )
 
     typed = _conditions_reason(_assess(proposition, _physics_claim(), physics))
     untyped = _conditions_reason(_assess(proposition, _physics_claim(typed=False), physics))
+    bare = _assess(proposition, _physics_claim(typed=False, system=False), physics)
     other_profile = _assess(proposition, _physics_claim(), get_profile(Domain.COMPUTER_SCIENCE))
 
-    assert "The claim reports system, sample, apparatus, conditions under the PHYSICS" in typed
+    assert mapped == ("system", "sample", "apparatus", "conditions", "theoretical assumptions")
+    assert f"The claim reports {', '.join(mapped)} under the PHYSICS" in typed
     assert "The claim reports system under the PHYSICS profile" in untyped
+    assert "no profile condition" in _conditions_reason(bare)
     # A profile that names none of those features reads the same claim off nothing.
     assert not set(physics.comparability_features) & set(
         get_profile(Domain.COMPUTER_SCIENCE).comparability_features
