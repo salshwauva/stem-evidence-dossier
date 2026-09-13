@@ -273,6 +273,11 @@ def _trim_tail(text: str, pattern: re.Pattern[str]) -> str:
         text = trimmed
 
 
+def new_query_id() -> str:
+    """Return the ID of one parse. Every parse gets its own, on either parser path."""
+    return f"query_{uuid.uuid4().hex[:16]}"
+
+
 def _proposition(
     text: str,
     notes: list[str],
@@ -292,7 +297,7 @@ def _proposition(
         notes.append("domain: none given, so retrieval searches every domain")
     notes.append(RULES_NOTE)
     return QueryProposition(
-        id=f"query_{uuid.uuid4().hex[:16]}",
+        id=new_query_id(),
         text=text,
         domain=domain,
         subject=subject,
