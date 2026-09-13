@@ -2,7 +2,11 @@
 
 STEM Evidence Dossier turns research papers into claims that keep a link to the exact passage they came from. A query such as "retrieval-augmented generation reduces factual hallucination compared with the same model without retrieval" returns the stored claims grouped by stance: supports, contradicts, mixed, null, indirect, or insufficiently comparable. Each result carries the reason for its stance and the section and character offsets of its source text.
 
-One `EvidenceClaim` model serves every domain. Biology, chemistry, computer science, physics, and engineering have typed profiles, and the extraction prompt names the expected entities and the attribute fields of whichever one the domain picks. The comparability engine reads a profile's own fields through a feature table. Physics maps five of its six comparability features, and engineering seven of its eight; the unmapped name on each side is the measurement, which the engine assesses on its own dimension. Biology leaves target and endpoint unmapped, chemistry leaves reaction, and computer science leaves baseline and metric. A test pins that split for every profile. Mathematics and the other STEM fields use the generic profile. Ingestion labels a work by its arXiv primary category or, for PubMed, by a narrow MeSH heading rule; the chemistry rules are a judgment call recorded in ADR 0010, and the physics and engineering field lists in ADR 0011. No profile has run on a real paper; see Status.
+One `EvidenceClaim` model serves every domain. Biology, chemistry, computer science, physics, and engineering have typed profiles, and the extraction prompt names the expected entities and the attribute fields of whichever one the domain picks.
+
+The comparability engine reads a profile's own fields through a feature table. Physics maps five of its six comparability features, and engineering seven of its eight; the unmapped name on each side is the measurement, which the engine assesses on its own dimension. Biology leaves target and endpoint unmapped, chemistry leaves reaction, and computer science leaves baseline and metric. A test pins that split for every profile.
+
+Mathematics and the other STEM fields use the generic profile. Ingestion labels a work by its arXiv primary category or, for PubMed, by a narrow MeSH heading rule; the chemistry rules are a judgment call recorded in ADR 0010, and the physics and engineering field lists in ADR 0011. No profile has run on a real paper; see Status.
 
 ## What the code does
 
