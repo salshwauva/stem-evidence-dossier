@@ -64,8 +64,9 @@ def test_profile_adds_its_entities_and_attribute_fields(
 
 
 def test_generic_profile_tells_the_model_to_leave_attributes_null() -> None:
+    # Mathematics keeps the generic profile. Physics carries its own since ADR 0011.
     with Store(":memory:") as store:
-        corpus = add_paper(store, "2409.00004", (RESULTS_TEXT,), domain=Domain.PHYSICS)
+        corpus = add_paper(store, "2409.00004", (RESULTS_TEXT,), domain=Domain.MATHEMATICS)
 
     assert "Leave domain_attributes null" in corpus.prompt
     assert "Expected entities" not in corpus.prompt

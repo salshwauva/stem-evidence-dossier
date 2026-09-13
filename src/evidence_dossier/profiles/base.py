@@ -7,10 +7,16 @@ from evidence_dossier.model import (
     ChemistryAttributes,
     ComputerScienceAttributes,
     Domain,
+    EngineeringAttributes,
+    PhysicsAttributes,
 )
 
 type AttributeModel = (
-    type[BiologyAttributes] | type[ComputerScienceAttributes] | type[ChemistryAttributes]
+    type[BiologyAttributes]
+    | type[ComputerScienceAttributes]
+    | type[ChemistryAttributes]
+    | type[PhysicsAttributes]
+    | type[EngineeringAttributes]
 )
 
 # Generic evidence gap dimensions (plan section 43).

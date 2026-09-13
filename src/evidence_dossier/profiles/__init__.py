@@ -12,7 +12,9 @@ from evidence_dossier.profiles.base import (
 from evidence_dossier.profiles.biology import BiologyProfile
 from evidence_dossier.profiles.chemistry import ChemistryProfile
 from evidence_dossier.profiles.computer_science import ComputerScienceProfile
+from evidence_dossier.profiles.engineering import EngineeringProfile
 from evidence_dossier.profiles.generic import GenericProfile
+from evidence_dossier.profiles.physics import PhysicsProfile
 from evidence_dossier.profiles.registry import get_profile
 
 __all__ = [
@@ -23,6 +25,8 @@ __all__ = [
     "ChemistryProfile",
     "ComputerScienceProfile",
     "DomainProfile",
+    "EngineeringProfile",
     "GenericProfile",
+    "PhysicsProfile",
     "get_profile",
 ]
