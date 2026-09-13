@@ -2,15 +2,17 @@
 
 Every proposition below is hand written, in the words a researcher types into
 a search box. Every label is hand written as well, from a plain reading of the
-English, before any parser ran on the text. No model wrote a proposition, a
-label or a score.
+English, and every label was written before any parser ran on the text.
 
 Twenty of the thirty use the subject, verb, measurement and comparator shape
 that the README documents. Ten use other phrasings that researchers type: a
 question about an effect, a passive question, a noun phrase, a hedge, an
 association, and a verb outside the table such as "extends" or "suppresses".
-One person chose that mix by hand, so it is a judgment about what people type
-and not a sample of real traffic.
+
+Read the counts with that provenance in mind. Claude wrote these propositions,
+these labels and that mix in the same session that broadened the rules, so they
+carry the bias of the author of the code. Nothing here is sampled from a real
+query log, and no second reader has checked the labels.
 
 The label holds the four fields a correct parse yields:
 

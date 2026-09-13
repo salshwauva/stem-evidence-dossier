@@ -22,6 +22,8 @@ Easier: a parse still costs nothing, repeats exactly and needs no key. The bench
 
 Harder: the ten cases the rules do not resolve fall in three groups, and each group asks for different work. A verb outside the table ("extends", "suppresses", "is associated with") asks for more rows. A question that states no relationship ("what is the effect of X on Y") asks for a second parse shape. A sentence that does not put the subject in front of the verb (a passive question, "is there evidence that", a noun phrase, a modal such as "may") asks for structure that a verb table does not hold.
 
+The benchmark measures the rules against its own author. Claude wrote the 30 propositions, their labels and the mix of phrasings in the same session that broadened the rules, so a phrasing that nobody thought of is missing from both. Nothing in the benchmark comes from a real query log. A second reader, or a set of queries that real users typed, would make the number worth more.
+
 The model path carries its own risk, and this repository has not measured it. `ModelQueryParser` has never run against a real model here, so no number in the README comes from a model parse. The tests drive it with a fake callable, which proves the fallback and the validation, and proves nothing about a real reply.
 
 ## Alternatives considered

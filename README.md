@@ -69,7 +69,7 @@ with Store("dossier.db") as store:
 
 The parser turns query text into a typed proposition with a fixed table of rules and no model call. It matches one relationship verb, takes the subject from the words in front of it, and takes the measurement and the comparator from the words after it. The table holds the increase, reduce, improve, worsen, no change and outperform families, and it reads a negation in front of a verb, so "does not reduce" never parses as "reduces". The parser does not understand the sentence. A verb the table does not hold gives the relationship "unknown", and the stance classifier then answers indirect instead of guessing a direction. Every rule that fires lands in `parse_notes`, which the API returns next to the proposition.
 
-A benchmark measures how far the rules reach. It holds 30 propositions across computer science, biology, and the physical and engineering domains. Every proposition and every label is hand written. No model wrote one, and no model scored one.
+A benchmark measures how far the rules reach. It holds 30 propositions across computer science, biology, and the physical and engineering domains, each with the subject, relationship, measurement and comparator that a correct parse yields. Every proposition and every label is hand written, and every label was written before the parser ran on the text.
 
 ```sh
 .venv/bin/python -m tests.query_parse_benchmark
@@ -81,6 +81,8 @@ resolved    20
 partial      6
 unresolved   4
 ```
+
+Read those counts with the provenance in mind. Claude wrote the propositions, the labels and the mix of phrasings in the same session that broadened the rules, so the benchmark carries the bias of the author of the code. Nothing in it comes from a real query log, and no second reader has checked the labels.
 
 A case is resolved when the subject, the relationship, the measurement and the comparator all match the label. It is partial when some of them match, and unresolved when none of the labeled fields match. The 10 cases the rules do not resolve fall in three groups: a verb outside the table ("extends", "suppresses", "is associated with"), a question that states no relationship ("what is the effect of X on Y"), and a sentence that does not put the subject in front of the verb, such as a passive question, a noun phrase, or a modal such as "may". The command names every case it does not resolve. ADR 0012 records the decision.
 
