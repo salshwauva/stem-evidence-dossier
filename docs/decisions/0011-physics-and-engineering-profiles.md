@@ -32,7 +32,18 @@ POLARITY_VERSION moves to polarity-v2. Every stance assessment records the table
 ## Consequences
 Easier: a physics paper from cond-mat and an engineering paper from eess reach a typed profile. The prompt names the expected entities and the attribute fields of that profile. The engine compares two physics claims on five of the six features that the physics profile declares, and two engineering claims on seven of the eight that the engineering profile declares. The one unmapped name on each side is measurement, which the engine assesses on its own dimension.
 
-Harder: five profiles are five places to keep in step. One new profile touches the attribute class, the AttributeModel alias, the registry, the isinstance list in `query/comparability.py`, `_FEATURE_FIELDS` in the same file, the PROFILED_DOMAINS set in the tests and the split that the guard test pins. A feature name outside `_FEATURE_FIELDS` is documentation and nothing more, and the guard test is what makes that visible.
+Harder: five profiles are five places to keep in step, and this decision touched nine files to add two of them. A profile after these lands in:
+
+- `model/attributes.py`, for the attribute class and the DomainAttributes union;
+- `model/__init__.py`, for the import and the `__all__` entry, which is how every core record reaches a caller;
+- `profiles/base.py`, for the AttributeModel alias;
+- `profiles/<domain>.py`, for the profile itself;
+- `profiles/registry.py` and `profiles/__init__.py`, for the lookup and the export;
+- `query/comparability.py`, twice: the isinstance list in `_condition_value` and `_FEATURE_FIELDS`;
+- `query/polarity.py`, when the profile names a measurement with one direction;
+- the tests, for PROFILED_DOMAINS, the closed union set, the domain specific field set and the split that the guard test pins.
+
+A feature name outside `_FEATURE_FIELDS` is documentation and nothing more, and the guard test is what makes that visible.
 
 Nothing here measures the two new domains on real papers. The profiles carry data that the prompt and the engine read, and the tests use invented claims.
 
