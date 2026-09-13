@@ -14,11 +14,13 @@ from evidence_dossier.model import (
     ChemistryAttributes,
     Comparator,
     ComputerScienceAttributes,
+    EngineeringAttributes,
     EvidenceClaim,
     EvidenceSpan,
     ExtractionRun,
     Measurement,
     Method,
+    PhysicsAttributes,
     ResearchContext,
     ResearchWork,
     Result,
@@ -71,7 +73,13 @@ def _attribute_classes() -> set[type[BaseModel]]:
 def test_context_method_and_comparator_share_one_attribute_union() -> None:
     attribute_classes = _attribute_classes()
 
-    assert attribute_classes == {BiologyAttributes, ChemistryAttributes, ComputerScienceAttributes}
+    assert attribute_classes == {
+        BiologyAttributes,
+        ChemistryAttributes,
+        ComputerScienceAttributes,
+        EngineeringAttributes,
+        PhysicsAttributes,
+    }
     for cls in (Method, Comparator):
         assert _union_members(cls.model_fields["domain_attributes"].annotation) == attribute_classes
 
