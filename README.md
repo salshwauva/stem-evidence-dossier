@@ -9,7 +9,7 @@ One `EvidenceClaim` model serves every domain. Biology, chemistry, computer scie
 - Ingests papers from PubMed and arXiv, splits them into sections, and stores each text version with a content hash. PMC full text is accepted only under a CC BY or CC0 license. Tested on invented fixtures only; see Status.
 - Extracts claims from a source document through a provider interface, validates the output against the schema and the source text, and stores invalid output next to its errors instead of dropping it.
 - Normalizes names and units while it keeps the original wording.
-- Parses a research proposition, retrieves candidate claims with SQLite FTS5, checks comparability on seven dimensions, and assigns a stance with a written reason. A versioned measurement polarity table decides whether an improvement supports or contradicts a proposition, and an unknown measurement gives an indirect stance instead of a guess.
+- Parses a research proposition with a table of relationship verbs and comparator words, retrieves candidate claims with SQLite FTS5, checks comparability on seven dimensions, and assigns a stance with a written reason. A versioned measurement polarity table decides whether an improvement supports or contradicts a proposition, and an unknown measurement gives an indirect stance instead of a guess.
 - Scores extraction fields, study relationships, evidence spans, retrieval, comparability, and stance against gold labels, and renders one report. The API serves it at GET /evaluation when a gold directory is configured.
 - Exposes the search, dossier, claim, and work routes over FastAPI.
 
@@ -64,6 +64,31 @@ with Store("dossier.db") as store:
         for item in group.items:
             print(group.stance, item.comparability, item.provenance.source_text)
 ```
+
+## Query parsing
+
+The parser turns query text into a typed proposition with a fixed table of rules and no model call. It matches one relationship verb, takes the subject from the words in front of it, and takes the measurement and the comparator from the words after it. The table holds the increase, reduce, improve, worsen, no change and outperform families, and it reads a negation in front of a verb, so "does not reduce" never parses as "reduces". The parser does not understand the sentence. A verb the table does not hold gives the relationship "unknown", and the stance classifier then answers indirect instead of guessing a direction. Every rule that fires lands in `parse_notes`, which the API returns next to the proposition.
+
+A benchmark measures how far the rules reach. It holds 30 propositions across computer science, biology, and the physical and engineering domains, each with the subject, relationship, measurement and comparator that a correct parse yields. Every proposition and every label is hand written, and every label was written before the parser ran on the text.
+
+```sh
+.venv/bin/python -m tests.query_parse_benchmark
+```
+
+```text
+query parse benchmark: 30 hand written propositions
+resolved    20
+partial      6
+unresolved   4
+```
+
+Read those counts with the provenance in mind. Claude wrote the propositions, the labels and the mix of phrasings in the same session that broadened the rules, so the benchmark carries the bias of the author of the code. Nothing in it comes from a real query log, and no second reader has checked the labels.
+
+A case is resolved when the subject, the relationship, the measurement and the comparator all match the label. It is partial when some of them match, and unresolved when none of the labeled fields match. The 10 cases the rules do not resolve fall in three groups: a verb outside the table ("extends", "suppresses", "is associated with"), a question that states no relationship ("what is the effect of X on Y"), and a sentence that does not put the subject in front of the verb, such as a passive question, a noun phrase, or a modal such as "may". The command names every case it does not resolve. ADR 0012 records the decision.
+
+`ModelQueryParser` in `src/evidence_dossier/query/model_parser.py` is an optional second path. It takes a callable that maps a prompt to text, so the repository holds no key and `query` imports no provider. The query goes into the prompt between delimiters as untrusted data, and the reply must validate into the proposition fields. A provider error, a reply that is not one JSON object, a missing field or an unknown direction falls back to the rules, and `parse_notes` records which path answered.
+
+That parser is off by default. Search and the API call the rules, and nothing in the package constructs the model path. It has never run against a real model in this repository, so no number above comes from a model parse. The tests drive it with a fake callable, which checks the fallback and the validation and says nothing about a real reply.
 
 ## Extraction providers
 
