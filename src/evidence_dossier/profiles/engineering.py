@@ -57,12 +57,14 @@ class EngineeringProfile(DomainProfile):
     # Section 38 lists no engineering features and delegates the detail to the
     # profile. Two engineering results compare when they hold the same system and
     # component, under the same load and conditions, against the same standard.
+    # The feature is "operating conditions", not "conditions", because the engine
+    # reads "conditions" off a temperature field that no engineering record carries.
     comparability_features: tuple[str, ...] = (
         "system",
         "component",
         "material",
         "load",
-        "conditions",
+        "operating conditions",
         "standard",
         "hardware",
         "measurement",

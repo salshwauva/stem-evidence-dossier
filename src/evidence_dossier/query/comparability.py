@@ -43,6 +43,18 @@ _FEATURE_FIELDS: dict[str, str] = {
     "catalyst": "catalyst",
     "substrate": "compound",
     "conditions": "temperature",
+    # Physics and engineering (ADR 0011). A name that the generic ResearchContext
+    # declares, such as system and material, reads the generic field first and the
+    # attribute field second. The rest read the attribute field.
+    "system": "system",
+    "sample": "sample",
+    "apparatus": "apparatus",
+    "theoretical assumptions": "theoretical_assumptions",
+    "component": "component",
+    "material": "material",
+    "load": "load",
+    "operating conditions": "operating_conditions",
+    "standard": "standard",
 }
 
 

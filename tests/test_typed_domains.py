@@ -7,9 +7,12 @@ import pytest
 
 from evidence_dossier.ingest.domains import arxiv_category_domain
 from evidence_dossier.model import (
+    BiologyAttributes,
+    ChemistryAttributes,
     ClaimType,
     ComparabilityLevel,
     Comparator,
+    ComputerScienceAttributes,
     Domain,
     EngineeringAttributes,
     EvidenceClaim,
@@ -24,12 +27,17 @@ from evidence_dossier.model import (
     Term,
 )
 from evidence_dossier.profiles import (
+    GENERIC_COMPARABILITY_DIMENSIONS,
     DomainProfile,
     EngineeringProfile,
     PhysicsProfile,
     get_profile,
 )
-from evidence_dossier.query.comparability import ComparabilityAssessment, ComparabilityEngine
+from evidence_dossier.query.comparability import (
+    _FEATURE_FIELDS,
+    ComparabilityAssessment,
+    ComparabilityEngine,
+)
 
 PHYSICS_PASSAGE = "The patterned sample showed a negative refractive index at 10 GHz"
 ENGINEERING_PASSAGE = "The redesigned rotor raised drive efficiency to 94% from 88%"
@@ -222,8 +230,12 @@ def test_an_engineering_claim_carries_engineering_attributes_through_the_core_mo
 # Decision 7: the comparability engine reads what the new profiles hold.
 
 
-def test_the_engine_reads_a_physics_field_because_the_physics_profile_names_it() -> None:
-    """The physics profile lists conditions, and the engine reads it off PhysicsAttributes."""
+def test_the_engine_reads_physics_fields_because_the_physics_profile_names_them() -> None:
+    """The claim carries sample, apparatus and temperature on PhysicsAttributes.
+
+    The context carries system. Take the attributes away and only system survives,
+    so the three that disappear came off the attribute class.
+    """
     proposition = _physics_proposition()
     physics = get_profile(Domain.PHYSICS)
 
@@ -231,26 +243,32 @@ def test_the_engine_reads_a_physics_field_because_the_physics_profile_names_it()
     untyped = _conditions_reason(_assess(proposition, _physics_claim(typed=False), physics))
     other_profile = _assess(proposition, _physics_claim(), get_profile(Domain.COMPUTER_SCIENCE))
 
-    assert "conditions" in physics.comparability_features
-    assert "The claim reports conditions under the PHYSICS profile" in typed
-    # The same claim without its physics attributes reports nothing to compare.
-    assert "no profile condition" in untyped
-    # A profile that does not name conditions reads the same field off nothing.
-    assert "conditions" not in get_profile(Domain.COMPUTER_SCIENCE).comparability_features
+    assert "The claim reports system, sample, apparatus, conditions under the PHYSICS" in typed
+    assert "The claim reports system under the PHYSICS profile" in untyped
+    # A profile that names none of those features reads the same claim off nothing.
+    assert not set(physics.comparability_features) & set(
+        get_profile(Domain.COMPUTER_SCIENCE).comparability_features
+    )
     assert "no profile condition" in _conditions_reason(other_profile)
 
 
-def test_the_engine_reads_an_engineering_field_because_the_profile_names_it() -> None:
-    """The engineering profile lists hardware, which the claim reports on its context."""
+def test_the_engine_reads_engineering_fields_because_the_profile_names_them() -> None:
+    """The claim carries five features on EngineeringAttributes and two on the context."""
     proposition = _engineering_proposition()
     engineering = get_profile(Domain.ENGINEERING)
 
-    reported = _conditions_reason(_assess(proposition, _engineering_claim(), engineering))
+    typed = _conditions_reason(_assess(proposition, _engineering_claim(), engineering))
+    untyped = _conditions_reason(_assess(proposition, _engineering_claim(typed=False), engineering))
     other_profile = _assess(proposition, _engineering_claim(), get_profile(Domain.BIOLOGY))
 
-    assert "hardware" in engineering.comparability_features
-    assert "The claim reports hardware under the ENGINEERING profile" in reported
-    assert "hardware" not in get_profile(Domain.BIOLOGY).comparability_features
+    assert (
+        "The claim reports system, component, material, load, operating conditions,"
+        " standard, hardware under the ENGINEERING" in typed
+    )
+    assert "The claim reports system, hardware under the ENGINEERING profile" in untyped
+    assert not set(engineering.comparability_features) & set(
+        get_profile(Domain.BIOLOGY).comparability_features
+    )
     assert "no profile condition" in _conditions_reason(other_profile)
 
 
@@ -262,3 +280,82 @@ def test_a_physics_claim_and_a_physics_proposition_reach_a_comparability_level()
     assert assessment.matched("measurement")
     assert assessment.matched("conditions")
     assert assessment.level is not ComparabilityLevel.INCOMPATIBLE
+
+
+# A declared comparability feature reaches the engine only through _FEATURE_FIELDS,
+# which maps the feature name to the claim field that reports it. The split below is
+# the whole picture, per profile, in the order each profile declares its features.
+#
+# An unread name is one of two things. A name in GENERIC_COMPARABILITY_DIMENSIONS has
+# its own dimension function, so the engine assesses it directly and the table needs no
+# entry for it. Every other unread name is the gap that ADR 0011 records: biology
+# target and endpoint, chemistry reaction, and computer science baseline and metric
+# have no claim field to read. An entry for those would change comparability, and so
+# stance, for three domains that ADR 0011 does not touch.
+#
+# This test exists so the gap cannot grow in silence when someone adds a profile or a
+# feature name.
+KNOWN_FEATURE_GAP = frozenset({"target", "endpoint", "reaction", "baseline", "metric"})
+
+GENERIC_SPLIT = (
+    ("conditions",),
+    ("subject", "method", "context", "comparator", "measurement", "evidence directness"),
+)
+
+# Domain to (features the engine reads through the table, features it does not).
+FEATURE_SPLIT: dict[Domain, tuple[tuple[str, ...], tuple[str, ...]]] = {
+    Domain.BIOLOGY: (
+        ("intervention", "organism", "model", "dose context"),
+        ("target", "endpoint"),
+    ),
+    Domain.CHEMISTRY: (
+        ("catalyst", "substrate", "conditions"),
+        ("reaction", "measurement"),
+    ),
+    Domain.COMPUTER_SCIENCE: (
+        ("task", "dataset", "model family", "hardware", "evaluation conditions"),
+        ("baseline", "metric"),
+    ),
+    Domain.PHYSICS: (
+        ("system", "sample", "apparatus", "conditions", "theoretical assumptions"),
+        ("measurement",),
+    ),
+    Domain.ENGINEERING: (
+        ("system", "component", "material", "load", "operating conditions", "standard", "hardware"),
+        ("measurement",),
+    ),
+    Domain.MATHEMATICS: GENERIC_SPLIT,
+    Domain.MULTIDISCIPLINARY: GENERIC_SPLIT,
+    Domain.OTHER_STEM: GENERIC_SPLIT,
+}
+
+
+@pytest.mark.parametrize("domain", list(Domain))
+def test_the_feature_table_covers_the_features_each_profile_declares(domain: Domain) -> None:
+    features = get_profile(domain).comparability_features
+    read = tuple(feature for feature in features if feature in _FEATURE_FIELDS)
+    unread = tuple(feature for feature in features if feature not in _FEATURE_FIELDS)
+    expected_read, expected_unread = FEATURE_SPLIT[domain]
+
+    assert read == expected_read
+    assert unread == expected_unread
+    for feature in unread:
+        assert feature in GENERIC_COMPARABILITY_DIMENSIONS or feature in KNOWN_FEATURE_GAP
+
+
+@pytest.mark.parametrize("domain", list(Domain))
+def test_every_mapped_feature_names_a_field_that_some_record_declares(domain: Domain) -> None:
+    """A mapped feature whose field exists nowhere would report a condition for no claim."""
+    read, _ = FEATURE_SPLIT[domain]
+    declared = set(ResearchContext.model_fields)
+    for cls in (
+        BiologyAttributes,
+        ChemistryAttributes,
+        ComputerScienceAttributes,
+        PhysicsAttributes,
+        EngineeringAttributes,
+    ):
+        declared |= set(cls.model_fields)
+
+    for feature in read:
+        assert _FEATURE_FIELDS[feature] in declared, feature
