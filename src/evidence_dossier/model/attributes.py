@@ -72,6 +72,13 @@ class PhysicsAttributes(FrozenModel):
     pressure (section 20), and the microwave frequency in the physics query (section 4).
     ADR 0011 records the choice. apparatus holds the system, and sample holds the
     material, so neither name shadows the generic context field (plan section 28).
+
+    theoretical_assumptions does repeat a generic ResearchContext name. The generic
+    field lists the assumptions of the study as a tuple. Every attribute field is one
+    optional string (ADR 0003), so this field holds the assumption that the claim
+    rests on, in the words of the paper. The generic list stays authoritative for the
+    study. The comparability engine reads a generic field only when it holds a string,
+    so for this name it reads the physics field and never the generic tuple.
     """
 
     profile: Literal["physics"] = "physics"

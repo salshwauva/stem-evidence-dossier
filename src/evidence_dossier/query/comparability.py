@@ -43,9 +43,12 @@ _FEATURE_FIELDS: dict[str, str] = {
     "catalyst": "catalyst",
     "substrate": "compound",
     "conditions": "temperature",
-    # Physics and engineering (ADR 0011). A name that the generic ResearchContext
-    # declares, such as system and material, reads the generic field first and the
-    # attribute field second. The rest read the attribute field.
+    # Physics and engineering (ADR 0011). system and material name a generic
+    # ResearchContext field that holds a string, so they read the generic value first
+    # and the attribute value second. theoretical_assumptions names a generic field
+    # too, but that one holds a tuple, and _condition_value takes a string, so this
+    # key always reads the attribute value. The rest name no generic field at all and
+    # read the attribute value.
     "system": "system",
     "sample": "sample",
     "apparatus": "apparatus",
