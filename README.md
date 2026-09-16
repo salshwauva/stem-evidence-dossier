@@ -86,7 +86,7 @@ partial      6
 unresolved   4
 ```
 
-Read those counts with the provenance in mind. Claude wrote the propositions, the labels and the mix of phrasings in the same session that broadened the rules, so the benchmark carries the bias of the author of the code. Nothing in it comes from a real query log, and no second reader has checked the labels.
+Read those counts with the provenance in mind. The same session that broadened the rules also wrote the propositions, the labels and the mix of phrasings, so the benchmark carries the bias of the author of the code. Nothing in it comes from a real query log, and no second reader has checked the labels.
 
 A case is resolved when the subject, the relationship, the measurement and the comparator all match the label. It is partial when some of them match, and unresolved when none of the labeled fields match. The 10 cases the rules do not resolve fall in three groups: a verb outside the table ("extends", "suppresses", "is associated with"), a question that states no relationship ("what is the effect of X on Y"), and a sentence that does not put the subject in front of the verb, such as a passive question, a noun phrase, or a modal such as "may". The command names every case it does not resolve. ADR 0012 records the decision.
 
