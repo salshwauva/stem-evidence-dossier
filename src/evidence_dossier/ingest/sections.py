@@ -1,13 +1,19 @@
 """The section parser: fetched text to ordered Section records (plan section 13).
 
 Evidence offsets point into section text, so the text must stay exact and
-stable. The parser keeps the character data of the source as it is. The only
-whitespace change is one strip of the leading and trailing whitespace of each
-paragraph, and paragraphs of one section join with one blank line. A second
-parse of the same input gives the same sections, and a passage of the source
-sits at the same offsets in the same section.
+stable. The parser keeps the characters of the source with one change: inside
+a paragraph, each run of spaces, tabs and newlines becomes one space. JATS puts
+formatting newlines between inline elements, such as a citation mark after a
+word or a superscript after a gene name, and hard wrapped plain text has them
+inside sentences. A reader and a model both copy those runs as one space.
+Other Unicode spaces, such as a thin space before a unit, stay, also at the
+ends of a paragraph. Preformatted text collapses too. PMC rarely carries it.
+Paragraphs of one section join with one blank line. A second parse of the same
+input gives the same sections, and a passage of the source sits at the same
+offsets in the same section.
 """
 
+import re
 import xml.etree.ElementTree as ET
 from collections.abc import Iterator
 
@@ -37,6 +43,10 @@ HEADING_TYPES: dict[str, SectionType] = {
 }
 
 _PARAGRAPH_SEPARATOR = "\n\n"
+_SPACE_RUN = re.compile(r"[ \t\r\n]+")
+_SPACE_CHARS = " \t\r\n"
+# A blank line, which separates two paragraphs of plain text.
+_BLANK_LINE = re.compile(r"\n[ \t\r]*\n")
 
 
 def section_type_for_heading(heading: str) -> SectionType:
@@ -59,17 +69,22 @@ class SectionParser:
         """Return the sections of the document, with ordinals from 0 in document order.
 
         JATS XML gives one section per abstract, per <sec> at any depth, per
-        figure caption, per table and per appendix. A nested <sec> whose
-        heading maps to OTHER takes the type of its parent, so "Cell culture"
-        under "Materials and Methods" is METHODS. A <sec> with no paragraph of
-        its own, such as a container of subsections, gives no section. Any
-        other format is one ABSTRACT section that holds the whole text. Empty
-        text gives no section.
+        figure caption, per table and per appendix. A structured abstract
+        keeps the paragraphs of its <sec> parts in one section. An abstract
+        with an abstract-type, such as a graphical abstract, gets that type in
+        its heading. Paragraphs directly under <body> give one OTHER section
+        before the first <sec>. A nested <sec> whose heading maps to OTHER
+        takes the type of its parent, so "Cell culture" under "Materials and
+        Methods" is METHODS. A <sec> with no paragraph of its own, such as a
+        container of subsections, gives no section. A list item counts as a
+        paragraph. Any other format is one ABSTRACT section that holds the
+        whole text, with its blank lines kept as paragraph breaks. Empty text
+        gives no section.
         """
         if fetched.source_format == JATS_FORMAT:
             parts = list(_jats_parts(parse_xml(fetched.text)))
         else:
-            parts = [(SectionType.ABSTRACT, None, fetched.text.strip())]
+            parts = [(SectionType.ABSTRACT, None, _plain_paragraphs(fetched.text))]
         return [
             Section(
                 id=make_section_id(document_id, ordinal),
@@ -90,9 +105,12 @@ def _jats_parts(root: ET.Element) -> Iterator[tuple[SectionType, str | None, str
     if article is None:
         return
     for abstract in article.iterfind("front/article-meta/abstract"):
-        yield SectionType.ABSTRACT, "Abstract", _paragraphs(abstract)
+        kind = abstract.get("abstract-type")
+        heading = "Abstract" if kind is None else f"Abstract ({kind})"
+        yield SectionType.ABSTRACT, heading, _paragraphs(abstract, nested=True)
     body = article.find("body")
     if body is not None:
+        yield SectionType.OTHER, None, _paragraphs(body)
         yield from _blocks(body)
     for appendix in article.iterfind("back/app-group/app"):
         heading = _text(appendix.find("title")) or "Appendix"
@@ -117,9 +135,29 @@ def _blocks(
             yield SectionType.TABLE, _text(child.find("label")) or None, _table(child)
 
 
-def _paragraphs(element: ET.Element) -> str:
+def _paragraphs(element: ET.Element, *, nested: bool = False) -> str:
+    """Join the paragraphs of an element. nested also reads the paragraphs of child <sec> parts."""
+    return _PARAGRAPH_SEPARATOR.join(text for text in _paragraph_texts(element, nested) if text)
+
+
+def _paragraph_texts(element: ET.Element, nested: bool) -> Iterator[str]:
+    for child in element:
+        if child.tag == "p":
+            yield _text(child)
+        elif child.tag == "list":
+            for item in child.iterfind("list-item"):
+                yield _text(item)
+        elif nested and child.tag == "sec":
+            yield from _paragraph_texts(child, nested)
+
+
+def _plain_paragraphs(text: str) -> str:
     return _PARAGRAPH_SEPARATOR.join(
-        text for text in (_text(paragraph) for paragraph in element.iterfind("p")) if text
+        paragraph
+        for paragraph in (
+            _SPACE_RUN.sub(" ", part).strip(_SPACE_CHARS) for part in _BLANK_LINE.split(text)
+        )
+        if paragraph
     )
 
 
@@ -137,5 +175,9 @@ def _table(element: ET.Element) -> str:
 
 
 def _text(element: ET.Element | None) -> str:
-    """Return the character data of an element and its descendants, with the outer whitespace removed."""
-    return "" if element is None else "".join(element.itertext()).strip()
+    """Return the character data of an element and its descendants, each space run as one space."""
+    return (
+        ""
+        if element is None
+        else _SPACE_RUN.sub(" ", "".join(element.itertext())).strip(_SPACE_CHARS)
+    )
