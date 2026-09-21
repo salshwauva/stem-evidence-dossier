@@ -7,11 +7,15 @@ FIXTURES_DIR = Path(__file__).parent / "fixtures" / "ingest"
 
 
 def request_key(url: str, params: Mapping[str, str]) -> str:
-    """Return the stable name of a request: the URL path and the parameters that pick a record."""
-    path = url.split("://", 1)[-1].split("/", 1)[-1].strip("/")
+    """Return the stable name of a request: the URL path and the parameters that pick a record.
+
+    A URL with no path, such as the root of the PMC cloud bucket, keys on its host.
+    """
+    host, _, path = url.split("://", 1)[-1].partition("/")
+    path = path.strip("/") or host
     picked = {
         name: params[name]
-        for name in ("db", "id", "ids", "id_list", "term", "search_query")
+        for name in ("db", "id", "ids", "id_list", "term", "search_query", "prefix")
         if name in params
     }
     suffix = "&".join(f"{name}={value}" for name, value in picked.items())
@@ -45,15 +49,18 @@ PUBMED_RECORDINGS = {
     "pmc/utils/idconv/v1.0?ids=90001235": "pmc_idconv_90001235.json",
     "pmc/utils/idconv/v1.0?ids=90001236": "pmc_idconv_90001236.json",
     "pmc/utils/idconv/v1.0?ids=90001237": "pmc_idconv_90001237.json",
-    "pmc/utils/oa/oa.fcgi?id=PMC99900001": "pmc_oa_PMC99900001.xml",
-    "pmc/utils/oa/oa.fcgi?id=PMC99900002": "pmc_oa_PMC99900002.xml",
-    "pmc/utils/oa/oa.fcgi?id=PMC99900003": "pmc_oa_PMC99900003.xml",
+    "pmc-oa-opendata.s3.amazonaws.com?prefix=PMC99900001.": "pmc_cloud_list_PMC99900001.xml",
+    "pmc-oa-opendata.s3.amazonaws.com?prefix=PMC99900002.": "pmc_cloud_list_PMC99900002.xml",
+    "pmc-oa-opendata.s3.amazonaws.com?prefix=PMC99900003.": "pmc_cloud_list_PMC99900003.xml",
+    "PMC99900001.1/PMC99900001.1.json": "pmc_cloud_PMC99900001.1.json",
+    "PMC99900002.1/PMC99900002.1.json": "pmc_cloud_PMC99900002.1.json",
     "entrez/eutils/efetch.fcgi?db=pmc&id=PMC99900001": "pmc_efetch_PMC99900001.xml",
 }
 
-# The key of the PMC OA record of the accepted work. A license test points it at
-# another fixture and keeps the rest of the recordings.
-OA_KEY_PMC99900001 = "pmc/utils/oa/oa.fcgi?id=PMC99900001"
+# The keys of the cloud listing and the cloud metadata of the accepted work. A
+# license test points one of them at another fixture and keeps the rest.
+CLOUD_LIST_KEY_PMC99900001 = "pmc-oa-opendata.s3.amazonaws.com?prefix=PMC99900001."
+CLOUD_KEY_PMC99900001 = "PMC99900001.1/PMC99900001.1.json"
 
 ARXIV_RECORDINGS = {
     "api/query?search_query=all:retrieval factual errors": "arxiv_search.xml",

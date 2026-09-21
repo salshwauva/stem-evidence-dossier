@@ -69,7 +69,7 @@ The schema lives in `src/evidence_dossier/store/migrations/`. The runner applies
 
 ### Ingest
 
-`ingest_work(store, adapter, identifier, *, fetched_at)` fetches metadata and text through a `LiteratureSourceAdapter`, falls back from full text to the abstract to metadata only, and stores the work, the document and its sections. The same text yields no second version. Changed text yields the next version number.
+`ingest_work(store, adapter, identifier, *, fetched_at)` fetches metadata and text through a `LiteratureSourceAdapter`, falls back from full text to the abstract to metadata only, and stores the work, the document and its sections. A full text fetch that raises also falls back, and `IngestResult.fetch_error` names the error. That fallback never replaces a stored full text with an abstract. The same text yields no second version. Changed text yields the next version number.
 
 ### Extract and normalize
 

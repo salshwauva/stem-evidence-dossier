@@ -1,0 +1,18 @@
+{
+  "pmcid": "PMC99900001",
+  "version": 2,
+  "pmid": 90001234,
+  "doi": "10.5555/bio.90001234",
+  "mid": null,
+  "title": "MAPT knockdown and neuronal survival in a test dementia model",
+  "citation": "J Test Neurosci. 2025 Mar 14;1(1):1-9. doi: 10.5555/bio.90001234",
+  "is_pmc_openaccess": true,
+  "is_manuscript": false,
+  "is_historical_ocr": false,
+  "is_retracted": false,
+  "license_code": "CC0",
+  "text_url": "s3://pmc-oa-opendata/PMC99900001.2/PMC99900001.2.txt",
+  "xml_url": "s3://pmc-oa-opendata/PMC99900001.2/PMC99900001.2.xml",
+  "pdf_url": "s3://pmc-oa-opendata/PMC99900001.2/PMC99900001.2.pdf",
+  "media_urls": []
+}
