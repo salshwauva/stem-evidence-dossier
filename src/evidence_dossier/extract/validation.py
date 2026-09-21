@@ -19,8 +19,8 @@ from pydantic import ValidationError
 from evidence_dossier.extract.candidates import CandidateClaims
 from evidence_dossier.model import EvidenceSpan, Section, SourceDocument
 
-# A reply wrapped in a Markdown code fence, with or without the json tag.
-_FENCE = re.compile(r"\A\s*```(?:json)?\s*\n(.*?)\n\s*```\s*\Z", re.DOTALL)
+# A Markdown code fence with any language tag, or none.
+_FENCE = re.compile(r"```[^\n`]*\n(.*?)\n[ \t]*```", re.DOTALL)
 _SLUG = re.compile(r"[^a-z0-9]+")
 
 
@@ -82,8 +82,26 @@ def validate_response(
 
 
 def _parse_json(text: str) -> Any:
-    match = _FENCE.match(text)
-    return json.loads(match.group(1) if match else text)
+    """Return the JSON of a reply: its one fenced JSON block, or else the whole reply.
+
+    A fenced block that is not JSON, such as quoted text, drops out. Two fenced
+    JSON blocks make the reply ambiguous. Prose around unfenced JSON fails the
+    parse, so the run is stored INVALID with its raw reply.
+    """
+    fenced = _json_blocks(_FENCE.findall(text))
+    if len(fenced) > 1:
+        raise ValueError(f"the reply holds {len(fenced)} fenced JSON blocks, so it is ambiguous")
+    return fenced[0] if fenced else json.loads(text)
+
+
+def _json_blocks(blocks: list[str]) -> list[Any]:
+    values: list[Any] = []
+    for block in blocks:
+        try:
+            values.append(json.loads(block))
+        except json.JSONDecodeError:
+            continue
+    return values
 
 
 def _error_strings(error: ValueError) -> tuple[str, ...]:
