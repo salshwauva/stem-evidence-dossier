@@ -1,3 +1,4 @@
+import sqlite3
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -206,3 +207,23 @@ def test_list_claims_filters_by_domain_claim_type_work_and_study(store: Store) -
     assert store.list_claims(research_work_id=biology.work.id) == [biology.claim]
     assert store.list_claims(study_id=computer_science.study.id) == [computer_science.claim]
     assert store.list_claims(domain=Domain.BIOLOGY, claim_type=ClaimType.PERFORMANCE) == []
+
+
+def test_a_transaction_commits_every_insert_or_none(store: Store) -> None:
+    paper = biology_paper()
+    with pytest.raises(sqlite3.IntegrityError), store.transaction():
+        store.add_work(paper.work)
+        store.add_work(paper.work)
+    assert store.get_work(paper.work.id) is None
+    with store.transaction():
+        store.add_work(paper.work)
+    assert store.get_work(paper.work.id) == paper.work
+
+
+def test_a_transaction_does_not_nest(store: Store) -> None:
+    with (
+        pytest.raises(RuntimeError, match="does not nest"),
+        store.transaction(),
+        store.transaction(),
+    ):
+        pass

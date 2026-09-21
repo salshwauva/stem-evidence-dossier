@@ -2,6 +2,8 @@
 
 import json
 import sqlite3
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from types import TracebackType
 from typing import Any, Self
@@ -48,7 +50,8 @@ class Store:
 
     Opening a store applies any pending migration. An add method raises
     sqlite3.IntegrityError when the ID already exists or a referenced record
-    is missing. A get method returns None for an unknown ID.
+    is missing. A get method returns None for an unknown ID. Each add method
+    commits on its own, except inside transaction().
     """
 
     def __init__(self, path: str | Path) -> None:
@@ -56,6 +59,23 @@ class Store:
         self._conn.row_factory = sqlite3.Row
         self._conn.execute("PRAGMA foreign_keys = ON")
         apply_migrations(self._conn)
+        self._in_transaction = False
+
+    @contextmanager
+    def transaction(self) -> Iterator[None]:
+        """Run the add calls inside the block as one unit: all of them commit, or none does.
+
+        An exception in the block rolls back every insert of the block. A
+        transaction does not nest.
+        """
+        if self._in_transaction:
+            raise RuntimeError("a store transaction does not nest")
+        self._in_transaction = True
+        try:
+            with self._conn:
+                yield
+        finally:
+            self._in_transaction = False
 
     def close(self) -> None:
         self._conn.close()
@@ -259,8 +279,12 @@ class Store:
     def _insert(self, table: str, values: dict[str, Any]) -> None:
         columns = ", ".join(values)
         placeholders = ", ".join(f":{column}" for column in values)
+        sql = f"INSERT INTO {table} ({columns}) VALUES ({placeholders})"
+        if self._in_transaction:
+            self._conn.execute(sql, values)
+            return
         with self._conn:
-            self._conn.execute(f"INSERT INTO {table} ({columns}) VALUES ({placeholders})", values)
+            self._conn.execute(sql, values)
 
     def _fetch(self, table: str, record_id: str) -> sqlite3.Row | None:
         row: sqlite3.Row | None = self._conn.execute(
