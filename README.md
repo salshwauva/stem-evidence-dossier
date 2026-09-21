@@ -96,7 +96,7 @@ That parser is off by default. Search and the API call the rules, and nothing in
 
 ## Extraction providers
 
-`extract_document` takes an `ExtractionProvider`. `RecordedProvider` replays stored responses and is what the tests use. `ClaudeCliProvider` runs the `claude` command line tool as a subprocess, so the repository holds no API key. The command line grants no tool, denies the file, shell, web and agent tools by name, loads no user settings and no MCP server, and runs in an empty directory. Those flags are pinned by a unit test on the argument list and have never run against the live command line tool. Each run records the model identifier, the prompt version, and the schema version.
+`extract_document` takes an `ExtractionProvider`. `RecordedProvider` replays stored responses and is what the tests use. `ClaudeCliProvider` runs the `claude` command line tool as a subprocess, so the repository holds no API key. The flags ask the command line tool for no tools, deny the file, shell, web and agent tools by name, and turn off the user, project and local settings, the MCP servers and the session history. The command runs in an empty directory. A unit test pins those flags on the argument list. An opt in test sends one short prompt through the installed command line tool when `CLAUDE_CLI_LIVE=1` is set. No live extraction has run yet. Each run records the model identifier, the prompt version, and the schema version.
 
 Paper text is untrusted input. The prompt wraps every section as data, and the validator rejects any response that leaves the schema. The adversarial fixtures are regression tests, not proof that injection cannot happen.
 

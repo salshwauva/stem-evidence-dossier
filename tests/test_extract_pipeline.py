@@ -104,6 +104,85 @@ def test_reply_in_a_json_fence_is_accepted(corpus: Corpus) -> None:
     assert len(corpus.store.list_claims(research_work_id=corpus.work.id)) == 3
 
 
+def test_prose_around_one_fenced_reply_is_accepted(corpus: Corpus) -> None:
+    reply = f"Here are the claims.\n\n```json\n{valid_response()}\n```\n\nEach span is exact."
+
+    run = extract_document(
+        corpus.store,
+        corpus.document.id,
+        corpus.provider(reply),
+        normalizer=normalize_claim,
+        now=NOW,
+    )
+
+    assert run.validation_status is ValidationStatus.VALID
+    assert len(corpus.store.list_claims(research_work_id=corpus.work.id)) == 3
+
+
+def test_two_fenced_blocks_make_the_reply_invalid(corpus: Corpus) -> None:
+    reply = f"```json\n{valid_response()}\n```\n\n```json\n{valid_response()}\n```"
+
+    run = extract_document(
+        corpus.store,
+        corpus.document.id,
+        corpus.provider(reply),
+        normalizer=normalize_claim,
+        now=NOW,
+    )
+
+    assert run.validation_status is ValidationStatus.INVALID
+    assert run.errors == (
+        "response is not JSON: the reply holds 2 fenced JSON blocks, so it is ambiguous",
+    )
+    assert corpus.store.list_claims(research_work_id=corpus.work.id) == []
+
+
+@pytest.mark.parametrize(
+    "template",
+    [
+        "```json5\n{reply}\n```",
+        "Quoted from the paper:\n```text\nsome algorithm line\n```\n\n```json\n{reply}\n```",
+    ],
+    ids=["any_language_tag", "a_fence_that_is_not_json_drops_out"],
+)
+def test_the_one_fenced_json_block_is_read(corpus: Corpus, template: str) -> None:
+    reply = template.format(reply=valid_response())
+
+    run = extract_document(
+        corpus.store,
+        corpus.document.id,
+        corpus.provider(reply),
+        normalizer=normalize_claim,
+        now=NOW,
+    )
+
+    assert run.validation_status is ValidationStatus.VALID
+    assert len(corpus.store.list_claims(research_work_id=corpus.work.id)) == 3
+
+
+@pytest.mark.parametrize(
+    "template",
+    ["Here is the JSON:\n{reply}", "{reply}\n\nAn earlier draft: {reply}"],
+    ids=["prose_around_unfenced_json", "two_unfenced_objects"],
+)
+def test_unfenced_json_with_anything_around_it_is_invalid(corpus: Corpus, template: str) -> None:
+    """The parse stays strict until a live run shows how real replies look."""
+    reply = template.format(reply=valid_response())
+
+    run = extract_document(
+        corpus.store,
+        corpus.document.id,
+        corpus.provider(reply),
+        normalizer=normalize_claim,
+        now=NOW,
+    )
+
+    assert run.validation_status is ValidationStatus.INVALID
+    assert run.raw_response == reply
+    assert run.errors[0].startswith("response is not JSON")
+    assert corpus.store.list_claims(research_work_id=corpus.work.id) == []
+
+
 def test_unknown_document_raises(corpus: Corpus) -> None:
     with pytest.raises(LookupError, match="missing_v1"):
         extract_document(

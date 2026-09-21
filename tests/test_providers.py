@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -10,7 +11,7 @@ from evidence_dossier.extract import (
     RecordedProvider,
     prompt_key,
 )
-from evidence_dossier.extract.providers import DENIED_TOOLS, run_command
+from evidence_dossier.extract.providers import DENIED_TOOLS, DETAIL_LIMIT, run_command
 
 PROMPT = "Extract the claims of document x."
 RESPONSE = ProviderResponse(
@@ -68,9 +69,24 @@ def test_claude_cli_provider_grants_no_tool_and_loads_no_settings() -> None:
     assert tuple(args[start : start + len(DENIED_TOOLS)]) == DENIED_TOOLS
     assert {"Bash", "Write", "Edit", "WebFetch", "Agent"} <= set(DENIED_TOOLS)
     assert "--strict-mcp-config" in args
+    assert args[args.index("--setting-sources") + 1] == ""
+    assert "--no-session-persistence" in args
     settings = json.loads(args[args.index("--settings") + 1])
     assert settings["permissions"]["allow"] == []
     assert set(settings["permissions"]["deny"]) == set(DENIED_TOOLS)
+
+
+@pytest.mark.skipif(
+    os.environ.get("CLAUDE_CLI_LIVE") != "1",
+    reason="set CLAUDE_CLI_LIVE=1 to call the logged in claude command line tool",
+)
+def test_the_installed_claude_cli_accepts_every_isolation_flag() -> None:
+    """One short live call. The command line tool stops with status 1 on a flag or tool
+    name that it does not know, so a reply proves the argument list still works."""
+    response = ClaudeCliProvider("claude-haiku-4-5-20251001").complete(
+        "Reply with the single word: ok"
+    )
+    assert response.text.strip()
 
 
 def test_run_command_reports_a_missing_command() -> None:
@@ -81,6 +97,18 @@ def test_run_command_reports_a_missing_command() -> None:
 def test_run_command_reports_a_failed_command() -> None:
     with pytest.raises(ProviderError, match="exited with status 3: boom"):
         run_command(["sh", "-c", "echo boom >&2; exit 3"], PROMPT)
+
+
+def test_run_command_reports_stdout_when_stderr_is_empty() -> None:
+    with pytest.raises(ProviderError, match="exited with status 1: Failed to authenticate"):
+        run_command(["sh", "-c", "echo Failed to authenticate; exit 1"], PROMPT)
+
+
+def test_run_command_cuts_long_output_in_the_error() -> None:
+    with pytest.raises(ProviderError) as raised:
+        run_command(["sh", "-c", "printf 'x%.0s' $(seq 2000); exit 1"], PROMPT)
+    detail = str(raised.value).split(": ", 1)[1]
+    assert detail == "x" * DETAIL_LIMIT + f" (cut at {DETAIL_LIMIT} characters)"
 
 
 def test_run_command_returns_stdout() -> None:

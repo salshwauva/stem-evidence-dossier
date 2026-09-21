@@ -67,6 +67,10 @@ class RecordedProvider:
         raise ProviderError(f"no recorded response for prompt key {key}")
 
 
+# The most command output that a ProviderError quotes. Output from a failed run
+# can hold part of a prompt or a reply, and a caller may log the error.
+DETAIL_LIMIT = 500
+
 type CommandRunner = Callable[[list[str], str], str]
 """Runs a command with the given text on stdin and returns its stdout."""
 
@@ -85,19 +89,23 @@ def run_command(args: list[str], stdin: str) -> str:
     except FileNotFoundError as error:
         raise ProviderError(f"{args[0]} is not on PATH") from error
     except subprocess.CalledProcessError as error:
-        detail = str(error.stderr).strip()
+        # The claude command line tool prints a login failure on stdout, not stderr.
+        detail = str(error.stderr).strip() or str(error.stdout).strip()
+        if len(detail) > DETAIL_LIMIT:
+            detail = f"{detail[:DETAIL_LIMIT]} (cut at {DETAIL_LIMIT} characters)"
         raise ProviderError(f"{args[0]} exited with status {error.returncode}: {detail}") from error
     return completed.stdout
 
 
 # Tools that the extractor must never reach. The prompt carries untrusted paper
 # text (plan section 51), so the command line grants no tool, denies these by
-# name, ignores the user's settings files, and loads no MCP server.
+# name, ignores the user, project and local settings files, and loads no MCP
+# server. Every name must be one the installed command line tool knows: an
+# unknown name in a deny rule stops the run with status 1.
 DENIED_TOOLS: tuple[str, ...] = (
     "Bash",
     "Write",
     "Edit",
-    "MultiEdit",
     "NotebookEdit",
     "WebFetch",
     "WebSearch",
@@ -113,10 +121,12 @@ class ClaudeCliProvider:
     The command needs a logged in claude command line tool on PATH. The
     repository holds no API key. The prompt carries paper text, so the
     command grants no tool: an empty --tools list, --disallowed-tools for the
-    tools in DENIED_TOOLS, a --settings document that allows nothing,
-    --strict-mcp-config, and an empty working directory. Its stdout is
-    untrusted input that validation checks before anything is stored. Tests
-    inject a fake runner in place of run_command.
+    tools in DENIED_TOOLS, a --settings document that allows nothing, an
+    empty --setting-sources list so that no user, project or local settings
+    file loads, --strict-mcp-config, and an empty working directory.
+    --no-session-persistence keeps the run out of the user's session history.
+    Its stdout is untrusted input that validation checks before anything is
+    stored. Tests inject a fake runner in place of run_command.
     """
 
     def __init__(self, model: str, runner: CommandRunner = run_command) -> None:
@@ -136,8 +146,11 @@ class ClaudeCliProvider:
             "--disallowed-tools",
             *DENIED_TOOLS,
             "--strict-mcp-config",
+            "--setting-sources",
+            "",
             "--settings",
             ISOLATION_SETTINGS,
+            "--no-session-persistence",
         ]
         text = self._runner(args, prompt)
         return ProviderResponse(model_identifier=f"claude-cli/{self._model}", text=text)
