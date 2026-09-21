@@ -42,7 +42,7 @@ def _report(dataset: Dataset, predict: bool = True) -> EvaluationReport:
         stance=run_stance_evaluation(dataset, STANCE_PREDICTIONS),
         notes=(
             "The papers, the gold labels and the predictions are invented test fixtures.",
-            "The predictions were written by hand from the gold labels with deliberate errors.",
+            "The predictions were made from the gold labels with deliberate errors.",
         ),
     )
 

@@ -1,5 +1,5 @@
 {
-  "note": "A small invented query benchmark over tests/query_corpus.py. The relevant claim ids are set by hand and prove nothing about a real corpus.",
+  "note": "A small invented query benchmark over tests/query_corpus.py. The relevant claim ids are fixed in this file and prove nothing about a real corpus.",
   "cases": [
     {
       "text": "retrieval-augmented generation reduces factual hallucination compared with the same model without retrieval",

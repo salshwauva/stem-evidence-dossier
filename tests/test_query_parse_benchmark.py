@@ -1,4 +1,4 @@
-"""Checks on the hand written parse benchmark (ADR 0012).
+"""Checks on the labeled parse benchmark (ADR 0012).
 
 The counts here are the numbers the README quotes. A rule change moves them,
 and a reviewer sees the move in the diff.
