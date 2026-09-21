@@ -2,10 +2,10 @@
 
 Metadata comes from the E-utilities: esearch for identifiers and efetch for
 one PubmedArticle record. Full text comes from PMC: the id converter maps a
-PMID to a PMCID, the OA web service reports the license, and efetch on the pmc
-database returns the JATS XML. A work outside PMC open access, or one under a
-license that the allow list does not hold, gets no full text, and the caller
-falls back to the abstract (plan section 51).
+PMID to a PMCID, the metadata file of the PMC Cloud Service reports the
+license, and efetch on the pmc database returns the JATS XML. A work outside
+PMC open access, or one under a license that the allow list does not hold,
+gets no full text, and the caller falls back to the abstract (plan section 51).
 """
 
 import json
@@ -22,7 +22,12 @@ EUTILS_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
 ESEARCH_URL = f"{EUTILS_URL}/esearch.fcgi"
 EFETCH_URL = f"{EUTILS_URL}/efetch.fcgi"
 IDCONV_URL = "https://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/"
-OA_URL = "https://www.ncbi.nlm.nih.gov/pmc/utils/oa/oa.fcgi"
+# The PMC Cloud Service bucket. NCBI retired the OA web service (oa.fcgi) in
+# August 2026, and this bucket replaced it. One folder per article version,
+# "PMC<id>.<version>/", holds a metadata file "PMC<id>.<version>.json".
+CLOUD_URL = "https://pmc-oa-opendata.s3.amazonaws.com/"
+
+_S3_NS = {"s3": "http://s3.amazonaws.com/doc/2006-03-01/"}
 
 # The licenses that let the store keep and serve the article body. CC BY-NC and
 # CC BY-ND stay out: the dossier is a public evidence store, so it redistributes
@@ -121,17 +126,34 @@ class PubMedAdapter:
         )
 
     def _permitted_license(self, pmcid: str) -> str | None:
-        """Return the OA service license of the PMCID when the allow list holds it, else None.
+        """Return the license of the PMCID when the allow list holds it, else None.
 
-        The service answers with an error element for an article outside the
-        open access subset, and the method then returns None.
+        The license comes from the metadata file of the newest version in the
+        cloud bucket. An article with no version there, or one whose metadata
+        says it is outside the open access subset, gives None.
         """
-        record = parse_xml(self._http.get(OA_URL, {"id": pmcid})).find("records/record")
-        if record is None:
+        folder = self._newest_version(pmcid)
+        if folder is None:
             return None
-        license_name = (record.get("license") or "").strip()
+        record = json.loads(self._http.get(f"{CLOUD_URL}{folder}/{folder}.json", {}))
+        if record.get("is_pmc_openaccess") is not True:
+            return None
+        license_name = (record.get("license_code") or "").strip()
         folded = license_name.lower().replace("-", "").replace(" ", "")
         return license_name if folded in FULL_TEXT_LICENSES else None
+
+    def _newest_version(self, pmcid: str) -> str | None:
+        """Return the folder name "PMC<id>.<version>" with the highest version, or None."""
+        body = self._http.get(
+            CLOUD_URL, {"list-type": "2", "prefix": f"{pmcid}.", "delimiter": "/"}
+        )
+        versions: dict[int, str] = {}
+        for prefix in parse_xml(body).iterfind("s3:CommonPrefixes/s3:Prefix", _S3_NS):
+            folder = (prefix.text or "").rstrip("/")
+            number = folder.removeprefix(f"{pmcid}.")
+            if number.isdigit():
+                versions[int(number)] = folder
+        return versions[max(versions)] if versions else None
 
 
 def _text(element: ET.Element | None) -> str:

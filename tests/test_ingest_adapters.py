@@ -6,7 +6,8 @@ from evidence_dossier.ingest import ArxivAdapter, PubMedAdapter
 from evidence_dossier.model import Author, Domain, SourceLevel, make_work_id
 from tests.recorded_http import (
     ARXIV_RECORDINGS,
-    OA_KEY_PMC99900001,
+    CLOUD_KEY_PMC99900001,
+    CLOUD_LIST_KEY_PMC99900001,
     PUBMED_RECORDINGS,
     RecordedHttpClient,
 )
@@ -67,7 +68,8 @@ def test_pubmed_full_text_comes_from_pmc_as_jats() -> None:
     assert "<article-title>MAPT knockdown" in fetched.text
     assert http.calls == [
         "pmc/utils/idconv/v1.0?ids=90001234",
-        "pmc/utils/oa/oa.fcgi?id=PMC99900001",
+        "pmc-oa-opendata.s3.amazonaws.com?prefix=PMC99900001.",
+        "PMC99900001.1/PMC99900001.1.json",
         "entrez/eutils/efetch.fcgi?db=pmc&id=PMC99900001",
     ]
 
@@ -84,32 +86,55 @@ def test_pubmed_full_text_is_none_for_a_noncommercial_license() -> None:
     assert PubMedAdapter(http).fetch_full_text("90001236") is None
     assert http.calls == [
         "pmc/utils/idconv/v1.0?ids=90001236",
-        "pmc/utils/oa/oa.fcgi?id=PMC99900002",
+        "pmc-oa-opendata.s3.amazonaws.com?prefix=PMC99900002.",
+        "PMC99900002.1/PMC99900002.1.json",
     ]
 
 
-def test_pubmed_full_text_is_none_when_the_oa_service_reports_an_error() -> None:
+def test_pubmed_full_text_is_none_when_the_cloud_lists_no_version() -> None:
+    """An article outside the open access subset has no folder in the cloud bucket."""
     http = RecordedHttpClient(PUBMED_RECORDINGS)
     assert PubMedAdapter(http).fetch_full_text("90001237") is None
     assert http.calls == [
         "pmc/utils/idconv/v1.0?ids=90001237",
-        "pmc/utils/oa/oa.fcgi?id=PMC99900003",
+        "pmc-oa-opendata.s3.amazonaws.com?prefix=PMC99900003.",
     ]
+
+
+def test_pubmed_full_text_is_none_when_the_metadata_is_not_open_access() -> None:
+    """A CC BY license does not count when PMC marks the article outside open access."""
+    recordings = dict(PUBMED_RECORDINGS)
+    recordings[CLOUD_KEY_PMC99900001] = "pmc_cloud_not_open_access.json"
+    http = RecordedHttpClient(recordings)
+    assert PubMedAdapter(http).fetch_full_text("90001234") is None
+    assert "entrez/eutils/efetch.fcgi?db=pmc&id=PMC99900001" not in http.calls
+
+
+def test_pubmed_license_comes_from_the_newest_cloud_version() -> None:
+    recordings = dict(PUBMED_RECORDINGS)
+    recordings[CLOUD_LIST_KEY_PMC99900001] = "pmc_cloud_list_two_versions.xml"
+    recordings["PMC99900001.2/PMC99900001.2.json"] = "pmc_cloud_PMC99900001.2.json"
+    http = RecordedHttpClient(recordings)
+    fetched = PubMedAdapter(http).fetch_full_text("90001234")
+    assert fetched is not None
+    assert fetched.license == "CC0"
+    assert "PMC99900001.2/PMC99900001.2.json" in http.calls
+    assert CLOUD_KEY_PMC99900001 not in http.calls
 
 
 @pytest.mark.parametrize(
     ("fixture", "expected_license"),
     [
-        ("pmc_oa_cc_by_lowercase.xml", "cc-by"),
-        ("pmc_oa_cc_by_uppercase.xml", "CC-BY"),
-        ("pmc_oa_cc_by_nd.xml", None),
+        ("pmc_cloud_cc_by_lowercase.json", "cc-by"),
+        ("pmc_cloud_cc_by_uppercase.json", "CC-BY"),
+        ("pmc_cloud_cc_by_nd.json", None),
     ],
 )
 def test_pubmed_license_comparison_folds_case_and_hyphens(
     fixture: str, expected_license: str | None
 ) -> None:
     recordings = dict(PUBMED_RECORDINGS)
-    recordings[OA_KEY_PMC99900001] = fixture
+    recordings[CLOUD_KEY_PMC99900001] = fixture
     fetched = PubMedAdapter(RecordedHttpClient(recordings)).fetch_full_text("90001234")
     if expected_license is None:
         assert fetched is None

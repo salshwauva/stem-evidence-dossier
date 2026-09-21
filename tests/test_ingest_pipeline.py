@@ -1,9 +1,11 @@
-from collections.abc import Iterator
+import xml.etree.ElementTree as ET
+from collections.abc import Iterator, Mapping
 from datetime import UTC, datetime
 
 import pytest
 
-from evidence_dossier.ingest import ArxivAdapter, PubMedAdapter, ingest_work
+from evidence_dossier.ingest import ArxivAdapter, FetchedText, PubMedAdapter, ingest_work
+from evidence_dossier.ingest.pubmed import CLOUD_URL
 from evidence_dossier.model import SectionType, SourceLevel, make_document_id, make_work_id
 from evidence_dossier.store import Store
 from tests.recorded_http import (
@@ -20,6 +22,15 @@ FETCHED_AT = datetime(2026, 9, 12, 8, 30, tzinfo=UTC)
 def store() -> Iterator[Store]:
     with Store(":memory:") as opened:
         yield opened
+
+
+class CloudDownClient(RecordedHttpClient):
+    """Serves the recordings, except that every call to the PMC cloud bucket fails."""
+
+    def get(self, url: str, params: Mapping[str, str]) -> bytes:
+        if url.startswith(CLOUD_URL):
+            raise ConnectionError("cloud bucket unavailable")
+        return super().get(url, params)
 
 
 def test_full_text_ingestion_stores_the_work_document_and_sections(store: Store) -> None:
@@ -89,12 +100,88 @@ def test_abstract_fallback_for_a_noncommercial_license(store: Store) -> None:
     assert "entrez/eutils/efetch.fcgi?db=pmc&id=PMC99900002" not in http.calls
 
 
-def test_abstract_fallback_when_the_oa_service_reports_an_error(store: Store) -> None:
+def test_abstract_fallback_when_the_cloud_lists_no_version(store: Store) -> None:
     http = RecordedHttpClient(PUBMED_RECORDINGS)
     result = ingest_work(store, PubMedAdapter(http), "90001237", fetched_at=FETCHED_AT)
     assert result.source_level == SourceLevel.ABSTRACT_ONLY
     assert result.license is None
     assert "entrez/eutils/efetch.fcgi?db=pmc&id=PMC99900003" not in http.calls
+
+
+def test_abstract_fallback_when_the_full_text_fetch_raises(store: Store) -> None:
+    result = ingest_work(
+        store,
+        PubMedAdapter(CloudDownClient(PUBMED_RECORDINGS)),
+        "90001234",
+        fetched_at=FETCHED_AT,
+    )
+    assert result.source_level == SourceLevel.ABSTRACT_ONLY
+    assert result.stored is True
+    assert result.license is None
+    assert result.fetch_error == "ConnectionError: cloud bucket unavailable"
+    section = store.get_section(f"{result.document_id}_s0")
+    assert section is not None
+    assert section.section_type == SectionType.ABSTRACT
+
+
+def test_a_failed_fetch_keeps_the_stored_full_text(store: Store) -> None:
+    first = ingest_work(
+        store,
+        PubMedAdapter(RecordedHttpClient(PUBMED_RECORDINGS)),
+        "90001234",
+        fetched_at=FETCHED_AT,
+    )
+    second = ingest_work(
+        store,
+        PubMedAdapter(CloudDownClient(PUBMED_RECORDINGS)),
+        "90001234",
+        fetched_at=FETCHED_AT,
+    )
+    assert second.document_id == first.document_id
+    assert second.version == 1
+    assert second.source_level == SourceLevel.FULL_TEXT
+    assert second.stored is False
+    assert second.fetch_error == "ConnectionError: cloud bucket unavailable"
+    assert store.get_source_document(make_document_id(first.work_id, 2)) is None
+
+
+def test_a_failed_fetch_still_versions_a_changed_abstract(store: Store) -> None:
+    """The keep rule covers a downgrade only. A new abstract at the same level is stored."""
+    first = ingest_work(
+        store,
+        PubMedAdapter(RecordedHttpClient(PUBMED_RECORDINGS)),
+        "90001237",
+        fetched_at=FETCHED_AT,
+    )
+    assert first.source_level == SourceLevel.ABSTRACT_ONLY
+    changed = dict(PUBMED_RECORDINGS)
+    changed["entrez/eutils/efetch.fcgi?db=pubmed&id=90001237"] = "pubmed_efetch_90001236.xml"
+    second = ingest_work(
+        store,
+        PubMedAdapter(CloudDownClient(changed)),
+        "90001237",
+        fetched_at=FETCHED_AT,
+    )
+    assert second.version == 2
+    assert second.stored is True
+    assert second.source_level == SourceLevel.ABSTRACT_ONLY
+    assert second.fetch_error == "ConnectionError: cloud bucket unavailable"
+    section = store.get_section(f"{second.document_id}_s0")
+    assert section is not None
+    assert section.text.startswith("MAPT knockdown lowered phosphorylated tau by 27%")
+
+
+def test_a_section_parse_error_leaves_no_work_behind(store: Store) -> None:
+    class BrokenXmlAdapter(ArxivAdapter):
+        def fetch_full_text(self, identifier: str) -> FetchedText:
+            return FetchedText(
+                text="<article><body>", source_level=SourceLevel.FULL_TEXT, source_format="jats_xml"
+            )
+
+    adapter = BrokenXmlAdapter(RecordedHttpClient(ARXIV_RECORDINGS))
+    with pytest.raises(ET.ParseError):
+        ingest_work(store, adapter, "9901.00001", fetched_at=FETCHED_AT)
+    assert store.get_work(make_work_id("arxiv", "9901.00001")) is None
 
 
 def test_arxiv_ingestion_is_abstract_only(store: Store) -> None:

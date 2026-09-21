@@ -1,11 +1,13 @@
 """ingest_work: one identifier from one source into the store (plan sections 31 and 46).
 
 The pipeline fetches the metadata, tries the full text, and falls back to the
-abstract and then to metadata alone. It stores the work, one source document
-and its sections. The result carries the license of an accepted full text,
-which the store does not hold (ADR 0009). A repeat ingestion with the same
-text writes nothing. A change to the text writes the next document version,
-because evidence offsets of the earlier version must stay valid.
+abstract and then to metadata alone. A full text fetch that raises also falls
+back, and the result names the error, so a failed source stays visible (plan
+section 51). It stores the work, one source document and its sections. The
+result carries the license of an accepted full text, which the store does not
+hold (ADR 0009). A repeat ingestion with the same text writes nothing. A change
+to the text writes the next document version, because evidence offsets of the
+earlier version must stay valid.
 """
 
 import hashlib
@@ -24,6 +26,9 @@ from evidence_dossier.store import Store
 
 PLAIN_TEXT_FORMAT = "plain_text"
 
+# How much of a work each source level holds, for the downgrade check.
+_LEVEL_RANK = {SourceLevel.METADATA_ONLY: 0, SourceLevel.ABSTRACT_ONLY: 1, SourceLevel.FULL_TEXT: 2}
+
 
 class IngestResult(FrozenModel):
     """What one ingestion stored, or found in the store already."""
@@ -39,22 +44,40 @@ class IngestResult(FrozenModel):
     # abstract and for metadata alone. SourceDocument has no license column, so
     # the license travels on the result instead of into the store (ADR 0009).
     license: str | None = None
+    # The error type and message when the full text fetch raised and the
+    # pipeline fell back. None when the fetch returned normally.
+    fetch_error: str | None = None
 
 
 def ingest_work(
     store: Store, adapter: LiteratureSourceAdapter, identifier: str, *, fetched_at: datetime
 ) -> IngestResult:
-    """Fetch one work through the adapter and store it with its best available text."""
+    """Fetch one work through the adapter and store it with its best available text.
+
+    The work is stored only after its sections parse, so a parse error leaves
+    nothing behind in the store.
+    """
     work = adapter.fetch_metadata(identifier)
-    if store.get_work(work.id) is None:
-        store.add_work(work)
-    fetched = adapter.fetch_full_text(identifier)
+    fetch_error = None
+    try:
+        fetched = adapter.fetch_full_text(identifier)
+    except Exception as error:
+        fetched = None
+        fetch_error = f"{type(error).__name__}: {error}"
     if fetched is None:
         fetched = _fallback(work.abstract)
     digest = hashlib.sha256(fetched.text.encode()).hexdigest()
 
     latest = _latest_document(store, work.id)
-    if latest is not None and latest.content_sha256 == digest:
+    # A failed fetch whose fallback holds less than the stored version keeps
+    # that version, so an outage never replaces a stored full text with an
+    # abstract. A changed text at the same level still writes a new version.
+    downgrade = (
+        latest is not None
+        and fetch_error is not None
+        and _LEVEL_RANK[fetched.source_level] < _LEVEL_RANK[latest.source_level]
+    )
+    if latest is not None and (downgrade or latest.content_sha256 == digest):
         return IngestResult(
             work_id=work.id,
             document_id=latest.id,
@@ -63,6 +86,7 @@ def ingest_work(
             section_count=_section_count(store, latest.id),
             stored=False,
             license=fetched.license,
+            fetch_error=fetch_error,
         )
     version = 1 if latest is None else latest.version + 1
     document = SourceDocument(
@@ -76,6 +100,8 @@ def ingest_work(
         fetched_at=fetched_at,
     )
     sections = SectionParser().parse(fetched, document.id)
+    if store.get_work(work.id) is None:
+        store.add_work(work)
     store.add_source_document(document)
     for section in sections:
         store.add_section(section)
@@ -87,6 +113,7 @@ def ingest_work(
         section_count=len(sections),
         stored=True,
         license=fetched.license,
+        fetch_error=fetch_error,
     )
 
 
