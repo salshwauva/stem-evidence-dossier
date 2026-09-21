@@ -180,6 +180,14 @@ def test_arxiv_full_text_is_the_abstract_with_its_inner_newlines() -> None:
     )
 
 
+def test_arxiv_metadata_and_text_of_one_work_cost_one_request() -> None:
+    http = RecordedHttpClient(ARXIV_RECORDINGS)
+    adapter = ArxivAdapter(http)
+    adapter.fetch_metadata("9901.00001")
+    adapter.fetch_full_text("9901.00001")
+    assert http.calls == ["api/query?id_list=9901.00001"]
+
+
 def test_arxiv_unknown_identifier_raises_lookup_error() -> None:
     with pytest.raises(LookupError):
         ArxivAdapter(RecordedHttpClient(ARXIV_RECORDINGS)).fetch_metadata("9999.99999")

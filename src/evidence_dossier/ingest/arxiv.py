@@ -4,6 +4,11 @@ Metadata comes from the arXiv API Atom feed. arXiv offers no structured full
 text: the PDF and the LaTeX source need a converter that this increment does
 not have. fetch_full_text therefore returns the abstract at source level
 ABSTRACT_ONLY, and a later increment can replace it with a PDF path.
+
+The arXiv API asks callers for no more than one request every three seconds.
+The adapter keeps the last entry it fetched, so fetch_metadata and
+fetch_full_text for one work cost one request. A caller paces the requests
+with PacedHttpClient.
 """
 
 import xml.etree.ElementTree as ET
@@ -27,6 +32,7 @@ class ArxivAdapter:
 
     def __init__(self, http: HttpClient) -> None:
         self._http = http
+        self._last: tuple[str, ET.Element] | None = None
 
     def search(self, query: str, limit: int) -> list[SourceHit]:
         body = self._http.get(
@@ -82,10 +88,14 @@ class ArxivAdapter:
         )
 
     def _entry(self, identifier: str) -> ET.Element:
+        """Return the entry of the identifier. A repeat of the last identifier reuses its entry."""
+        if self._last is not None and self._last[0] == identifier:
+            return self._last[1]
         body = self._http.get(QUERY_URL, {"id_list": identifier, "max_results": "1"})
         entry = parse_xml(body).find("atom:entry", _NS)
         if entry is None:
             raise LookupError(f"arXiv has no entry with identifier {identifier}")
+        self._last = (identifier, entry)
         return entry
 
 
