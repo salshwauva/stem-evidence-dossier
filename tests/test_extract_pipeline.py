@@ -1,3 +1,5 @@
+import hashlib
+import sqlite3
 from collections.abc import Iterator
 
 import pytest
@@ -181,6 +183,32 @@ def test_unfenced_json_with_anything_around_it_is_invalid(corpus: Corpus, templa
     assert run.raw_response == reply
     assert run.errors[0].startswith("response is not JSON")
     assert corpus.store.list_claims(research_work_id=corpus.work.id) == []
+
+
+def test_a_second_extraction_of_a_document_stores_nothing(corpus: Corpus) -> None:
+    """The second reply differs, so its run ID differs, but its claim IDs collide."""
+    first = extract_document(
+        corpus.store,
+        corpus.document.id,
+        corpus.provider(valid_response()),
+        normalizer=normalize_claim,
+        now=NOW,
+    )
+    second_reply = valid_response() + "\n"
+
+    with pytest.raises(sqlite3.IntegrityError):
+        extract_document(
+            corpus.store,
+            corpus.document.id,
+            corpus.provider(second_reply),
+            normalizer=normalize_claim,
+            now=NOW,
+        )
+
+    digest = hashlib.sha256((corpus.prompt + second_reply).encode()).hexdigest()[:12]
+    assert corpus.store.get_extraction_run(f"{corpus.document.id}_run_{digest}") is None
+    assert corpus.store.get_extraction_run(first.id) == first
+    assert len(corpus.store.list_claims(research_work_id=corpus.work.id)) == 3
 
 
 def test_unknown_document_raises(corpus: Corpus) -> None:

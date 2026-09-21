@@ -15,13 +15,14 @@ STEM Evidence Dossier is one Python package, `evidence_dossier`, in a src layout
 | `evaluate` | Gold labels, dataset splits and scoring | Built in the evaluation increment |
 | `query` | Query parser, retrieval, comparability, stance and search | Built in the query increment |
 | `api` | FastAPI routes | Built in the query increment |
+| `cli` (a module) | The `evidence-dossier` command: ingest, extract, search, claim and serve | Built for the demo path |
 
 ## Import direction
 
 - `model` imports nothing from the other `evidence_dossier` subpackages. Imports inside `model` are fine.
 - `profiles` imports `model`.
 - `store` imports `model` and `profiles`.
-- Each other subpackage imports `model`, `profiles` and `store`. It never imports a sibling. The one exception is `api`, which imports `query` and `evaluate`. `extract` takes its normalizer as an argument (ADR 0005), and `evaluate` takes its search as an argument (ADR 0008), so neither imports a sibling.
+- Each other subpackage imports `model`, `profiles` and `store`. It never imports a sibling. The one exception is `api`, which imports `query` and `evaluate`. The `cli` module composes the whole pipeline: it imports `ingest`, `extract`, `normalize`, `query` and `api`, and no subpackage imports `cli`. `extract` takes its normalizer as an argument (ADR 0005), and `evaluate` takes its search as an argument (ADR 0008), so neither imports a sibling.
 
 ```mermaid
 flowchart BT
@@ -35,6 +36,11 @@ flowchart BT
     query --> store
     api --> query
     api --> evaluate
+    cli --> ingest
+    cli --> extract
+    cli --> normalize
+    cli --> query
+    cli --> api
 ```
 
 An arrow means "imports". The diagram leaves out the direct imports of `model` and `profiles` from the other subpackages.

@@ -97,11 +97,14 @@ def extract_document(
             zip(outcome.candidates.claims, outcome.spans, strict=True), start=1
         )
     ]
-    store.add_extraction_run(run)
-    for study in studies:
-        store.add_study(study)
-    for claim in claims:
-        store.add_claim(claim)
+    # One unit, so a claim that fails to store (a second extraction of the same
+    # document collides on its claim IDs) leaves no run or study behind.
+    with store.transaction():
+        store.add_extraction_run(run)
+        for study in studies:
+            store.add_study(study)
+        for claim in claims:
+            store.add_claim(claim)
     return run
 
 
