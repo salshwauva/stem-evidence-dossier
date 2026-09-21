@@ -1,18 +1,19 @@
-"""A hand written benchmark for the deterministic query parser (plan section 36, ADR 0012).
+"""A labeled benchmark for the deterministic query parser (plan section 36, ADR 0012).
 
-Every proposition below is hand written, in the words a researcher types into
-a search box. Every label is hand written as well, from a plain reading of the
-English, and every label was written before any parser ran on the text.
+Every proposition below uses the words a researcher types into a search box.
+Every label comes from a plain reading of the English, and every label was
+written before any parser ran on the text.
 
 Twenty of the thirty use the subject, verb, measurement and comparator shape
 that the README documents. Ten use other phrasings that researchers type: a
 question about an effect, a passive question, a noun phrase, a hedge, an
 association, and a verb outside the table such as "extends" or "suppresses".
 
-Read the counts with that provenance in mind. Claude wrote these propositions,
-these labels and that mix in the same session that broadened the rules, so they
-carry the bias of the author of the code. Nothing here is sampled from a real
-query log, and no second reader has checked the labels.
+Read the counts with that provenance in mind. The author of the rules also
+wrote these propositions, these labels and that mix, in the same pass that
+broadened the rules, so they carry the bias of the author of the code.
+Nothing here is sampled from a real query log, and no second reader has
+checked the labels.
 
 The label holds the four fields a correct parse yields:
 
@@ -48,7 +49,7 @@ FIELDS: tuple[str, ...] = ("subject", "relationship", "measurement", "comparator
 
 @dataclass(frozen=True)
 class ParseCase:
-    """One hand written proposition with the fields a correct parse yields."""
+    """One labeled proposition with the fields a correct parse yields."""
 
     text: str
     domain: Domain
@@ -365,7 +366,7 @@ def counts(results: Sequence[CaseResult]) -> dict[str, int]:
 def main() -> None:
     results = run()
     tally = counts(results)
-    print(f"query parse benchmark: {len(results)} hand written propositions")
+    print(f"query parse benchmark: {len(results)} labeled propositions")
     for verdict in ("resolved", "partial", "unresolved"):
         print(f"{verdict:<11}{tally[verdict]:>3}")
     print("\ncases the rules do not resolve:")

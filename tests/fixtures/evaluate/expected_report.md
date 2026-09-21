@@ -6,7 +6,7 @@
 - Split: dev
 - Created at: 2026-09-12T06:00:00+00:00
 - Note: The papers, the gold labels and the predictions are invented test fixtures.
-- Note: The predictions were written by hand from the gold labels with deliberate errors.
+- Note: The predictions were made from the gold labels with deliberate errors.
 
 ## Extraction
 
