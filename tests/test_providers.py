@@ -9,6 +9,7 @@ from evidence_dossier.extract import (
     ProviderError,
     ProviderResponse,
     RecordedProvider,
+    RecordingProvider,
     prompt_key,
 )
 from evidence_dossier.extract.providers import DENIED_TOOLS, DETAIL_LIMIT, run_command
@@ -36,6 +37,15 @@ def test_recorded_provider_names_the_missing_key(tmp_path: Path) -> None:
 
     with pytest.raises(ProviderError, match=prompt_key("another prompt")):
         provider.complete("another prompt")
+
+
+def test_a_recording_provider_saves_a_reply_that_recorded_provider_replays(
+    tmp_path: Path,
+) -> None:
+    live = RecordedProvider({prompt_key(PROMPT): RESPONSE})
+
+    assert RecordingProvider(live, tmp_path).complete(PROMPT) == RESPONSE
+    assert RecordedProvider(fixture_dir=tmp_path).complete(PROMPT) == RESPONSE
 
 
 def test_claude_cli_provider_sends_the_prompt_on_stdin_to_the_claude_command() -> None:

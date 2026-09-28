@@ -19,6 +19,7 @@ from evidence_dossier.extract.providers import (
     ProviderError,
     ProviderResponse,
     RecordedProvider,
+    RecordingProvider,
     prompt_key,
 )
 from evidence_dossier.extract.validation import ValidationOutcome, validate_response
@@ -35,6 +36,7 @@ __all__ = [
     "ProviderError",
     "ProviderResponse",
     "RecordedProvider",
+    "RecordingProvider",
     "ValidationOutcome",
     "build_prompt",
     "extract_document",

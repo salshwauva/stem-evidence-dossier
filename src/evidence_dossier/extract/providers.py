@@ -71,6 +71,26 @@ class RecordedProvider:
 # can hold part of a prompt or a reply, and a caller may log the error.
 DETAIL_LIMIT = 500
 
+
+class RecordingProvider:
+    """Sends each prompt through a live provider and saves the reply for RecordedProvider.
+
+    The file is "<prompt key>.json" in the folder, the layout that
+    RecordedProvider(fixture_dir=folder) replays.
+    """
+
+    def __init__(self, inner: ExtractionProvider, folder: Path) -> None:
+        self._inner = inner
+        self._folder = folder
+
+    def complete(self, prompt: str) -> ProviderResponse:
+        response = self._inner.complete(prompt)
+        self._folder.mkdir(parents=True, exist_ok=True)
+        path = self._folder / f"{prompt_key(prompt)}.json"
+        path.write_text(response.model_dump_json(indent=2) + "\n", encoding="utf-8")
+        return response
+
+
 type CommandRunner = Callable[[list[str], str], str]
 """Runs a command with the given text on stdin and returns its stdout."""
 
