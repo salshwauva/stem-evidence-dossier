@@ -1,13 +1,15 @@
 import io
+import json
 from pathlib import Path
 from typing import Any
 
 import pytest
 
 from evidence_dossier.cli import run
-from evidence_dossier.model import make_document_id, make_work_id
+from evidence_dossier.extract import ProviderResponse
+from evidence_dossier.model import make_document_id, make_section_id, make_work_id
 from evidence_dossier.store import Store
-from tests.extract_support import paper_corpus, valid_response
+from tests.extract_support import RESULTS_TEXT, add_paper, paper_corpus, valid_response
 from tests.query_corpus import retrieval_papers, seed
 from tests.recorded_http import ARXIV_RECORDINGS, PUBMED_RECORDINGS, RecordedHttpClient
 from tests.test_query_parser import RAG_TEXT
@@ -80,6 +82,23 @@ def test_extract_prints_the_errors_of_an_invalid_reply(tmp_path: Path) -> None:
     assert second.startswith("  response is not JSON")
 
 
+def test_extract_goes_on_after_a_document_with_no_reply(tmp_path: Path) -> None:
+    db = tmp_path / "dossier.db"
+    with Store(db) as store:
+        unknown = add_paper(store, "2409.00002", (RESULTS_TEXT,))
+        known = paper_corpus(store)
+    argv = ["--db", str(db), "extract", unknown.document.id, known.document.id, "--model", "x"]
+
+    status, out, _ = invoke(argv, provider=known.provider(valid_response()))
+
+    first, second = out.splitlines()
+    assert status == 1
+    assert first.startswith(
+        f"{unknown.document.id}: nothing stored, no reply: no recorded response"
+    )
+    assert second == f"{known.document.id}: VALID, 3 claims"
+
+
 def test_search_prints_each_stance_group_with_its_reasons_and_passage(seeded_db: str) -> None:
     status, out, _ = invoke(["--db", seeded_db, "search", RAG_TEXT, "--limit", "5"])
 
@@ -146,3 +165,126 @@ def test_claim_without_an_outcome_leaves_the_outcome_out(tmp_path: Path) -> None
     assert status == 0
     predicate = [line for line in out.splitlines() if line.startswith("Predicate:")]
     assert predicate == [f"Predicate: {bare.predicate}"]
+
+
+class FixedReplyProvider:
+    """Answers every prompt with one reply, so the demo runs without a model."""
+
+    def __init__(self, text: str) -> None:
+        self.text = text
+
+    def complete(self, prompt: str) -> ProviderResponse:
+        return ProviderResponse(model_identifier="fixed-model", text=self.text)
+
+
+def arxiv_fixture_reply() -> str:
+    """One valid claim for the invented arXiv fixture. Its passage spans a hard wrap."""
+    section_id = make_section_id(make_document_id(make_work_id("arxiv", "9901.00001"), 1), 0)
+    return json.dumps(
+        {
+            "studies": [{"key": "retrieval", "description": "Retrieval on Benchmark X"}],
+            "claims": [
+                {
+                    "study_key": "retrieval",
+                    "claim_type": "PERFORMANCE",
+                    "claim_text": "With retrieval, the factual error rate fell to 11.5%.",
+                    "subject": "retrieval-augmented generation",
+                    "predicate": "reduces",
+                    "outcome": "factual error rate",
+                    "research_context": {"benchmark": "Benchmark X"},
+                    "method": {"name": "retrieval-augmented generation"},
+                    "comparator": {"name": "same model without retrieval"},
+                    "measurement": {"name": "factual error rate", "unit": "percent"},
+                    "result": {"direction": "DECREASED", "value": 11.5, "unit": "percent"},
+                    "evidence": {
+                        "section_id": section_id,
+                        "source_text": "the factual error rate fell from 18.2% to 11.5% on Benchmark X",
+                    },
+                }
+            ],
+        }
+    )
+
+
+@pytest.fixture
+def demo_dir(tmp_path: Path) -> Path:
+    folder = tmp_path / "demo"
+    folder.mkdir()
+    corpus = {
+        "note": "An invented corpus for the demo command tests.",
+        "works": [{"source": "arxiv", "identifier": "9901.00001"}],
+        "queries": [RAG_TEXT],
+    }
+    (folder / "corpus.json").write_text(json.dumps(corpus))
+    return folder
+
+
+def test_the_demo_records_once_and_replays_the_same_output(tmp_path: Path, demo_dir: Path) -> None:
+    recorded_db, replayed_db = tmp_path / "recorded.db", tmp_path / "replayed.db"
+    record = ["--db", str(recorded_db), "demo", "--demo-dir", str(demo_dir), "--record"]
+    status, recorded, _ = invoke(
+        [*record, "--model", "fixed-model"],
+        http=RecordedHttpClient(ARXIV_RECORDINGS),
+        provider=FixedReplyProvider(arxiv_fixture_reply()),
+    )
+    assert status == 0
+    assert "SUPPORTS (1)" in recorded.splitlines()
+
+    status, replayed, _ = invoke(["--db", str(replayed_db), "demo", "--demo-dir", str(demo_dir)])
+
+    assert status == 0
+    assert replayed == recorded.replace(str(recorded_db), str(replayed_db))
+    assert replayed.splitlines()[-1].startswith(
+        f"Open one claim: evidence-dossier --db {replayed_db}"
+    )
+    sources = (demo_dir / "SOURCES.md").read_text()
+    assert "| arxiv 9901.00001, doi 10.5555/cs.9901.00001 | ABSTRACT_ONLY | CC0 |" in sources
+
+
+def test_the_demo_refuses_to_reuse_an_existing_store(seeded_db: str, demo_dir: Path) -> None:
+    status, out, err = invoke(["--db", seeded_db, "demo", "--demo-dir", str(demo_dir)])
+
+    assert status == 1
+    assert out == ""
+    assert err.startswith(f"error: {seeded_db} exists")
+
+
+def test_recording_refuses_to_mix_with_earlier_recordings(tmp_path: Path, demo_dir: Path) -> None:
+    (demo_dir / "replies").mkdir()
+    (demo_dir / "replies" / "old.json").write_text("{}")
+    argv = ["--db", str(tmp_path / "d.db"), "demo", "--demo-dir", str(demo_dir)]
+
+    status, _, err = invoke([*argv, "--record", "--model", "fixed-model"])
+
+    assert status == 1
+    assert "holds recordings" in err
+
+
+def test_a_replay_with_a_missing_reply_names_the_request(tmp_path: Path, demo_dir: Path) -> None:
+    status, _, err = invoke(["--db", str(tmp_path / "d.db"), "demo", "--demo-dir", str(demo_dir)])
+
+    assert status == 1
+    assert (
+        err == f"error: no recorded reply for api/query?id_list=9901.00001 in {demo_dir / 'http'}\n"
+    )
+
+
+def test_a_replay_miss_names_the_document_and_the_fix(tmp_path: Path, demo_dir: Path) -> None:
+    record = ["--db", str(tmp_path / "recorded.db"), "demo", "--demo-dir", str(demo_dir)]
+    invoke(
+        [*record, "--record", "--model", "fixed-model"],
+        http=RecordedHttpClient(ARXIV_RECORDINGS),
+        provider=FixedReplyProvider(arxiv_fixture_reply()),
+    )
+    for reply in (demo_dir / "replies").iterdir():
+        reply.unlink()
+    replay = ["--db", str(tmp_path / "replayed.db"), "demo", "--demo-dir", str(demo_dir)]
+
+    status, out, err = invoke(replay)
+
+    document_id = make_document_id(make_work_id("arxiv", "9901.00001"), 1)
+    assert status == 1
+    assert f"{document_id}: nothing stored, no reply: no recorded response" in out
+    assert f"Query: {RAG_TEXT}" in out.splitlines()
+    assert err.startswith("error: 1 document had no recorded reply.")
+    assert err.rstrip().endswith("then run demo --record.")
