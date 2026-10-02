@@ -6,6 +6,12 @@ belongs to the document, and every source_text occurs exactly once in its
 section. The pipeline computes the offsets from the section text and never
 trusts offsets from the model. Every failure is an error string, so an
 invalid reply stays stored with its errors.
+
+The section text keeps Unicode spaces such as the no-break space, and a model
+reply often copies one of them as a plain space. A source_text that does not
+occur exactly is retried with each plain space matching any such space. The
+match is one character for one character, so the stored span holds the exact
+section text and its offsets stay inside the section.
 """
 
 import json
@@ -22,6 +28,8 @@ from evidence_dossier.model import EvidenceSpan, Section, SourceDocument
 # A Markdown code fence with any language tag, or none.
 _FENCE = re.compile(r"```[^\n`]*\n(.*?)\n[ \t]*```", re.DOTALL)
 _SLUG = re.compile(r"[^a-z0-9]+")
+# Characters that a reply may copy as a plain space: tab and the Unicode space separators.
+_SPACE_LIKE = "[ \t\u00a0\u1680\u2000-\u200a\u202f\u205f\u3000]"
 
 
 @dataclass(frozen=True)
@@ -58,27 +66,40 @@ def validate_response(
                 f" is not a section of document {document.id}"
             )
             continue
-        count = section.text.count(claim.evidence.source_text)
-        if count != 1:
-            reason = "does not occur" if count == 0 else f"occurs {count} times"
+        found = _occurrences(section.text, claim.evidence.source_text)
+        if len(found) != 1:
+            reason = "does not occur" if not found else f"occurs {len(found)} times"
             errors.append(
                 f"claims.{n}.evidence.source_text: {reason} in section {section.id},"
                 " so the span is ambiguous or missing"
             )
             continue
-        start = section.text.index(claim.evidence.source_text)
+        start, end = found[0]
         spans.append(
             EvidenceSpan(
                 research_work_id=document.research_work_id,
                 section_id=section.id,
                 start_offset=start,
-                end_offset=start + len(claim.evidence.source_text),
-                source_text=claim.evidence.source_text,
+                end_offset=end,
+                source_text=section.text[start:end],
             )
         )
     if errors:
         return ValidationOutcome(None, (), tuple(errors))
     return ValidationOutcome(candidates, tuple(spans), ())
+
+
+def _occurrences(section_text: str, source_text: str) -> list[tuple[int, int]]:
+    """Return the start and end of each place where the source text occurs in the section.
+
+    An exact match wins. Without one, each plain space of the source text matches
+    any space-like character, one for one.
+    """
+    exact = [m.span() for m in re.finditer(re.escape(source_text), section_text)]
+    if exact:
+        return exact
+    pattern = _SPACE_LIKE.join(re.escape(word) for word in source_text.split(" "))
+    return [m.span() for m in re.finditer(pattern, section_text)]
 
 
 def _parse_json(text: str) -> Any:

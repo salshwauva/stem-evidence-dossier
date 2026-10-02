@@ -11,26 +11,29 @@ One run of the evaluate package on real text. Run date: 2026-10-02.
 
 ## Results
 
-| measure | value |
-| --- | --- |
-| gold claims | 30 |
-| predicted claims | 34 |
-| claim match, span overlap rule of the guidelines (Jaccard 0.5) | precision 47.1%, recall 53.3% |
-| claim match, any span overlap | precision 64.7%, recall 73.3% |
-| field micro precision and recall, matched and unmatched claims | 26.4% and 27.9% |
-| stance accuracy over all 21 labeled pairs | 14.3% (3 of 21) |
-| stance accuracy over the 7 pairs that got a prediction | 42.9% (3 of 7) |
-| stance macro F1 | 0.115 |
+Two runs on the same 8 abstracts and the same gold. The first run hit a span validation defect that stored no claims for one paper. The fix lets a plain space in a model quote match a no-break space in the stored text (`src/evidence_dossier/extract/validation.py`). The second run re-extracted that one paper. The other 7 papers kept their claims from the first run.
 
-`report.md` holds the full report.
+| measure | before the fix | after the fix |
+| --- | --- | --- |
+| gold claims | 30 | 30 |
+| predicted claims | 34 | 38 |
+| claim match, span overlap rule of the guidelines (Jaccard 0.5) | precision 47.1%, recall 53.3% | precision 50.0%, recall 63.3% |
+| claim match, any span overlap | precision 64.7%, recall 73.3% | precision 65.8%, recall 83.3% |
+| field micro precision and recall, matched and unmatched claims | 26.4% and 27.9% | 27.4% and 33.2% |
+| stance accuracy over all 21 labeled pairs | 14.3% (3 of 21) | 33.3% (7 of 21) |
+| stance accuracy over the pairs that got a prediction | 42.9% (3 of 7) | 53.8% (7 of 13) |
+| stance macro F1 | 0.115 | 0.258 |
+| retrieval Recall@5 | 0.306 | 0.639 |
+
+`report.before-fix.md` and `report.md` hold the two full reports.
 
 ## Read these before you quote a number
 
 - N is 30 claims. One claim moves a rate by about 3 points.
 - The gold spans are clause sized and the extractor spans are sentence sized. The strict match rule drops some correct claims for that reason alone, so the strict figures read low.
 - The field scores compare predicate and outcome as exact text after case folding. The gold phrasing is one choice among several, so those fields score low even when the extraction is right.
-- `work_f911b46a09ec5d13_v1` failed validation and stored no claims. The stored text holds non-breaking spaces and the model reply holds plain spaces, so no span matched. That is a pipeline defect, and it costs 3 gold claims of recall.
-- 14 of 21 stance pairs got no prediction because retrieval did not return the claim. The stance score mostly reflects retrieval misses.
+- The second run re-extracted one paper, and a model reply varies between calls. The jump from the fix mixes the fix with that variation.
+- 8 of 21 stance pairs still got no prediction because retrieval did not return the claim. The stance score mostly reflects retrieval misses and the rule based classifier.
 - The gold labeler and the extractor are the same model family, which usually inflates agreement.
 
 ## Files
