@@ -45,17 +45,35 @@ def search(store: Store, text: str) -> list[SearchHit]:
     ]
 
 
+def run_versions(store: Store) -> tuple[str, str, str]:
+    """Return the model, prompt and schema version that the stored runs agree on."""
+    found: tuple[set[str], set[str], set[str]] = (set(), set(), set())
+    for document in ds.documents:
+        for claim in store.list_claims(research_work_id=document.research_work_id):
+            run = (
+                store.get_extraction_run(claim.extraction_run_id)
+                if claim.extraction_run_id
+                else None
+            )
+            if run is not None:
+                found[0].add(run.model_identifier)
+                found[1].add(run.prompt_version)
+                found[2].add(run.schema_version)
+    return tuple(next(iter(v)) if len(v) == 1 else "mixed" for v in found)  # type: ignore[return-value]
+
+
 with Store(str(R / "dossier.db")) as store:
+    model_id, prompt_id, schema_id = run_versions(store)
     rep = evaluate_store(
         store,
         ds,
-        model_identifier=MODEL,
-        prompt_version="v1",
-        schema_version="v1",
+        model_identifier=model_id,
+        prompt_version=prompt_id,
+        schema_version=schema_id,
         now=datetime.now(UTC),
         search=search,
         notes=tuple(json.loads((R / "gold/notes.json").read_text())["notes"])
         + ("Search ran with AI query expansion, prompt query-expand-v1.",),
     )
-(R / "report.expanded.md").write_text(rep.to_markdown())
+(R / "report.claims-v2.expanded.md").write_text(rep.to_markdown())
 print("ok")
