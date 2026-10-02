@@ -1,0 +1,150 @@
+{
+  "research_work_id": "work_f911b46a09ec5d13",
+  "document_id": "work_f911b46a09ec5d13_v1",
+  "source_level": "ABSTRACT_ONLY",
+  "claims": [
+    {
+      "gold_key": "c1",
+      "research_work_id": "work_f911b46a09ec5d13",
+      "study_key": "vitd_oil:vitd-rct",
+      "claim_type": "EFFECT",
+      "claim_text": "Vitamin D supplement raised serum 25(OH)D more than control.",
+      "subject": {
+        "original": "vitamin D supplement",
+        "canonical": "vitamin D supplement"
+      },
+      "predicate": "increased",
+      "outcome": "serum 25(OH)D",
+      "research_context": {
+        "domain": "BIOLOGY",
+        "system": "healthy adults aged 18-30"
+      },
+      "method": {
+        "name": {
+          "original": "1000 IU vitamin D supplement",
+          "canonical": "1000 IU vitamin D supplement"
+        }
+      },
+      "comparator": {
+        "name": {
+          "original": "control",
+          "canonical": "control"
+        }
+      },
+      "measurement": {
+        "name": {
+          "original": "serum 25(OH)D",
+          "canonical": "serum 25(OH)D"
+        }
+      },
+      "result": {
+        "direction": "INCREASED",
+        "value": null,
+        "statistical_significance": true,
+        "p_value": "= 0.001"
+      },
+      "evidence_span": {
+        "research_work_id": "work_f911b46a09ec5d13",
+        "section_id": "work_f911b46a09ec5d13_v1_s0",
+        "start_offset": 836,
+        "end_offset": 935,
+        "source_text": "Serum 25(OH)D increased more in the vitamin D supplement group compared to the controls (P = 0.001)"
+      }
+    },
+    {
+      "gold_key": "c2",
+      "research_work_id": "work_f911b46a09ec5d13",
+      "study_key": "vitd_oil:vitd-rct",
+      "claim_type": "EFFECT",
+      "claim_text": "In vitamin D sufficient participants, supplement and fortified oil raised serum 25(OH)D more than control.",
+      "subject": {
+        "original": "vitamin D supplement and fortified oil",
+        "canonical": "vitamin D supplement and fortified oil"
+      },
+      "predicate": "increased",
+      "outcome": "serum 25(OH)D",
+      "research_context": {
+        "domain": "BIOLOGY",
+        "system": "vitamin D sufficient subgroup"
+      },
+      "method": {
+        "name": {
+          "original": "vitamin D supplement and fortified oil",
+          "canonical": "vitamin D supplement and fortified oil"
+        }
+      },
+      "comparator": {
+        "name": {
+          "original": "control",
+          "canonical": "control"
+        }
+      },
+      "measurement": {
+        "name": {
+          "original": "serum 25(OH)D",
+          "canonical": "serum 25(OH)D"
+        }
+      },
+      "result": {
+        "direction": "INCREASED",
+        "value": null,
+        "statistical_significance": true,
+        "p_value": "= 0.001"
+      },
+      "evidence_span": {
+        "research_work_id": "work_f911b46a09ec5d13",
+        "section_id": "work_f911b46a09ec5d13_v1_s0",
+        "start_offset": 1025,
+        "end_offset": 1169,
+        "source_text": "serum 25(OH)D increased more in both vitamin D supplement group and vitamin D fortified oil group, compared to the controls (P = 0.001 for both)"
+      }
+    },
+    {
+      "gold_key": "c3",
+      "research_work_id": "work_f911b46a09ec5d13",
+      "study_key": "vitd_oil:vitd-rct",
+      "claim_type": "EFFECT",
+      "claim_text": "PTH, BAP and CTX did not differ among the study groups.",
+      "subject": {
+        "original": "vitamin D supplement and fortified oil",
+        "canonical": "vitamin D supplement and fortified oil"
+      },
+      "predicate": "did not change",
+      "outcome": "PTH, BAP and CTX",
+      "research_context": {
+        "domain": "BIOLOGY",
+        "system": "healthy adults aged 18-30"
+      },
+      "method": {
+        "name": {
+          "original": "vitamin D supplement and fortified oil",
+          "canonical": "vitamin D supplement and fortified oil"
+        }
+      },
+      "comparator": {
+        "name": {
+          "original": "control",
+          "canonical": "control"
+        }
+      },
+      "measurement": {
+        "name": {
+          "original": "bone turnover markers",
+          "canonical": "bone turnover markers"
+        }
+      },
+      "result": {
+        "direction": "UNCHANGED",
+        "value": null,
+        "statistical_significance": false
+      },
+      "evidence_span": {
+        "research_work_id": "work_f911b46a09ec5d13",
+        "section_id": "work_f911b46a09ec5d13_v1_s0",
+        "start_offset": 1171,
+        "end_offset": 1268,
+        "source_text": "The mean differences of PTH, BAP, and CTX were not significantly different among the study groups"
+      }
+    }
+  ]
+}
