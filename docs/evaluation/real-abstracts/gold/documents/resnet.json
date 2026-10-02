@@ -1,0 +1,290 @@
+{
+  "research_work_id": "work_4627097f8362928c",
+  "document_id": "work_4627097f8362928c_v1",
+  "source_level": "ABSTRACT_ONLY",
+  "claims": [
+    {
+      "gold_key": "c1",
+      "research_work_id": "work_4627097f8362928c",
+      "study_key": "resnet:resnet-imagenet",
+      "claim_type": "PERFORMANCE",
+      "claim_text": "An ensemble of residual nets achieves 3.57% error on the ImageNet test set.",
+      "subject": {
+        "original": "ensemble of residual nets",
+        "canonical": "ensemble of residual nets"
+      },
+      "predicate": "achieves",
+      "outcome": "error",
+      "research_context": {
+        "domain": "COMPUTER_SCIENCE",
+        "system": "ImageNet"
+      },
+      "method": {
+        "name": {
+          "original": "residual nets",
+          "canonical": "residual nets"
+        }
+      },
+      "comparator": null,
+      "measurement": {
+        "name": {
+          "original": "error",
+          "canonical": "error"
+        }
+      },
+      "result": {
+        "direction": "OBSERVED",
+        "value": 3.57,
+        "unit": {
+          "original": "%"
+        }
+      },
+      "evidence_span": {
+        "research_work_id": "work_4627097f8362928c",
+        "section_id": "work_4627097f8362928c_v1_s0",
+        "start_offset": 638,
+        "end_offset": 718,
+        "source_text": "An ensemble of these residual nets achieves 3.57% error on the ImageNet test set"
+      }
+    },
+    {
+      "gold_key": "c2",
+      "research_work_id": "work_4627097f8362928c",
+      "study_key": "resnet:resnet-coco",
+      "claim_type": "PERFORMANCE",
+      "claim_text": "Extremely deep representations gave a 28% relative improvement on COCO object detection.",
+      "subject": {
+        "original": "deep residual representations",
+        "canonical": "deep residual representations"
+      },
+      "predicate": "improves",
+      "outcome": "object detection performance",
+      "research_context": {
+        "domain": "COMPUTER_SCIENCE",
+        "system": "COCO"
+      },
+      "method": {
+        "name": {
+          "original": "residual nets",
+          "canonical": "residual nets"
+        }
+      },
+      "comparator": null,
+      "measurement": {
+        "name": {
+          "original": "object detection performance",
+          "canonical": "object detection performance"
+        }
+      },
+      "result": {
+        "direction": "IMPROVED",
+        "value": 28.0,
+        "unit": {
+          "original": "% relative"
+        }
+      },
+      "evidence_span": {
+        "research_work_id": "work_4627097f8362928c",
+        "section_id": "work_4627097f8362928c_v1_s0",
+        "start_offset": 992,
+        "end_offset": 1065,
+        "source_text": "we obtain a 28% relative improvement on the COCO object detection dataset"
+      }
+    },
+    {
+      "gold_key": "c3",
+      "research_work_id": "work_4627097f8362928c",
+      "study_key": "resnet:resnet-imagenet",
+      "claim_type": "COMPARISON",
+      "claim_text": "Residual networks are easier to optimize.",
+      "subject": {
+        "original": "residual networks",
+        "canonical": "residual networks"
+      },
+      "predicate": "are easier to optimize",
+      "outcome": "optimization",
+      "research_context": {
+        "domain": "COMPUTER_SCIENCE",
+        "system": null
+      },
+      "method": {
+        "name": {
+          "original": "residual networks",
+          "canonical": "residual networks"
+        }
+      },
+      "comparator": null,
+      "measurement": null,
+      "result": {
+        "direction": "IMPROVED",
+        "value": null
+      },
+      "evidence_span": {
+        "research_work_id": "work_4627097f8362928c",
+        "section_id": "work_4627097f8362928c_v1_s0",
+        "start_offset": 395,
+        "end_offset": 435,
+        "source_text": "residual networks are easier to optimize"
+      }
+    },
+    {
+      "gold_key": "c4",
+      "research_work_id": "work_4627097f8362928c",
+      "study_key": "resnet:resnet-imagenet",
+      "claim_type": "SCALING",
+      "claim_text": "Residual networks gain accuracy from considerably increased depth.",
+      "subject": {
+        "original": "residual networks",
+        "canonical": "residual networks"
+      },
+      "predicate": "gain accuracy from",
+      "outcome": "accuracy",
+      "research_context": {
+        "domain": "COMPUTER_SCIENCE",
+        "system": null
+      },
+      "method": {
+        "name": {
+          "original": "residual networks",
+          "canonical": "residual networks"
+        }
+      },
+      "comparator": null,
+      "measurement": {
+        "name": {
+          "original": "accuracy",
+          "canonical": "accuracy"
+        }
+      },
+      "result": {
+        "direction": "INCREASED",
+        "value": null
+      },
+      "evidence_span": {
+        "research_work_id": "work_4627097f8362928c",
+        "section_id": "work_4627097f8362928c_v1_s0",
+        "start_offset": 441,
+        "end_offset": 492,
+        "source_text": "can gain accuracy from considerably increased depth"
+      }
+    },
+    {
+      "gold_key": "c5",
+      "research_work_id": "work_4627097f8362928c",
+      "study_key": "resnet:resnet-imagenet",
+      "claim_type": "COMPARISON",
+      "claim_text": "A 152-layer residual net has lower complexity than the 8x shallower VGG nets.",
+      "subject": {
+        "original": "152-layer residual nets",
+        "canonical": "152-layer residual nets"
+      },
+      "predicate": "have lower complexity than",
+      "outcome": "complexity",
+      "research_context": {
+        "domain": "COMPUTER_SCIENCE",
+        "system": "ImageNet"
+      },
+      "method": {
+        "name": {
+          "original": "residual nets",
+          "canonical": "residual nets"
+        }
+      },
+      "comparator": {
+        "name": {
+          "original": "VGG nets",
+          "canonical": "VGG nets"
+        }
+      },
+      "measurement": {
+        "name": {
+          "original": "complexity",
+          "canonical": "complexity"
+        }
+      },
+      "result": {
+        "direction": "DECREASED",
+        "value": null
+      },
+      "evidence_span": {
+        "research_work_id": "work_4627097f8362928c",
+        "section_id": "work_4627097f8362928c_v1_s0",
+        "start_offset": 530,
+        "end_offset": 636,
+        "source_text": "residual nets with a depth of up to 152 layers---8x deeper than VGG nets but still having lower complexity"
+      }
+    },
+    {
+      "gold_key": "c6",
+      "research_work_id": "work_4627097f8362928c",
+      "study_key": "resnet:resnet-ilsvrc",
+      "claim_type": "PERFORMANCE",
+      "claim_text": "The ensemble won 1st place on the ILSVRC 2015 classification task.",
+      "subject": {
+        "original": "ensemble of residual nets",
+        "canonical": "ensemble of residual nets"
+      },
+      "predicate": "won",
+      "outcome": "ILSVRC 2015 classification",
+      "research_context": {
+        "domain": "COMPUTER_SCIENCE",
+        "system": "ILSVRC 2015"
+      },
+      "method": {
+        "name": {
+          "original": "residual nets",
+          "canonical": "residual nets"
+        }
+      },
+      "comparator": null,
+      "measurement": null,
+      "result": {
+        "direction": "OBSERVED",
+        "value": null
+      },
+      "evidence_span": {
+        "research_work_id": "work_4627097f8362928c",
+        "section_id": "work_4627097f8362928c_v1_s0",
+        "start_offset": 720,
+        "end_offset": 788,
+        "source_text": "This result won the 1st place on the ILSVRC 2015 classification task"
+      }
+    },
+    {
+      "gold_key": "c7",
+      "research_work_id": "work_4627097f8362928c",
+      "study_key": "resnet:resnet-competitions",
+      "claim_type": "PERFORMANCE",
+      "claim_text": "Deep residual nets won 1st place on ImageNet detection, ImageNet localization, COCO detection and COCO segmentation.",
+      "subject": {
+        "original": "deep residual nets",
+        "canonical": "deep residual nets"
+      },
+      "predicate": "won",
+      "outcome": "ILSVRC and COCO 2015 competition tasks",
+      "research_context": {
+        "domain": "COMPUTER_SCIENCE",
+        "system": "ILSVRC and COCO 2015"
+      },
+      "method": {
+        "name": {
+          "original": "residual nets",
+          "canonical": "residual nets"
+        }
+      },
+      "comparator": null,
+      "measurement": null,
+      "result": {
+        "direction": "OBSERVED",
+        "value": null
+      },
+      "evidence_span": {
+        "research_work_id": "work_4627097f8362928c",
+        "section_id": "work_4627097f8362928c_v1_s0",
+        "start_offset": 1163,
+        "end_offset": 1286,
+        "source_text": "we also won the 1st places on the tasks of ImageNet detection, ImageNet localization, COCO detection, and COCO segmentation"
+      }
+    }
+  ]
+}

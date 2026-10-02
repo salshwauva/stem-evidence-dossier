@@ -1,0 +1,7 @@
+{
+  "notes": [
+    "The papers are 8 real abstracts: 3 from arXiv and 5 from PubMed. Every document is ABSTRACT_ONLY.",
+    "The gold labels were written by Claude, not by a human annotator, from the stored abstract text and before the extractor output was read.",
+    "The extractor also ran on a Claude model, so a score here is a same-family comparison and probably reads high."
+  ]
+}

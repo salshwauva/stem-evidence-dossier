@@ -1,0 +1,94 @@
+{
+  "research_work_id": "work_6d41d2f09c026403",
+  "document_id": "work_6d41d2f09c026403_v1",
+  "source_level": "ABSTRACT_ONLY",
+  "claims": [
+    {
+      "gold_key": "c1",
+      "research_work_id": "work_6d41d2f09c026403",
+      "study_key": "adam:adam-empirical",
+      "claim_type": "COMPARISON",
+      "claim_text": "Adam works well in practice and compares favorably to other stochastic optimization methods.",
+      "subject": {
+        "original": "Adam",
+        "canonical": "Adam"
+      },
+      "predicate": "compares favorably to",
+      "outcome": "optimization performance",
+      "research_context": {
+        "domain": "COMPUTER_SCIENCE",
+        "system": null
+      },
+      "method": {
+        "name": {
+          "original": "Adam",
+          "canonical": "Adam"
+        }
+      },
+      "comparator": {
+        "name": {
+          "original": "other stochastic optimization methods",
+          "canonical": "other stochastic optimization methods"
+        }
+      },
+      "measurement": null,
+      "result": {
+        "direction": "IMPROVED",
+        "value": null
+      },
+      "evidence_span": {
+        "research_work_id": "work_6d41d2f09c026403",
+        "section_id": "work_6d41d2f09c026403_v1_s0",
+        "start_offset": 943,
+        "end_offset": 1034,
+        "source_text": "Adam works well in practice and compares favorably to other stochastic optimization methods"
+      }
+    },
+    {
+      "gold_key": "c2",
+      "research_work_id": "work_6d41d2f09c026403",
+      "study_key": "adam:adam-theory",
+      "claim_type": "PERFORMANCE",
+      "claim_text": "Adam has a regret bound comparable to the best known results under online convex optimization.",
+      "subject": {
+        "original": "Adam",
+        "canonical": "Adam"
+      },
+      "predicate": "has a regret bound comparable to",
+      "outcome": "convergence rate",
+      "research_context": {
+        "domain": "COMPUTER_SCIENCE",
+        "system": "online convex optimization"
+      },
+      "method": {
+        "name": {
+          "original": "Adam",
+          "canonical": "Adam"
+        }
+      },
+      "comparator": {
+        "name": {
+          "original": "best known results",
+          "canonical": "best known results"
+        }
+      },
+      "measurement": {
+        "name": {
+          "original": "regret bound",
+          "canonical": "regret bound"
+        }
+      },
+      "result": {
+        "direction": "UNCHANGED",
+        "value": null
+      },
+      "evidence_span": {
+        "research_work_id": "work_6d41d2f09c026403",
+        "section_id": "work_6d41d2f09c026403_v1_s0",
+        "start_offset": 776,
+        "end_offset": 906,
+        "source_text": "a regret bound on the convergence rate that is comparable to the best known results under the online convex optimization framework"
+      }
+    }
+  ]
+}
