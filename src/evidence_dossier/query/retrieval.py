@@ -44,8 +44,12 @@ class Retriever:
         *,
         source_level: SourceLevel | None = None,
         limit: int = 20,
+        extra_terms: tuple[str, ...] = (),
     ) -> list[Candidate]:
         """Return up to limit candidates, best rank first.
+
+        extra_terms are search tokens beyond the proposition fields, such as an
+        expansion. They widen the match and nothing else.
 
         The domain and the source level filter on real claim columns. The
         context filters (dataset, system, population) compare against the
@@ -53,7 +57,7 @@ class Retriever:
         filter is set, the search runs without a limit and the limit applies
         after the filter, so an excluded match cannot hide a qualifying claim.
         """
-        terms = query_terms(proposition)
+        terms = tuple(dict.fromkeys((*query_terms(proposition), *extra_terms)))
         if not terms:
             return []
         domain: Domain | None = proposition.domain

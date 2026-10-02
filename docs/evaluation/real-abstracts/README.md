@@ -27,6 +27,21 @@ Two runs on the same 8 abstracts and the same gold. The first run hit a span val
 
 `report.before-fix.md` and `report.md` hold the two full reports.
 
+## With AI query expansion
+
+Search ran again over the same store and gold, with `ModelQueryExpander` and the `claude-sonnet-5-5` model (ADR 0013). The extraction claims did not change. `expansions.json` holds the model replies, so `score_expanded.py` replays them without a model call.
+
+| measure | rules and keywords | with expansion |
+| --- | --- | --- |
+| retrieval Recall@5 | 0.639 | 0.722 |
+| retrieval Recall@10 | 0.722 | 0.722 |
+| retrieval Precision@10 | 0.117 | 0.117 |
+| stance accuracy over all 21 labeled pairs | 33.3% (7 of 21) | 33.3% (7 of 21) |
+| stance macro F1 | 0.258 | 0.258 |
+| predictions without a gold label | 29 | 52 |
+
+Expansion widened retrieval a little and left stance alone, which is expected, because stance still comes from rules and reads the claim, not the expansion. Eight labeled pairs still get no prediction. Six of them belong to gold claims whose predicted span did not overlap the gold span enough to match, so the evaluation could not link a retrieved claim to its gold key. The other two are unrelated controls that search rightly did not return. The extraction prompt says "choose a passage" and gives no length, while the annotation guidelines ask for the shortest run of text that states the finding. That mismatch lowers every score that depends on a claim match, and it is the first thing to settle before the next run.
+
 ## Read these before you quote a number
 
 - N is 30 claims. One claim moves a rate by about 3 points.

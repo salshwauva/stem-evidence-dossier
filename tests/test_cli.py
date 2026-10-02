@@ -6,6 +6,7 @@ import pytest
 
 from evidence_dossier.cli import run
 from evidence_dossier.model import make_document_id, make_work_id
+from evidence_dossier.query import ModelQueryExpander
 from evidence_dossier.store import Store
 from tests.extract_support import paper_corpus, valid_response
 from tests.query_corpus import retrieval_papers, seed
@@ -95,6 +96,18 @@ def test_search_prints_each_stance_group_with_its_reasons_and_passage(seeded_db:
     assert '    Passage: RESULTS "Results", characters 16 to 63' in lines
     assert '      "the factual error rate fell from 18.2% to 11.5%"' in lines
     assert lines[-1] == "No claims: CONTRADICTS, MIXED, NULL, INDIRECT, INSUFFICIENTLY_COMPARABLE"
+
+
+def test_search_with_an_expander_reaches_a_claim_that_the_query_words_miss(seeded_db: str) -> None:
+    text = "quantum foam warps spacetime"
+    _, plain, _ = invoke(["--db", seeded_db, "search", text])
+    expander = ModelQueryExpander(lambda prompt: '{"terms": ["MAPT knockdown"]}')
+
+    status, out, _ = invoke(["--db", seeded_db, "search", text], expander=expander)
+
+    assert status == 0
+    assert "claim-90000001" not in plain
+    assert "claim-90000001" in out
 
 
 def test_claim_prints_the_context_baseline_metric_result_and_passage(seeded_db: str) -> None:
