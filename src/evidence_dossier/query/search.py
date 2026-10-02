@@ -18,6 +18,7 @@ from evidence_dossier.model import (
 )
 from evidence_dossier.profiles import get_profile
 from evidence_dossier.query.comparability import ComparabilityEngine
+from evidence_dossier.query.expansion import QueryExpander
 from evidence_dossier.query.parser import parse_query
 from evidence_dossier.query.retrieval import Candidate, Retriever
 from evidence_dossier.query.stance import StanceClassifier
@@ -80,12 +81,26 @@ def search_evidence(
     dataset: str | None = None,
     system: str | None = None,
     population: str | None = None,
+    expander: QueryExpander | None = None,
 ) -> EvidenceResults:
-    """Run the pipeline for a proposition text and store the proposition and its assessments."""
+    """Run the pipeline for a proposition text and store the proposition and its assessments.
+
+    An expander adds search terms to retrieval. Its note joins the parse notes,
+    so a stored proposition says which terms widened its search.
+    """
     proposition = parse_query(
         text, domain=domain, dataset=dataset, system=system, population=population
     )
-    candidates = Retriever(store).retrieve(proposition, source_level=source_level, limit=limit)
+    extra_terms: tuple[str, ...] = ()
+    if expander is not None:
+        expansion = expander.expand(proposition)
+        extra_terms = expansion.tokens
+        proposition = proposition.model_copy(
+            update={"parse_notes": (*proposition.parse_notes, expansion.note)}
+        )
+    candidates = Retriever(store).retrieve(
+        proposition, source_level=source_level, limit=limit, extra_terms=extra_terms
+    )
     engine = ComparabilityEngine()
     classifier = StanceClassifier()
     items: list[EvidenceItem] = []
