@@ -1,0 +1,43 @@
+{
+  "research_work_id": "work_ecdc742ad2d21fbc",
+  "document_id": "work_ecdc742ad2d21fbc_v1",
+  "source_level": "ABSTRACT_ONLY",
+  "claims": [
+    {
+      "gold_key": "c1",
+      "research_work_id": "work_ecdc742ad2d21fbc",
+      "study_key": "cas9_msm:msm-cas9",
+      "claim_type": "MECHANISM",
+      "claim_text": "A model is proposed for the synergy between Gln768 and Arg976 in Cas9.",
+      "subject": {
+        "original": "Gln768 and Arg976",
+        "canonical": "Gln768 and Arg976"
+      },
+      "predicate": "act synergistically in",
+      "outcome": "Cas9 configurational space",
+      "research_context": {
+        "domain": "BIOLOGY",
+        "system": "Cas9"
+      },
+      "method": {
+        "name": {
+          "original": "MD-MSM-ML scheme",
+          "canonical": "MD-MSM-ML scheme"
+        }
+      },
+      "comparator": null,
+      "measurement": null,
+      "result": {
+        "direction": "UNKNOWN",
+        "value": null
+      },
+      "evidence_span": {
+        "research_work_id": "work_ecdc742ad2d21fbc",
+        "section_id": "work_ecdc742ad2d21fbc_v1_s0",
+        "start_offset": 986,
+        "end_offset": 1048,
+        "source_text": "A model for the synergy between those two residues is proposed"
+      }
+    }
+  ]
+}

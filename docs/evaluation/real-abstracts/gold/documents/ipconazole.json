@@ -1,0 +1,407 @@
+{
+  "research_work_id": "work_5c58342a230665a3",
+  "document_id": "work_5c58342a230665a3_v1",
+  "source_level": "ABSTRACT_ONLY",
+  "claims": [
+    {
+      "gold_key": "c1",
+      "research_work_id": "work_5c58342a230665a3",
+      "study_key": "ipconazole:ipc-larvae",
+      "claim_type": "EFFECT",
+      "claim_text": "Ipconazole reduced the locomotive activity of zebrafish larvae during early development.",
+      "subject": {
+        "original": "ipconazole",
+        "canonical": "ipconazole"
+      },
+      "predicate": "reduced",
+      "outcome": "locomotive activity",
+      "research_context": {
+        "domain": "BIOLOGY",
+        "system": "zebrafish larvae"
+      },
+      "method": {
+        "name": {
+          "original": "ipconazole exposure",
+          "canonical": "ipconazole exposure"
+        }
+      },
+      "comparator": null,
+      "measurement": {
+        "name": {
+          "original": "locomotive activity",
+          "canonical": "locomotive activity"
+        }
+      },
+      "result": {
+        "direction": "DECREASED",
+        "value": null
+      },
+      "evidence_span": {
+        "research_work_id": "work_5c58342a230665a3",
+        "section_id": "work_5c58342a230665a3_v1_s0",
+        "start_offset": 614,
+        "end_offset": 709,
+        "source_text": "locomotive activity of ipconazole-exposed zebrafish larvae was reduced during early development"
+      }
+    },
+    {
+      "gold_key": "c2",
+      "research_work_id": "work_5c58342a230665a3",
+      "study_key": "ipconazole:ipc-larvae",
+      "claim_type": "EFFECT",
+      "claim_text": "Ipconazole exposure produced no detected morphological abnormalities.",
+      "subject": {
+        "original": "ipconazole",
+        "canonical": "ipconazole"
+      },
+      "predicate": "did not cause",
+      "outcome": "morphological abnormalities",
+      "research_context": {
+        "domain": "BIOLOGY",
+        "system": "zebrafish larvae"
+      },
+      "method": {
+        "name": {
+          "original": "ipconazole exposure",
+          "canonical": "ipconazole exposure"
+        }
+      },
+      "comparator": null,
+      "measurement": {
+        "name": {
+          "original": "morphological abnormalities",
+          "canonical": "morphological abnormalities"
+        }
+      },
+      "result": {
+        "direction": "NOT_OBSERVED",
+        "value": null
+      },
+      "evidence_span": {
+        "research_work_id": "work_5c58342a230665a3",
+        "section_id": "work_5c58342a230665a3_v1_s0",
+        "start_offset": 711,
+        "end_offset": 764,
+        "source_text": "even when morphological abnormalities were undetected"
+      }
+    },
+    {
+      "gold_key": "c3",
+      "research_work_id": "work_5c58342a230665a3",
+      "study_key": "ipconazole:ipc-embryos",
+      "claim_type": "EFFECT",
+      "claim_text": "Ipconazole reduced the mitochondrial antioxidants SOD1 and SOD2 in embryos.",
+      "subject": {
+        "original": "ipconazole",
+        "canonical": "ipconazole"
+      },
+      "predicate": "reduced",
+      "outcome": "superoxide dismutases 1 and 2",
+      "research_context": {
+        "domain": "BIOLOGY",
+        "system": "zebrafish embryos"
+      },
+      "method": {
+        "name": {
+          "original": "ipconazole treatment",
+          "canonical": "ipconazole treatment"
+        }
+      },
+      "comparator": null,
+      "measurement": {
+        "name": {
+          "original": "superoxide dismutase expression",
+          "canonical": "superoxide dismutase expression"
+        }
+      },
+      "result": {
+        "direction": "DECREASED",
+        "value": null
+      },
+      "evidence_span": {
+        "research_work_id": "work_5c58342a230665a3",
+        "section_id": "work_5c58342a230665a3_v1_s0",
+        "start_offset": 804,
+        "end_offset": 874,
+        "source_text": "the mitochondrial-specific antioxidants, superoxide dismutases 1 and 2"
+      }
+    },
+    {
+      "gold_key": "c4",
+      "research_work_id": "work_5c58342a230665a3",
+      "study_key": "ipconazole:ipc-embryos",
+      "claim_type": "EFFECT",
+      "claim_text": "Ipconazole reduced the genes for mitochondrial genome maintenance and function in embryos.",
+      "subject": {
+        "original": "ipconazole",
+        "canonical": "ipconazole"
+      },
+      "predicate": "reduced",
+      "outcome": "mitochondrial genome maintenance and function genes",
+      "research_context": {
+        "domain": "BIOLOGY",
+        "system": "zebrafish embryos"
+      },
+      "method": {
+        "name": {
+          "original": "ipconazole treatment",
+          "canonical": "ipconazole treatment"
+        }
+      },
+      "comparator": null,
+      "measurement": {
+        "name": {
+          "original": "gene expression",
+          "canonical": "gene expression"
+        }
+      },
+      "result": {
+        "direction": "DECREASED",
+        "value": null
+      },
+      "evidence_span": {
+        "research_work_id": "work_5c58342a230665a3",
+        "section_id": "work_5c58342a230665a3_v1_s0",
+        "start_offset": 880,
+        "end_offset": 1019,
+        "source_text": "the genes essential for mitochondrial genome maintenance and functions were specifically reduced in ipconazole-treated (0.02 μg/mL) embryos"
+      }
+    },
+    {
+      "gold_key": "c5",
+      "research_work_id": "work_5c58342a230665a3",
+      "study_key": "ipconazole:ipc-embryos",
+      "claim_type": "EFFECT",
+      "claim_text": "Ipconazole reduced hsp70 expression.",
+      "subject": {
+        "original": "ipconazole",
+        "canonical": "ipconazole"
+      },
+      "predicate": "reduced",
+      "outcome": "hsp70 expression",
+      "research_context": {
+        "domain": "BIOLOGY",
+        "system": "zebrafish embryos"
+      },
+      "method": {
+        "name": {
+          "original": "ipconazole treatment",
+          "canonical": "ipconazole treatment"
+        }
+      },
+      "comparator": null,
+      "measurement": {
+        "name": {
+          "original": "hsp70 expression",
+          "canonical": "hsp70 expression"
+        }
+      },
+      "result": {
+        "direction": "DECREASED",
+        "value": null
+      },
+      "evidence_span": {
+        "research_work_id": "work_5c58342a230665a3",
+        "section_id": "work_5c58342a230665a3_v1_s0",
+        "start_offset": 1114,
+        "end_offset": 1152,
+        "source_text": "substantially reduced hsp70 expression"
+      }
+    },
+    {
+      "gold_key": "c6",
+      "research_work_id": "work_5c58342a230665a3",
+      "study_key": "ipconazole:ipc-embryos",
+      "claim_type": "EFFECT",
+      "claim_text": "Ipconazole increased ERK1/2 phosphorylation in a dose-dependent manner.",
+      "subject": {
+        "original": "ipconazole",
+        "canonical": "ipconazole"
+      },
+      "predicate": "increased",
+      "outcome": "ERK1/2 phosphorylation",
+      "research_context": {
+        "domain": "BIOLOGY",
+        "system": "zebrafish embryos"
+      },
+      "method": {
+        "name": {
+          "original": "ipconazole treatment",
+          "canonical": "ipconazole treatment"
+        }
+      },
+      "comparator": null,
+      "measurement": {
+        "name": {
+          "original": "ERK1/2 phosphorylation",
+          "canonical": "ERK1/2 phosphorylation"
+        }
+      },
+      "result": {
+        "direction": "INCREASED",
+        "value": null
+      },
+      "evidence_span": {
+        "research_work_id": "work_5c58342a230665a3",
+        "section_id": "work_5c58342a230665a3_v1_s0",
+        "start_offset": 1157,
+        "end_offset": 1216,
+        "source_text": "increased ERK1/2 phosphorylation in a dose-dependent manner"
+      }
+    },
+    {
+      "gold_key": "c7",
+      "research_work_id": "work_5c58342a230665a3",
+      "study_key": "ipconazole:ipc-embryos",
+      "claim_type": "EFFECT",
+      "claim_text": "Ipconazole dysregulated GABAergic inhibitory neurons at 0.02 ug/mL.",
+      "subject": {
+        "original": "ipconazole",
+        "canonical": "ipconazole"
+      },
+      "predicate": "dysregulated",
+      "outcome": "GABAergic inhibitory neurons",
+      "research_context": {
+        "domain": "BIOLOGY",
+        "system": "zebrafish embryos"
+      },
+      "method": {
+        "name": {
+          "original": "ipconazole treatment",
+          "canonical": "ipconazole treatment"
+        }
+      },
+      "comparator": null,
+      "measurement": {
+        "name": {
+          "original": "gad1b expression",
+          "canonical": "gad1b expression"
+        }
+      },
+      "result": {
+        "direction": "UNKNOWN",
+        "value": null
+      },
+      "evidence_span": {
+        "research_work_id": "work_5c58342a230665a3",
+        "section_id": "work_5c58342a230665a3_v1_s0",
+        "start_offset": 1218,
+        "end_offset": 1333,
+        "source_text": "Interrupted gad1b expression confirmed that GABAergic inhibitory neurons were dysregulated at 0.02 μg/mL ipconazole"
+      }
+    },
+    {
+      "gold_key": "c8",
+      "research_work_id": "work_5c58342a230665a3",
+      "study_key": "ipconazole:ipc-embryos",
+      "claim_type": "EFFECT",
+      "claim_text": "Glutamatergic excitatory and dopaminergic neurons were unaffected by ipconazole.",
+      "subject": {
+        "original": "ipconazole",
+        "canonical": "ipconazole"
+      },
+      "predicate": "did not affect",
+      "outcome": "glutamatergic excitatory and dopaminergic neurons",
+      "research_context": {
+        "domain": "BIOLOGY",
+        "system": "zebrafish embryos"
+      },
+      "method": {
+        "name": {
+          "original": "ipconazole treatment",
+          "canonical": "ipconazole treatment"
+        }
+      },
+      "comparator": null,
+      "measurement": null,
+      "result": {
+        "direction": "UNCHANGED",
+        "value": null
+      },
+      "evidence_span": {
+        "research_work_id": "work_5c58342a230665a3",
+        "section_id": "work_5c58342a230665a3_v1_s0",
+        "start_offset": 1343,
+        "end_offset": 1412,
+        "source_text": "glutamatergic excitatory and dopaminergic neurons remained unaffected"
+      }
+    },
+    {
+      "gold_key": "c9",
+      "research_work_id": "work_5c58342a230665a3",
+      "study_key": "ipconazole:ipc-embryos",
+      "claim_type": "EFFECT",
+      "claim_text": "Ipconazole at 2 ug/mL produced caspase-independent cell death.",
+      "subject": {
+        "original": "ipconazole",
+        "canonical": "ipconazole"
+      },
+      "predicate": "caused",
+      "outcome": "caspase-independent cell death",
+      "research_context": {
+        "domain": "BIOLOGY",
+        "system": "zebrafish embryos"
+      },
+      "method": {
+        "name": {
+          "original": "ipconazole treatment",
+          "canonical": "ipconazole treatment"
+        }
+      },
+      "comparator": null,
+      "measurement": {
+        "name": {
+          "original": "cell death",
+          "canonical": "cell death"
+        }
+      },
+      "result": {
+        "direction": "INCREASED",
+        "value": null
+      },
+      "evidence_span": {
+        "research_work_id": "work_5c58342a230665a3",
+        "section_id": "work_5c58342a230665a3_v1_s0",
+        "start_offset": 1474,
+        "end_offset": 1551,
+        "source_text": "ipconazole-treated (2 μg/mL) embryos exhibited caspase-independent cell death"
+      }
+    },
+    {
+      "gold_key": "c10",
+      "research_work_id": "work_5c58342a230665a3",
+      "study_key": "ipconazole:ipc-embryos",
+      "claim_type": "MECHANISM",
+      "claim_text": "Ipconazole may alter neurodevelopment by dysregulating mitochondrial homeostasis.",
+      "subject": {
+        "original": "ipconazole",
+        "canonical": "ipconazole"
+      },
+      "predicate": "may alter neurodevelopment by dysregulating",
+      "outcome": "mitochondrial homeostasis",
+      "research_context": {
+        "domain": "BIOLOGY",
+        "system": "zebrafish"
+      },
+      "method": {
+        "name": {
+          "original": "ipconazole treatment",
+          "canonical": "ipconazole treatment"
+        }
+      },
+      "comparator": null,
+      "measurement": null,
+      "result": {
+        "direction": "UNKNOWN",
+        "value": null
+      },
+      "evidence_span": {
+        "research_work_id": "work_5c58342a230665a3",
+        "section_id": "work_5c58342a230665a3_v1_s0",
+        "start_offset": 1572,
+        "end_offset": 1669,
+        "source_text": "ipconazole has the potential to alter neurodevelopment by dysregulating mitochondrial homeostasis"
+      }
+    }
+  ]
+}

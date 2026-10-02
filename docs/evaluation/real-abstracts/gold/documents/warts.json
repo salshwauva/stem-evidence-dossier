@@ -1,0 +1,89 @@
+{
+  "research_work_id": "work_8c83c39cd1afa399",
+  "document_id": "work_8c83c39cd1afa399_v1",
+  "source_level": "ABSTRACT_ONLY",
+  "claims": [
+    {
+      "gold_key": "c1",
+      "research_work_id": "work_8c83c39cd1afa399",
+      "study_key": "warts:warts-rct",
+      "claim_type": "COMPARISON",
+      "claim_text": "Intralesional vitamin D3 led to more complete resolution of warts than cryotherapy.",
+      "subject": {
+        "original": "intralesional vitamin D3",
+        "canonical": "intralesional vitamin D3"
+      },
+      "predicate": "was related to more",
+      "outcome": "complete resolution of warts",
+      "research_context": {
+        "domain": "BIOLOGY",
+        "system": "cutaneous warts"
+      },
+      "method": {
+        "name": {
+          "original": "intralesional vitamin D3",
+          "canonical": "intralesional vitamin D3"
+        }
+      },
+      "comparator": {
+        "name": {
+          "original": "cryotherapy",
+          "canonical": "cryotherapy"
+        }
+      },
+      "measurement": {
+        "name": {
+          "original": "complete resolution of warts",
+          "canonical": "complete resolution of warts"
+        }
+      },
+      "result": {
+        "direction": "IMPROVED",
+        "value": null,
+        "statistical_significance": true,
+        "p_value": "<0.05"
+      },
+      "evidence_span": {
+        "research_work_id": "work_8c83c39cd1afa399",
+        "section_id": "work_8c83c39cd1afa399_v1_s0",
+        "start_offset": 1084,
+        "end_offset": 1208,
+        "source_text": "Vitamin D3 was statistically significantly related to complete resolution of warts as compared to cryotherapy (p-value<0.05)"
+      }
+    },
+    {
+      "gold_key": "c2",
+      "research_work_id": "work_8c83c39cd1afa399",
+      "study_key": "warts:warts-rct",
+      "claim_type": "PROPERTY",
+      "claim_text": "Plantar warts were the commonest wart type, 41 of 50 patients (82%).",
+      "subject": {
+        "original": "plantar warts",
+        "canonical": "plantar warts"
+      },
+      "predicate": "were the commonest type",
+      "outcome": "wart type",
+      "research_context": {
+        "domain": "BIOLOGY",
+        "system": "cutaneous warts"
+      },
+      "method": null,
+      "comparator": null,
+      "measurement": null,
+      "result": {
+        "direction": "OBSERVED",
+        "value": 82.0,
+        "unit": {
+          "original": "%"
+        }
+      },
+      "evidence_span": {
+        "research_work_id": "work_8c83c39cd1afa399",
+        "section_id": "work_8c83c39cd1afa399_v1_s0",
+        "start_offset": 933,
+        "end_offset": 1010,
+        "source_text": "Planter warts 41 (82%) were the commonest type according to the site of warts"
+      }
+    }
+  ]
+}

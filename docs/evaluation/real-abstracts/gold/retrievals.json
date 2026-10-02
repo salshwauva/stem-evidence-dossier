@@ -1,0 +1,48 @@
+[
+  {
+    "query_id": "q1",
+    "query_text": "Does vitamin D supplementation increase serum vitamin D levels?",
+    "relevant_claim_ids": [
+      "work_f911b46a09ec5d13:c1",
+      "work_f911b46a09ec5d13:c2"
+    ]
+  },
+  {
+    "query_id": "q2",
+    "query_text": "Do residual connections improve the accuracy of very deep networks?",
+    "relevant_claim_ids": [
+      "work_4627097f8362928c:c1",
+      "work_4627097f8362928c:c3",
+      "work_4627097f8362928c:c4"
+    ]
+  },
+  {
+    "query_id": "q3",
+    "query_text": "Does the Transformer outperform recurrent models on machine translation?",
+    "relevant_claim_ids": [
+      "work_a1a0262a54cd0bbc:c1",
+      "work_a1a0262a54cd0bbc:c2"
+    ]
+  },
+  {
+    "query_id": "q4",
+    "query_text": "Does ipconazole reduce locomotor activity in zebrafish larvae?",
+    "relevant_claim_ids": [
+      "work_5c58342a230665a3:c1"
+    ]
+  },
+  {
+    "query_id": "q5",
+    "query_text": "Is intralesional vitamin D3 more effective than cryotherapy for cutaneous warts?",
+    "relevant_claim_ids": [
+      "work_8c83c39cd1afa399:c1"
+    ]
+  },
+  {
+    "query_id": "q6",
+    "query_text": "Does vitamin D change bone turnover markers?",
+    "relevant_claim_ids": [
+      "work_f911b46a09ec5d13:c3"
+    ]
+  }
+]

@@ -11,6 +11,7 @@ from evidence_dossier.query.comparability import (
     ComparabilityEngine,
     DimensionResult,
 )
+from evidence_dossier.query.expansion import ModelQueryExpander, QueryExpander, QueryExpansion
 from evidence_dossier.query.parser import parse_query
 from evidence_dossier.query.polarity import POLARITY_VERSION, Polarity, polarity_of
 from evidence_dossier.query.retrieval import Candidate, Retriever
@@ -36,8 +37,11 @@ __all__ = [
     "Dossier",
     "EvidenceItem",
     "EvidenceResults",
+    "ModelQueryExpander",
     "Polarity",
     "Provenance",
+    "QueryExpander",
+    "QueryExpansion",
     "QueryProposition",
     "Retriever",
     "StanceAssessment",
