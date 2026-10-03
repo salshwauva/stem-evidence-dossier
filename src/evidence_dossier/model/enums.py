@@ -107,7 +107,13 @@ class WorkLinkRelation(StrEnum):
 
 
 class ValidationStatus(StrEnum):
-    """Outcome of schema and relationship validation for one extraction run."""
+    """Outcome of schema and relationship validation for one extraction run.
+
+    VALID stores every claim of the reply. PARTIAL stores the claims that
+    passed and records an error for each claim that did not. INVALID stores
+    no claim: the reply failed as a whole, or every claim failed.
+    """
 
     VALID = "VALID"
+    PARTIAL = "PARTIAL"
     INVALID = "INVALID"

@@ -54,8 +54,19 @@ from evidence_dossier.evaluate.stance import (
     StancePrediction,
     run_stance_evaluation,
 )
+from evidence_dossier.evaluate.stop_sheet import (
+    COHORT_KEYWORDS,
+    Fetch,
+    StoppedTrial,
+    draw_batch,
+    fetch_stopped_trials,
+    in_cohort,
+    write_key,
+    write_sheet,
+)
 
 __all__ = [
+    "COHORT_KEYWORDS",
     "FIELDS",
     "NOT_ASSESSABLE",
     "OVERLAP_THRESHOLD",
@@ -66,6 +77,7 @@ __all__ = [
     "DatasetSplitter",
     "EvaluationReport",
     "ExtractionEvaluation",
+    "Fetch",
     "FieldError",
     "FieldScores",
     "GoldClaim",
@@ -84,8 +96,12 @@ __all__ = [
     "Split",
     "StanceEvaluation",
     "StancePrediction",
+    "StoppedTrial",
+    "draw_batch",
     "evaluate_store",
+    "fetch_stopped_trials",
     "gold_keys",
+    "in_cohort",
     "load_dataset",
     "match_claims",
     "run_extraction_evaluation",
@@ -95,4 +111,6 @@ __all__ = [
     "spans_overlap",
     "stored_claims",
     "term_value",
+    "write_key",
+    "write_sheet",
 ]

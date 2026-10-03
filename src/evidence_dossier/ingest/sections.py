@@ -2,12 +2,14 @@
 
 Evidence offsets point into section text, so the text must stay exact and
 stable. The parser keeps the characters of the source with one change: inside
-a paragraph, each run of spaces, tabs and newlines becomes one space. JATS puts
-formatting newlines between inline elements, such as a citation mark after a
-word or a superscript after a gene name, and hard wrapped plain text has them
-inside sentences. A reader and a model both copy those runs as one space.
-Other Unicode spaces, such as a thin space before a unit, stay, also at the
-ends of a paragraph. Preformatted text collapses too. PMC rarely carries it.
+a paragraph, each run of spaces, tabs, newlines and Unicode space separators
+becomes one space. JATS puts formatting newlines between inline elements, such
+as a citation mark after a word or a superscript after a gene name, and hard
+wrapped plain text has them inside sentences. It also puts a thin or a
+no-break space before a unit. A reader and a model both copy all of these as
+one plain space, and a quote that does not match the text letter for letter
+fails validation. A run at the end of a paragraph drops out. Preformatted
+text collapses the same way. PMC rarely carries it.
 Paragraphs of one section join with one blank line. A second parse of the same
 input gives the same sections, and a passage of the source sits at the same
 offsets in the same section.
@@ -43,8 +45,14 @@ HEADING_TYPES: dict[str, SectionType] = {
 }
 
 _PARAGRAPH_SEPARATOR = "\n\n"
-_SPACE_RUN = re.compile(r"[ \t\r\n]+")
-_SPACE_CHARS = " \t\r\n"
+# The Unicode space separators (category Zs) besides the plain space: no-break,
+# en and em, thin, narrow no-break and ideographic spaces.
+_UNICODE_SPACES = (
+    "\u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a"
+    "\u202f\u205f\u3000"
+)
+_SPACE_CHARS = " \t\r\n" + _UNICODE_SPACES
+_SPACE_RUN = re.compile(f"[{_SPACE_CHARS}]+")
 # A blank line, which separates two paragraphs of plain text.
 _BLANK_LINE = re.compile(r"\n[ \t\r]*\n")
 

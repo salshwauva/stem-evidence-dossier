@@ -135,7 +135,7 @@ class Store:
         return _load(Study, self._fetch("studies", study_id))
 
     def add_extraction_run(self, run: ExtractionRun) -> None:
-        """Store an extraction run. An INVALID run keeps its raw response and its errors."""
+        """Store an extraction run. A PARTIAL or INVALID run keeps its raw response and its errors."""
         self._insert("extraction_runs", _dump(run, _RUN_JSON))
 
     def get_extraction_run(self, run_id: str) -> ExtractionRun | None:

@@ -1,0 +1,22 @@
+{
+  "PMC12306013.1/PMC12306013.1.json": "932fdaa851570d37.json",
+  "PMC4247762.1/PMC4247762.1.json": "ec6cd4f8755aef31.json",
+  "PMC6915767.1/PMC6915767.1.json": "c05d613a9f27e19e.json",
+  "api/query?id_list=2005.11401": "c5d3b13d01921fec.xml",
+  "api/query?id_list=2104.07567": "5785848b1a370d79.xml",
+  "api/query?id_list=2212.10511": "8f6b98e8e959da4e.xml",
+  "api/query?id_list=2310.01558": "7ef66a1ebf9b5b71.xml",
+  "api/query?id_list=2310.11511": "b3a6e600e7d590d2.xml",
+  "entrez/eutils/efetch.fcgi?db=pmc&id=PMC12306013": "c1c8181b579c3ad4.xml",
+  "entrez/eutils/efetch.fcgi?db=pmc&id=PMC4247762": "e70b19faba0adb8d.xml",
+  "entrez/eutils/efetch.fcgi?db=pmc&id=PMC6915767": "9d50f6ae03054c14.xml",
+  "entrez/eutils/efetch.fcgi?db=pubmed&id=25384392": "687ddb69b597a8e6.xml",
+  "entrez/eutils/efetch.fcgi?db=pubmed&id=31825838": "efa5ea55a138d043.xml",
+  "entrez/eutils/efetch.fcgi?db=pubmed&id=40734174": "10c8239b5c427169.xml",
+  "pmc-oa-opendata.s3.amazonaws.com?prefix=PMC12306013.": "9a39b2f3ba2a7635.xml",
+  "pmc-oa-opendata.s3.amazonaws.com?prefix=PMC4247762.": "35ebfe4b90e22ee5.xml",
+  "pmc-oa-opendata.s3.amazonaws.com?prefix=PMC6915767.": "a54f1c309fe60f84.xml",
+  "pmc/utils/idconv/v1.0?ids=25384392": "05e1e95d507dd976.json",
+  "pmc/utils/idconv/v1.0?ids=31825838": "375fa5b076b56bdb.json",
+  "pmc/utils/idconv/v1.0?ids=40734174": "462ff41e629d1b7f.json"
+}

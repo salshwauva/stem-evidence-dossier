@@ -125,6 +125,20 @@ def _label(term: Term | None) -> str:
 
 def _subject(proposition: QueryProposition, claim: EvidenceClaim) -> DimensionResult:
     score = _term_overlap(proposition.subject, claim.subject)
+    if score < MATCH_THRESHOLD and claim.method is not None:
+        # An extractor often names the subject by an acronym or a short form ("RAG
+        # models") and spells the method out. The method then carries the subject.
+        method_score = _term_overlap(proposition.subject, claim.method.name)
+        if method_score >= MATCH_THRESHOLD:
+            return DimensionResult(
+                dimension="subject",
+                matched=True,
+                reason=(
+                    f"The claim subject {_label(claim.subject)} lacks the proposition subject"
+                    f" '{proposition.subject}' (overlap {score:.2f}), but its method"
+                    f" {_label(claim.method.name)} holds it (overlap {method_score:.2f})."
+                ),
+            )
     matched = score >= MATCH_THRESHOLD
     return DimensionResult(
         dimension="subject",

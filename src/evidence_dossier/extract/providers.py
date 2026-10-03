@@ -158,7 +158,7 @@ class ClaudeCliProvider:
             "claude",
             "-p",
             "--output-format",
-            "text",
+            "json",
             "--model",
             self._model,
             "--tools",
@@ -172,5 +172,32 @@ class ClaudeCliProvider:
             ISOLATION_SETTINGS,
             "--no-session-persistence",
         ]
-        text = self._runner(args, prompt)
+        text = _reply_text(self._runner(args, prompt))
         return ProviderResponse(model_identifier=f"claude-cli/{self._model}", text=text)
+
+
+def _reply_text(stdout: str) -> str:
+    """Return the reply text of the claude command line tool's JSON result.
+
+    The text format hides a cut reply: the tail of a long reply arrives with no
+    sign that the model stopped early. The JSON result names the stop reason, so
+    a reply that did not end its turn raises ProviderError instead of reaching
+    validation as a fragment.
+    """
+    try:
+        result = json.loads(stdout)
+    except json.JSONDecodeError as error:
+        raise ProviderError(f"claude printed no JSON result: {stdout[:DETAIL_LIMIT]}") from error
+    text = result.get("result") if isinstance(result, dict) else None
+    if not isinstance(text, str):
+        raise ProviderError(f"claude JSON result has no reply text: {stdout[:DETAIL_LIMIT]}")
+    if result.get("is_error"):
+        raise ProviderError(f"claude reported an error: {text[:DETAIL_LIMIT]}")
+    stop_reason = result.get("stop_reason")
+    if stop_reason != "end_turn":
+        raise ProviderError(
+            f"claude stopped with stop_reason {stop_reason!r}"
+            f" (terminal_reason {result.get('terminal_reason')!r}, num_turns {result.get('num_turns')!r}),"
+            f" so the reply may be cut: {text[-DETAIL_LIMIT:]}"
+        )
+    return text

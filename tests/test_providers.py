@@ -48,18 +48,33 @@ def test_a_recording_provider_saves_a_reply_that_recorded_provider_replays(
     assert RecordedProvider(fixture_dir=tmp_path).complete(PROMPT) == RESPONSE
 
 
+def _cli_result(text: str, **fields: object) -> str:
+    """Return the JSON that `claude -p --output-format json` prints."""
+    return json.dumps(
+        {
+            "type": "result",
+            "is_error": False,
+            "stop_reason": "end_turn",
+            "terminal_reason": "completed",
+            "num_turns": 1,
+            "result": text,
+            **fields,
+        }
+    )
+
+
 def test_claude_cli_provider_sends_the_prompt_on_stdin_to_the_claude_command() -> None:
     calls: list[tuple[list[str], str]] = []
 
     def fake_runner(args: list[str], stdin: str) -> str:
         calls.append((args, stdin))
-        return "  {}\n"
+        return _cli_result("  {}\n")
 
     response = ClaudeCliProvider("claude-test-1", runner=fake_runner).complete(PROMPT)
 
     ((args, stdin),) = calls
     assert stdin == PROMPT
-    assert args[:6] == ["claude", "-p", "--output-format", "text", "--model", "claude-test-1"]
+    assert args[:6] == ["claude", "-p", "--output-format", "json", "--model", "claude-test-1"]
     assert response == ProviderResponse(model_identifier="claude-cli/claude-test-1", text="  {}\n")
 
 
@@ -69,7 +84,7 @@ def test_claude_cli_provider_grants_no_tool_and_loads_no_settings() -> None:
 
     def fake_runner(args: list[str], stdin: str) -> str:
         calls.append(args)
-        return "{}"
+        return _cli_result("{}")
 
     ClaudeCliProvider("claude-test-1", runner=fake_runner).complete(PROMPT)
 
@@ -84,6 +99,26 @@ def test_claude_cli_provider_grants_no_tool_and_loads_no_settings() -> None:
     settings = json.loads(args[args.index("--settings") + 1])
     assert settings["permissions"]["allow"] == []
     assert set(settings["permissions"]["deny"]) == set(DENIED_TOOLS)
+
+
+@pytest.mark.parametrize(
+    ("stdout", "expected"),
+    [
+        ("not json at all", "printed no JSON result"),
+        ('{"type": "result"}', "has no reply text"),
+        (_cli_result("Failed to authenticate", is_error=True), "reported an error: Failed"),
+        (_cli_result('{"studies": [', stop_reason="max_tokens"), "stop_reason 'max_tokens'"),
+        (_cli_result("{}", stop_reason=None), "stop_reason None"),
+    ],
+    ids=["not_json", "no_result", "is_error", "max_tokens", "no_stop_reason"],
+)
+def test_claude_cli_provider_raises_on_a_result_that_is_not_a_finished_reply(
+    stdout: str, expected: str
+) -> None:
+    provider = ClaudeCliProvider("claude-test-1", runner=lambda args, stdin: stdout)
+
+    with pytest.raises(ProviderError, match=expected):
+        provider.complete(PROMPT)
 
 
 @pytest.mark.skipif(

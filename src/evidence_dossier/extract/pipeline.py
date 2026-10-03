@@ -1,11 +1,14 @@
 """The extraction pipeline for one source document (plan sections 31, 46 and 47).
 
 extract_document builds the prompt, calls the provider, validates the reply,
-normalizes the claims and stores the run. An invalid reply is stored as an
-INVALID run with its raw response and its errors, and no claim is stored
-(plan section 31). The pipeline takes the normalizer as an argument, typed by
-the Normalizer protocol, so extract never imports normalize. Methodological
-reporting flags (plan section 44) are out of scope for this increment.
+normalizes the claims and stores the run. A reply that fails as a whole, or
+whose every claim fails, is stored as an INVALID run with its raw response and
+its errors, and no claim is stored (plan section 31). A reply with some failing
+claims is stored as a PARTIAL run: the claims that passed are stored, and each
+rejected claim keeps an error on the run. The pipeline takes the normalizer as
+an argument, typed by the Normalizer protocol, so extract never imports
+normalize. Methodological reporting flags (plan section 44) are out of scope
+for this increment.
 """
 
 import hashlib
@@ -15,7 +18,7 @@ from typing import Protocol
 from evidence_dossier.extract.candidates import CandidateClaim
 from evidence_dossier.extract.prompt import PROMPT_VERSION, build_prompt
 from evidence_dossier.extract.providers import ExtractionProvider
-from evidence_dossier.extract.validation import slug, validate_response
+from evidence_dossier.extract.validation import ValidationOutcome, slug, validate_response
 from evidence_dossier.model import (
     Comparator,
     EvidenceClaim,
@@ -51,9 +54,11 @@ def extract_document(
 ) -> ExtractionRun:
     """Extract the claims of one stored document and return the stored run.
 
-    Claim IDs are "<document_id>_c<n>" in reply order, and study IDs are
-    "<document_id>_<study key slug>". The run ID hashes the prompt and the
-    reply, so the same reply to the same prompt gives the same run ID.
+    Claim IDs are "<document_id>_c<n>", with n the position of the claim in
+    the reply counted from 1, so a rejected claim leaves a gap and claim n
+    matches the error "claims.<n - 1>". Study IDs are "<document_id>_<study key
+    slug>". The run ID hashes the prompt and the reply, so the same reply to
+    the same prompt gives the same run ID.
     """
     document = store.get_source_document(document_id)
     if document is None:
@@ -66,6 +71,7 @@ def extract_document(
     prompt = build_prompt(document, sections, profile)
     response = provider.complete(prompt)
     outcome = validate_response(response.text, document, sections)
+    status = _status(outcome)
     run = ExtractionRun(
         id=f"{document_id}_run_{hashlib.sha256((prompt + response.text).encode()).hexdigest()[:12]}",
         source_document_id=document_id,
@@ -74,10 +80,10 @@ def extract_document(
         schema_version=schema_version,
         created_at=now,
         raw_response=response.text,
-        validation_status=ValidationStatus.INVALID if outcome.errors else ValidationStatus.VALID,
+        validation_status=status,
         errors=outcome.errors,
     )
-    if outcome.candidates is None:
+    if outcome.studies is None or status is ValidationStatus.INVALID:
         store.add_extraction_run(run)
         return run
     studies = [
@@ -86,16 +92,21 @@ def extract_document(
             research_work_id=work.id,
             description=study.description,
         )
-        for study in outcome.candidates.studies
+        for study in outcome.studies
     ]
     claims = [
         normalizer(
-            _build_claim(candidate, span, work, f"{document_id}_c{n}", run.id, document_id),
+            _build_claim(
+                item.candidate,
+                item.span,
+                work,
+                f"{document_id}_c{item.number}",
+                run.id,
+                document_id,
+            ),
             profile,
         )
-        for n, (candidate, span) in enumerate(
-            zip(outcome.candidates.claims, outcome.spans, strict=True), start=1
-        )
+        for item in outcome.accepted
     ]
     # One unit, so a claim that fails to store (a second extraction of the same
     # document collides on its claim IDs) leaves no run or study behind.
@@ -106,6 +117,14 @@ def extract_document(
         for claim in claims:
             store.add_claim(claim)
     return run
+
+
+def _status(outcome: ValidationOutcome) -> ValidationStatus:
+    if outcome.studies is None:
+        return ValidationStatus.INVALID
+    if not outcome.errors:
+        return ValidationStatus.VALID
+    return ValidationStatus.PARTIAL if outcome.accepted else ValidationStatus.INVALID
 
 
 def _build_claim(

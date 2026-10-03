@@ -38,6 +38,7 @@ from evidence_dossier.ingest import (
     ReplayHttpClient,
     ingest_work,
 )
+from evidence_dossier.ingest.http import INDEX_FILE
 from evidence_dossier.model import Domain, EvidenceClaim, FrozenModel, Term
 from evidence_dossier.normalize import normalize_claim
 from evidence_dossier.query import EvidenceItem, EvidenceResults, search_evidence
@@ -89,7 +90,15 @@ def run(
     try:
         if args.command == "demo":
             return _demo(
-                args.db, Path(args.demo_dir), args.record, args.model, out, err, http, provider
+                args.db,
+                Path(args.demo_dir),
+                args.record,
+                args.model,
+                tuple(args.only),
+                out,
+                err,
+                http,
+                provider,
             )
         with Store(args.db) as store:
             if args.command == "ingest":
@@ -142,6 +151,14 @@ def _parser() -> argparse.ArgumentParser:
         "--record", action="store_true", help="fetch and extract live, and save every reply"
     )
     demo.add_argument("--model", help="model for the claude command line tool, with --record")
+    demo.add_argument(
+        "--only",
+        action="append",
+        default=[],
+        metavar="SOURCE:ID",
+        help="with --record, record only this corpus entry (such as arxiv:2310.11511)"
+        " and keep the other recordings; repeat to name more entries",
+    )
     return parser
 
 
@@ -373,6 +390,7 @@ def _demo(
     folder: Path,
     record: bool,
     model: str | None,
+    only: tuple[str, ...],
     out: TextIO,
     err: TextIO,
     http: HttpClient | None,
@@ -382,53 +400,78 @@ def _demo(
 
     Replay reads demo/http and demo/replies and opens no network connection.
     Record fetches and extracts live, saves every reply there, and writes
-    demo/SOURCES.md with the title, authors and license of each work.
+    demo/SOURCES.md with the title, authors and license of each work. Record
+    with --only runs live for the named entries and replays the rest, so one
+    failed paper does not cost a full recording.
     """
     corpus_path = folder / "corpus.json"
     if not corpus_path.is_file():
         print(f"error: {corpus_path} is missing; run from the repository root", file=err)
+        return 1
+    if only and not record:
+        print("error: --only needs --record", file=err)
         return 1
     if Path(db).exists():
         print(f"error: {db} exists; the demo builds a new store, so pass another --db", file=err)
         return 1
     corpus = DemoCorpus.model_validate_json(corpus_path.read_text(encoding="utf-8"))
     http_dir, replies_dir = folder / "http", folder / "replies"
-    clients: dict[str, HttpClient]
-    chosen: ExtractionProvider
+    entries = [_entry(work) for work in corpus.works]
+    live = set(only) if only else set(entries)
     if record:
         if model is None:
             print("error: --record needs --model", file=err)
             return 1
-        if any(path.exists() and any(path.iterdir()) for path in (http_dir, replies_dir)):
+        unknown = sorted(live - set(entries))
+        if unknown:
             print(
-                f"error: {folder} holds recordings; delete http and replies to record again",
+                f"error: --only: no corpus entry {', '.join(unknown)}; entries: {', '.join(entries)}",
                 file=err,
             )
             return 1
-        clients = {
-            source: RecordingHttpClient(http or _live_client(source), http_dir)
-            for source in ("arxiv", "pubmed")
-        }
-        chosen = RecordingProvider(provider or ClaudeCliProvider(model), replies_dir)
-    else:
-        replay = ReplayHttpClient(http_dir)
-        clients = {"arxiv": replay, "pubmed": replay}
-        chosen = RecordedProvider(fixture_dir=replies_dir)
+        recordings = any(path.exists() and any(path.iterdir()) for path in (http_dir, replies_dir))
+        if only and not ((http_dir / INDEX_FILE).is_file() and replies_dir.is_dir()):
+            print(f"error: --only needs earlier recordings in {folder}", file=err)
+            return 1
+        if recordings and not only:
+            print(
+                f"error: {folder} holds recordings; delete http and replies to record again,"
+                " or pass --only to record single entries",
+                file=err,
+            )
+            return 1
+    replay = ReplayHttpClient(http_dir)
+    recorded = RecordedProvider(fixture_dir=replies_dir)
+    recording_provider = (
+        RecordingProvider(provider or ClaudeCliProvider(model), replies_dir)
+        if record and model is not None
+        else None
+    )
+
+    def client_for(work: DemoWork) -> HttpClient:
+        if record and _entry(work) in live:
+            return RecordingHttpClient(http or _live_client(work.source), http_dir)
+        return replay
+
+    def provider_for(work: DemoWork) -> ExtractionProvider:
+        return recording_provider if recording_provider and _entry(work) in live else recorded
+
     with Store(db) as store:
         results = [
             _ingest_one(
-                store,
-                _adapter(work.source, clients[work.source]),
-                work.source,
-                work.identifier,
-                out,
+                store, _adapter(work.source, client_for(work)), work.source, work.identifier, out
             )
             for work in corpus.works
         ]
         if record:
             _write_sources(store, corpus, results, folder / "SOURCES.md")
         print(file=out)
-        summary = _extract(store, [result.document_id for result in results], chosen, out)
+        summary = ExtractSummary()
+        for work, result in zip(corpus.works, results, strict=True):
+            part = _extract(store, [result.document_id], provider_for(work), out)
+            summary = ExtractSummary(
+                invalid=summary.invalid + part.invalid, failed=summary.failed + part.failed
+            )
         first_claim: str | None = None
         for text in corpus.queries:
             print(file=out)
@@ -440,8 +483,17 @@ def _demo(
                 )
     if first_claim is not None:
         print(f"\nOpen one claim: evidence-dossier --db {db} claim {first_claim}", file=out)
-    if summary.failed and not record:
+    if summary.failed:
         documents = "document" if summary.failed == 1 else "documents"
+        if record:
+            print(
+                f"error: {summary.failed} {documents} got no reply. A failed recording keeps its"
+                " earlier reply. If the prompt, the schema or the section parser changed since"
+                " the last full recording, delete demo/http and demo/replies, then run"
+                " demo --record without --only.",
+                file=err,
+            )
+            return 1
         print(
             f"error: {summary.failed} {documents} had no recorded reply. The prompt, the schema"
             " or the section parser changed since the recording, so the recorded replies no"
@@ -450,6 +502,11 @@ def _demo(
         )
         return 1
     return 0
+
+
+def _entry(work: DemoWork) -> str:
+    """Return the name of a corpus entry as --only takes it, such as arxiv:2310.11511."""
+    return f"{work.source}:{work.identifier}"
 
 
 def _write_sources(

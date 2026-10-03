@@ -11,7 +11,7 @@
     {"source": "pubmed", "identifier": "31825838"}
   ],
   "queries": [
-    "retrieval-augmented generation reduces factual hallucination compared with the same model without retrieval",
+    "retrieval augmentation reduces factual hallucination compared with the same model without retrieval",
     "tau reduction reduces amyloid pathology compared with control mice"
   ]
 }

@@ -7,6 +7,7 @@ from evidence_dossier.model import (
     Domain,
     EvidenceClaim,
     Measurement,
+    Method,
     Result,
     ResultDirection,
     Stance,
@@ -91,6 +92,52 @@ def test_the_indirect_claim_fails_only_the_directness_dimension(store: Store) ->
     failed = [result.dimension for result in assessment.dimensions if not result.matched]
     assert failed == ["evidence directness"]
     assert "answer quality" in assessment.reasons()[-1]
+
+
+def _subject_dimension(claim: EvidenceClaim) -> tuple[bool, str]:
+    proposition = parse_query(RAG_TEXT, domain=Domain.COMPUTER_SCIENCE)
+    assessment = ComparabilityEngine().assess(
+        proposition, claim, get_profile(Domain.COMPUTER_SCIENCE)
+    )
+    (subject,) = (result for result in assessment.dimensions if result.dimension == "subject")
+    return subject.matched, subject.reason
+
+
+def test_a_method_that_holds_the_proposition_subject_carries_the_subject(store: Store) -> None:
+    """An acronym subject such as "RAG models" has no word in common with the spelled out subject."""
+    claim = store.get_claim("claim-supports")
+    assert claim is not None
+    acronym = claim.model_copy(
+        update={
+            "subject": Term(original="RAG models"),
+            "method": Method(name=Term(original="retrieval-augmented generation (RAG)")),
+        }
+    )
+
+    matched, reason = _subject_dimension(acronym)
+
+    assert matched
+    assert "lacks the proposition subject" in reason
+    assert "its method 'retrieval-augmented generation (RAG)' holds it" in reason
+
+
+def test_a_method_that_does_not_hold_the_proposition_subject_leaves_the_subject_unmatched(
+    store: Store,
+) -> None:
+    claim = store.get_claim("claim-supports")
+    assert claim is not None
+    other = claim.model_copy(
+        update={
+            "subject": Term(original="scaling"),
+            "method": Method(name=Term(original="large-scale knowledge probing")),
+        }
+    )
+
+    matched, reason = _subject_dimension(other)
+
+    assert not matched
+    assert reason.startswith("The claim subject 'scaling' lacks the proposition subject")
+    assert "its method" not in reason
 
 
 def test_search_evidence_groups_results_in_the_plan_order_and_stores_them(store: Store) -> None:

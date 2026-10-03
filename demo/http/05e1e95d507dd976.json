@@ -1,0 +1,1 @@
+{"status":"ok","response-date":"2026-10-01 20:50:52","request":{"warnings":["query param `email` is missing.","query param `tool` is missing."],"format":"json","ids":["25384392"],"echo":"ids=25384392&format=json","versions":"no","showaiid":"no","idtype":"pmid"},"records":[{"doi":"10.1186/1750-1326-9-46","pmcid":"PMC4247762","pmid":25384392,"requested-id":"25384392"}]}

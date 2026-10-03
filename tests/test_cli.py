@@ -6,7 +6,7 @@ from typing import Any
 import pytest
 
 from evidence_dossier.cli import run
-from evidence_dossier.extract import ProviderResponse
+from evidence_dossier.extract import ProviderError, ProviderResponse
 from evidence_dossier.model import make_document_id, make_section_id, make_work_id
 from evidence_dossier.store import Store
 from tests.extract_support import RESULTS_TEXT, add_paper, paper_corpus, valid_response
@@ -80,6 +80,22 @@ def test_extract_prints_the_errors_of_an_invalid_reply(tmp_path: Path) -> None:
     first, second = out.splitlines()
     assert first == f"{corpus.document.id}: INVALID, 0 claims"
     assert second.startswith("  response is not JSON")
+
+
+def test_extract_prints_a_partial_run_with_the_claims_it_stored(tmp_path: Path) -> None:
+    db = tmp_path / "dossier.db"
+    with Store(db) as store:
+        corpus = paper_corpus(store)
+    data = json.loads(valid_response())
+    data["claims"][1]["evidence"]["source_text"] = "text the paper does not hold"
+    argv = ["--db", str(db), "extract", corpus.document.id, "--model", "unused"]
+
+    status, out, _ = invoke(argv, provider=corpus.provider(json.dumps(data)))
+
+    assert status == 1
+    first, second = out.splitlines()
+    assert first == f"{corpus.document.id}: PARTIAL, 2 claims"
+    assert second.startswith("  claims.1.evidence.source_text: does not occur")
 
 
 def test_extract_goes_on_after_a_document_with_no_reply(tmp_path: Path) -> None:
@@ -288,3 +304,187 @@ def test_a_replay_miss_names_the_document_and_the_fix(tmp_path: Path, demo_dir: 
     assert f"Query: {RAG_TEXT}" in out.splitlines()
     assert err.startswith("error: 1 document had no recorded reply.")
     assert err.rstrip().endswith("then run demo --record.")
+
+
+class CountingProvider:
+    """Answers every prompt with one reply and counts the calls."""
+
+    def __init__(self, text: str) -> None:
+        self.text = text
+        self.calls = 0
+
+    def complete(self, prompt: str) -> ProviderResponse:
+        self.calls += 1
+        return ProviderResponse(model_identifier="fixed-model", text=self.text)
+
+
+class FailingProvider:
+    def complete(self, prompt: str) -> ProviderResponse:
+        raise ProviderError("the model call failed")
+
+
+BOTH_RECORDINGS = {**ARXIV_RECORDINGS, **PUBMED_RECORDINGS}
+
+
+@pytest.fixture
+def two_work_demo(tmp_path: Path, demo_dir: Path) -> Path:
+    """A demo folder with one arXiv and one PubMed work, fully recorded."""
+    corpus = json.loads((demo_dir / "corpus.json").read_text())
+    corpus["works"].append({"source": "pubmed", "identifier": "90001236"})
+    (demo_dir / "corpus.json").write_text(json.dumps(corpus))
+    status, _, _ = invoke(
+        ["--db", str(tmp_path / "all.db"), "demo", "--demo-dir", str(demo_dir)]
+        + ["--record", "--model", "fixed-model"],
+        http=RecordedHttpClient(BOTH_RECORDINGS),
+        provider=FixedReplyProvider(arxiv_fixture_reply()),
+    )
+    assert status == 0
+    return demo_dir
+
+
+def _snapshot(folder: Path) -> dict[str, bytes]:
+    return {path.name: path.read_bytes() for path in (folder / "replies").iterdir()}
+
+
+def test_record_only_rerecords_the_named_entry_and_keeps_the_rest(
+    tmp_path: Path, two_work_demo: Path
+) -> None:
+    before = _snapshot(two_work_demo)
+    changed = json.loads(arxiv_fixture_reply())
+    changed["claims"][0]["claim_text"] += " Recorded again."
+    http, provider = RecordedHttpClient(BOTH_RECORDINGS), CountingProvider(json.dumps(changed))
+    argv = ["--db", str(tmp_path / "only.db"), "demo", "--demo-dir", str(two_work_demo)]
+
+    status, _, err = invoke(
+        [*argv, "--record", "--model", "fixed-model", "--only", "arxiv:9901.00001"],
+        http=http,
+        provider=provider,
+    )
+
+    assert status == 0, err
+    assert provider.calls == 1
+    assert all(not call.startswith(("entrez", "pmc")) for call in http.calls), http.calls
+    after = _snapshot(two_work_demo)
+    changed = [name for name in after if before.get(name) != after[name]]
+    assert len(changed) == 1
+    assert {name: data for name, data in before.items() if name not in changed} == {
+        name: data for name, data in after.items() if name not in changed
+    }
+    status, replayed, err = invoke(
+        ["--db", str(tmp_path / "replayed.db"), "demo", "--demo-dir", str(two_work_demo)]
+    )
+    assert status == 0, err
+    assert "Recorded again." in replayed
+
+
+def test_record_only_names_the_entries_when_one_is_unknown(
+    tmp_path: Path, two_work_demo: Path
+) -> None:
+    http = RecordedHttpClient(BOTH_RECORDINGS)
+    db = tmp_path / "only.db"
+
+    status, out, err = invoke(
+        ["--db", str(db), "demo", "--demo-dir", str(two_work_demo)]
+        + ["--record", "--model", "fixed-model", "--only", "arxiv:0000.00000"],
+        http=http,
+        provider=FixedReplyProvider("unused"),
+    )
+
+    assert status == 1
+    assert out == ""
+    assert err == (
+        "error: --only: no corpus entry arxiv:0000.00000;"
+        " entries: arxiv:9901.00001, pubmed:90001236\n"
+    )
+    assert http.calls == [] and not db.exists()
+
+
+def test_only_needs_record(tmp_path: Path, two_work_demo: Path) -> None:
+    status, _, err = invoke(
+        ["--db", str(tmp_path / "d.db"), "demo", "--demo-dir", str(two_work_demo)]
+        + ["--only", "arxiv:9901.00001"]
+    )
+
+    assert status == 1
+    assert err == "error: --only needs --record\n"
+
+
+def test_record_only_needs_earlier_recordings(tmp_path: Path, demo_dir: Path) -> None:
+    status, _, err = invoke(
+        ["--db", str(tmp_path / "d.db"), "demo", "--demo-dir", str(demo_dir)]
+        + ["--record", "--model", "fixed-model", "--only", "arxiv:9901.00001"]
+    )
+
+    assert status == 1
+    assert err == f"error: --only needs earlier recordings in {demo_dir}\n"
+
+
+def test_a_failed_rerecording_keeps_the_old_reply(tmp_path: Path, two_work_demo: Path) -> None:
+    before = _snapshot(two_work_demo)
+
+    status, out, err = invoke(
+        ["--db", str(tmp_path / "only.db"), "demo", "--demo-dir", str(two_work_demo)]
+        + ["--record", "--model", "fixed-model", "--only", "arxiv:9901.00001"],
+        http=RecordedHttpClient(BOTH_RECORDINGS),
+        provider=FailingProvider(),
+    )
+
+    assert status == 1
+    assert "nothing stored, no reply: the model call failed" in out
+    assert err.startswith("error: 1 document got no reply. A failed recording keeps its earlier")
+    assert _snapshot(two_work_demo) == before
+
+
+def test_record_only_exits_1_when_a_replayed_entry_has_no_reply(
+    tmp_path: Path, two_work_demo: Path
+) -> None:
+    """A change to the prompt makes the other recordings stale, and --only cannot fix that."""
+    pubmed_prompt = None
+    for reply in (two_work_demo / "replies").iterdir():
+        if "reached" not in reply.read_text():  # the PubMed paper holds the second reply
+            pubmed_prompt = reply
+    assert pubmed_prompt is not None
+    pubmed_prompt.unlink()
+
+    status, out, err = invoke(
+        ["--db", str(tmp_path / "only.db"), "demo", "--demo-dir", str(two_work_demo)]
+        + ["--record", "--model", "fixed-model", "--only", "arxiv:9901.00001"],
+        http=RecordedHttpClient(BOTH_RECORDINGS),
+        provider=FixedReplyProvider(arxiv_fixture_reply()),
+    )
+
+    assert status == 1
+    assert "nothing stored, no reply: no recorded response" in out
+    assert "then run demo --record without --only." in err
+
+
+def test_record_only_takes_several_entries(tmp_path: Path, two_work_demo: Path) -> None:
+    provider = CountingProvider(arxiv_fixture_reply())
+
+    status, _, err = invoke(
+        ["--db", str(tmp_path / "only.db"), "demo", "--demo-dir", str(two_work_demo)]
+        + ["--record", "--model", "fixed-model"]
+        + ["--only", "arxiv:9901.00001", "--only", "pubmed:90001236"],
+        http=RecordedHttpClient(BOTH_RECORDINGS),
+        provider=provider,
+    )
+
+    assert status == 0, err
+    assert provider.calls == 2
+
+
+def test_the_demo_prints_a_partial_run_and_exits_0(tmp_path: Path, demo_dir: Path) -> None:
+    data = json.loads(arxiv_fixture_reply())
+    bad = json.loads(json.dumps(data["claims"][0]))
+    bad["evidence"]["source_text"] = "text the paper does not hold"
+    data["claims"].append(bad)
+
+    status, out, _ = invoke(
+        ["--db", str(tmp_path / "d.db"), "demo", "--demo-dir", str(demo_dir)]
+        + ["--record", "--model", "fixed-model"],
+        http=RecordedHttpClient(ARXIV_RECORDINGS),
+        provider=FixedReplyProvider(json.dumps(data)),
+    )
+
+    assert status == 0
+    assert ": PARTIAL, 1 claims" in out
