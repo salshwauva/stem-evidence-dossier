@@ -1,0 +1,35 @@
+{
+  "note": "A small invented query benchmark over tests/query_corpus.py. The relevant claim ids are set by hand and prove nothing about a real corpus.",
+  "cases": [
+    {
+      "text": "retrieval-augmented generation reduces factual hallucination compared with the same model without retrieval",
+      "domain": null,
+      "relevant_claim_ids": ["claim-2401.01234"]
+    },
+    {
+      "text": "MAPT knockdown increases neuronal survival compared with a scrambled control",
+      "domain": "BIOLOGY",
+      "relevant_claim_ids": ["claim-12345678"]
+    },
+    {
+      "text": "prompt caching reduces latency",
+      "domain": "COMPUTER_SCIENCE",
+      "relevant_claim_ids": ["claim-caching"]
+    },
+    {
+      "text": "a palladium catalyst improves coupling yield compared with no catalyst",
+      "domain": null,
+      "relevant_claim_ids": ["claim-catalyst"]
+    },
+    {
+      "text": "does graphene doping lower sheet resistance?",
+      "domain": "PHYSICS",
+      "relevant_claim_ids": ["claim-graphene"]
+    },
+    {
+      "text": "SIRT1 overexpression increases mitochondrial density",
+      "domain": null,
+      "relevant_claim_ids": ["claim-sirt1"]
+    }
+  ]
+}
