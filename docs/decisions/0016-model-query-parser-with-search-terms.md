@@ -4,7 +4,7 @@
 Accepted, 2026-10-08. Replaces the fallback behavior of ADR 0012 for the model path. The parser is off by default.
 
 ## Context
-The rule parser reads the words a researcher types into a search box only when a relationship verb from its table appears. The benchmark of ADR 0012 leaves 10 of 30 propositions unresolved. A natural sentence such as "endometriosis has less invasive ways to come up with a largely accurate diagnosis than laparoscopic surgery" parses as one subject with the relationship "unknown", no measurement and no comparator. The comparability step then has nothing to compare.
+The rule parser reads the words a researcher types into a search box only when a relationship verb from its table appears. The benchmark of ADR 0012 resolves 20 of its 30 propositions. A natural sentence such as "endometriosis has less invasive ways to come up with a largely accurate diagnosis than laparoscopic surgery" parses as one subject with the relationship "unknown", no measurement and no comparator. The comparability step then has nothing to compare.
 
 Retrieval has a second gap. It searches for the query words and nothing else, so a claim that says "Abeta" does not surface for a query that says "amyloid". The judge of ADR 0015 can only decide on claims that retrieval returns.
 
