@@ -1,0 +1,19 @@
+{
+  "subject": "data augmentation",
+  "relationship": "is associated with",
+  "measurement": "generalization gains",
+  "comparator": null,
+  "expected_direction": "IMPROVED",
+  "search_terms": [
+    "image augmentation",
+    "augmentation strategies",
+    "generalization performance",
+    "test accuracy",
+    "overfitting",
+    "low-data regime",
+    "limited training data",
+    "few-shot image classification",
+    "small-scale image classification",
+    "regularization"
+  ]
+}

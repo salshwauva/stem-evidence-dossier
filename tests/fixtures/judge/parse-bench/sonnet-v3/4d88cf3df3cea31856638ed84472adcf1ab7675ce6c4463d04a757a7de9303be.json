@@ -1,0 +1,19 @@
+{
+  "subject": "SIRT1 overexpression",
+  "relationship": "does not change",
+  "measurement": "mitochondrial density in muscle fibres",
+  "comparator": null,
+  "expected_direction": "UNCHANGED",
+  "search_terms": [
+    "sirtuin 1",
+    "SIRT1 transgenic",
+    "mitochondrial content",
+    "mitochondrial biogenesis",
+    "skeletal muscle",
+    "myofibres",
+    "PGC-1alpha",
+    "citrate synthase activity",
+    "mtDNA copy number",
+    "mitochondrial volume density"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "subject": "sparse mixture-of-experts models",
+  "relationship": "outperform",
+  "measurement": "downstream accuracy",
+  "comparator": "dense models",
+  "expected_direction": "IMPROVED",
+  "search_terms": [
+    "MoE",
+    "sparse MoE",
+    "sparsely-gated mixture of experts",
+    "dense transformer",
+    "downstream task performance",
+    "benchmark accuracy",
+    "conditional computation",
+    "expert routing",
+    "scaling laws",
+    "compute-matched comparison"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "subject": "CRISPR base editing",
+  "relationship": "reduces",
+  "measurement": "off-target mutations",
+  "comparator": null,
+  "expected_direction": "DECREASED",
+  "search_terms": [
+    "base editor",
+    "cytosine base editor",
+    "adenine base editor",
+    "CBE",
+    "ABE",
+    "off-target effects",
+    "off-target editing",
+    "unintended edits",
+    "genome-wide off-target analysis",
+    "Cas9 nuclease"
+  ]
+}

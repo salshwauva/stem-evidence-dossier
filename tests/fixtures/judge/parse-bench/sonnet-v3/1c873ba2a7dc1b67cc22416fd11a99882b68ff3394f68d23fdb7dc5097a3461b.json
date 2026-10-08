@@ -1,0 +1,19 @@
+{
+  "subject": "Rapamycin",
+  "relationship": "extends",
+  "measurement": "median lifespan in mice",
+  "comparator": "untreated controls",
+  "expected_direction": "INCREASED",
+  "search_terms": [
+    "sirolimus",
+    "mTOR inhibition",
+    "mTORC1 inhibitor",
+    "longevity",
+    "life extension",
+    "survival",
+    "aging",
+    "Interventions Testing Program",
+    "murine",
+    "mouse models"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "subject": "Ultrasonic welding",
+  "relationship": "does not lower",
+  "measurement": "joint strength of aluminium sheets",
+  "comparator": null,
+  "expected_direction": null,
+  "search_terms": [
+    "USW",
+    "ultrasonic metal welding",
+    "ultrasonic spot welding",
+    "lap shear strength",
+    "tensile shear strength",
+    "weld strength",
+    "aluminum alloy sheets",
+    "solid-state welding",
+    "Al sheet joining",
+    "peel strength"
+  ]
+}

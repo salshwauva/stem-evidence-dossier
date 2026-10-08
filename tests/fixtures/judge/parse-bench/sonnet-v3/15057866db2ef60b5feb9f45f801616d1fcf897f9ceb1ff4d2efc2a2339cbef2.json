@@ -1,0 +1,19 @@
+{
+  "subject": "Speculative decoding",
+  "relationship": "boosts",
+  "measurement": "tokens per second",
+  "comparator": "greedy decoding",
+  "expected_direction": "INCREASED",
+  "search_terms": [
+    "speculative sampling",
+    "draft model",
+    "assisted generation",
+    "LLM inference acceleration",
+    "decoding throughput",
+    "tokens/s",
+    "inference latency",
+    "autoregressive decoding",
+    "draft-and-verify",
+    "lossless acceleration"
+  ]
+}

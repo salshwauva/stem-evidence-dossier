@@ -1,0 +1,19 @@
+{
+  "subject": "metformin in type 2 diabetes",
+  "relationship": "lower",
+  "measurement": "fasting glucose",
+  "comparator": "placebo",
+  "expected_direction": "DECREASED",
+  "search_terms": [
+    "fasting plasma glucose",
+    "FPG",
+    "blood glucose",
+    "glycemic control",
+    "T2DM",
+    "type 2 diabetes mellitus",
+    "biguanide",
+    "randomized controlled trial",
+    "placebo-controlled",
+    "HbA1c"
+  ]
+}

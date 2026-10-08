@@ -1,0 +1,18 @@
+{
+  "subject": "Perovskite tandem cells",
+  "relationship": "outperform",
+  "measurement": "power conversion efficiency",
+  "comparator": "silicon cells",
+  "expected_direction": "IMPROVED",
+  "search_terms": [
+    "perovskite/silicon tandem solar cells",
+    "PCE",
+    "tandem photovoltaics",
+    "monolithic tandem",
+    "crystalline silicon solar cells",
+    "c-Si",
+    "solar cell efficiency",
+    "multijunction solar cells",
+    "wide-bandgap perovskite"
+  ]
+}

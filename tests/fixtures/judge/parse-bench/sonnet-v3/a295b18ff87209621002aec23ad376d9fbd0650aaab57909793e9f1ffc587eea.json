@@ -1,0 +1,18 @@
+{
+  "subject": "exercise",
+  "relationship": "raises",
+  "measurement": "BDNF levels",
+  "comparator": null,
+  "expected_direction": "INCREASED",
+  "search_terms": [
+    "brain-derived neurotrophic factor",
+    "physical activity",
+    "aerobic training",
+    "resistance training",
+    "serum BDNF",
+    "plasma BDNF",
+    "elderly",
+    "aging",
+    "neurotrophin"
+  ]
+}

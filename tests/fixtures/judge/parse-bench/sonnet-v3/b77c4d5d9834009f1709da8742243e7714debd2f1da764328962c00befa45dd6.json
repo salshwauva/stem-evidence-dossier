@@ -1,0 +1,19 @@
+{
+  "subject": "zeolite catalyst",
+  "relationship": "suppress",
+  "measurement": "coke formation",
+  "comparator": "the amorphous support",
+  "expected_direction": "DECREASED",
+  "search_terms": [
+    "zeolite",
+    "zeolitic catalyst",
+    "coking",
+    "carbon deposition",
+    "catalyst deactivation",
+    "coke deposition",
+    "amorphous silica-alumina",
+    "amorphous oxide support",
+    "coke selectivity",
+    "shape-selective catalysis"
+  ]
+}

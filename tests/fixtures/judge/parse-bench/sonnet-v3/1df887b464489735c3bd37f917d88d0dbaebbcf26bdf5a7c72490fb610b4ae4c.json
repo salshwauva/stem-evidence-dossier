@@ -1,0 +1,19 @@
+{
+  "subject": "shielded qubits",
+  "relationship": "show a longer",
+  "measurement": "decoherence time",
+  "comparator": "unshielded qubits",
+  "expected_direction": "INCREASED",
+  "search_terms": [
+    "qubit shielding",
+    "magnetic shielding",
+    "electromagnetic shielding",
+    "coherence time",
+    "T2 time",
+    "dephasing time",
+    "superconducting qubit",
+    "quantum decoherence",
+    "noise suppression",
+    "radiation shielding"
+  ]
+}

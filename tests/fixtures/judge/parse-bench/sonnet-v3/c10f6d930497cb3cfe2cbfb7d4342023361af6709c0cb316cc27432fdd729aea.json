@@ -1,0 +1,19 @@
+{
+  "subject": "chain-of-thought prompting",
+  "relationship": "effect on",
+  "measurement": "arithmetic accuracy",
+  "comparator": null,
+  "expected_direction": null,
+  "search_terms": [
+    "CoT prompting",
+    "step-by-step reasoning",
+    "reasoning traces",
+    "large language models",
+    "math word problems",
+    "GSM8K",
+    "arithmetic reasoning",
+    "few-shot prompting",
+    "intermediate reasoning steps",
+    "numerical reasoning"
+  ]
+}

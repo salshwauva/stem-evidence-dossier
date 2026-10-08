@@ -1,0 +1,19 @@
+{
+  "subject": "Faecal microbiota transplantation",
+  "relationship": "improves",
+  "measurement": "insulin sensitivity",
+  "comparator": "sham treatment",
+  "expected_direction": "IMPROVED",
+  "search_terms": [
+    "FMT",
+    "fecal microbiota transplant",
+    "gut microbiota transfer",
+    "insulin resistance",
+    "glucose tolerance",
+    "HOMA-IR",
+    "glucose homeostasis",
+    "sham transplantation",
+    "murine model",
+    "metabolic syndrome"
+  ]
+}
