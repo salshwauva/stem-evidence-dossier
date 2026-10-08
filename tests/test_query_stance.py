@@ -234,11 +234,13 @@ def test_an_improvement_on_an_unknown_measurement_is_indirect() -> None:
     assert POLARITY_VERSION in result.reason
 
 
-def test_the_suffix_rule_decides_a_measurement_the_table_does_not_list() -> None:
-    result = _improved_on("refusal rate")
+def test_an_improved_success_rate_is_indirect_not_lower_is_better() -> None:
+    """A trailing "rate" carries no direction. The expected DECREASED stays unresolved."""
+    result = _improved_on("success rate")
 
-    assert result.stance is Stance.SUPPORTS
-    assert "LOWER_IS_BETTER" in result.reason
+    assert result.stance is Stance.INDIRECT
+    assert "success rate" in result.reason
+    assert POLARITY_VERSION in result.reason
 
 
 def test_a_plain_same_direction_case_needs_no_polarity_table() -> None:
@@ -284,3 +286,41 @@ def test_a_worsening_on_a_higher_is_better_measurement_supports() -> None:
 
     assert result.stance is Stance.SUPPORTS
     assert "both as DECREASED" in result.reason
+
+
+def _with_comparator(claim: EvidenceClaim, name: str) -> EvidenceClaim:
+    assert claim.comparator is not None
+    return _variant(
+        claim, comparator=claim.comparator.model_copy(update={"name": Term(original=name)})
+    )
+
+
+def test_a_baseline_with_the_feature_does_not_match_a_baseline_without_it() -> None:
+    """Both phrases lose "with" and "without" as stopwords, so the marker decides."""
+    base, _ = stance_paper()
+    claim = _with_comparator(base.claim, "same model with retrieval")
+
+    result = _classify(RAG_TEXT, claim)
+
+    assert result.stance is Stance.INDIRECT
+    assert result.comparability is ComparabilityLevel.MODERATE
+    assert "comparator dimension fails" in result.reason
+
+
+def test_a_baseline_without_a_marker_still_matches_by_words() -> None:
+    base, _ = stance_paper()
+    claim = _with_comparator(base.claim, "same model without retrieval")
+
+    assert _classify(RAG_TEXT, claim).stance is Stance.SUPPORTS
+
+
+def test_a_different_baseline_withholds_a_firm_stance() -> None:
+    base, _ = stance_paper()
+    claim = _with_comparator(base.claim, "human experts")
+
+    result = _classify(RAG_TEXT, claim)
+
+    assert result.comparability is ComparabilityLevel.MODERATE
+    assert result.stance is Stance.INDIRECT
+    assert "human experts" not in result.reason
+    assert "the same model without retrieval" in result.reason

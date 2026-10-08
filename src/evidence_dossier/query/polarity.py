@@ -17,7 +17,7 @@ from evidence_dossier.query.text import tokens
 
 # Version of the table below. The stance reason names it, so a stored assessment
 # says which table decided the stance. A new or changed entry needs a new version.
-POLARITY_VERSION = "polarity-v2"
+POLARITY_VERSION = "polarity-v3"
 
 
 class Polarity(StrEnum):
@@ -76,28 +76,18 @@ TABLE: dict[str, Polarity] = {
     fold(name): polarity for polarity, names in _SEED.items() for name in names
 }
 
-# Trailing words that mark a count of bad outcomes. A measurement name that ends
-# in one of them counts as lower is better, even when the table has no exact key.
-# The rule stays on the last token, so "yield" and "recall" keep their entries and
-# a name such as "refusal rate" or "annotation error" needs no new table version.
-_LOWER_SUFFIXES = frozenset({"rate", "error"})
-
 
 def polarity_of(name: str | None) -> Polarity | None:
     """Return the polarity of a measurement name, or None when the table does not know it.
 
-    The lookup tries the exact folded key first. It then applies the suffix rule
-    above. An empty or unknown name gives None, and the caller reports that the
-    polarity is missing rather than assuming one.
+    The lookup uses the exact folded key. A name that the table does not hold gives
+    None, and the caller reports that the polarity is missing rather than assuming one.
+    A trailing "rate" says nothing about the direction ("success rate" and "error rate"
+    point opposite ways), so v3 dropped the suffix rule that v2 had.
     """
     if name is None:
         return None
     key = fold(name)
     if not key:
         return None
-    exact = TABLE.get(key)
-    if exact is not None:
-        return exact
-    if key.rsplit(" ", 1)[-1] in _LOWER_SUFFIXES:
-        return Polarity.LOWER_IS_BETTER
-    return None
+    return TABLE.get(key)

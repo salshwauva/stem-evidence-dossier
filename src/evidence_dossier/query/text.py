@@ -61,3 +61,22 @@ def overlap(query_text: str | None, claim_text: str | None) -> float:
         return 0.0
     claim_tokens = set(tokens(claim_text))
     return sum(token in claim_tokens for token in query_tokens) / len(query_tokens)
+
+
+_WITHOUT = frozenset({"without", "no", "not", "non"})
+
+
+def has_without(text: str | None) -> bool | None:
+    """Say whether a baseline phrase names an absence ("without X", "no X") or a presence.
+
+    "with" and "without" are stopwords, so token overlap cannot tell "same model with
+    retrieval" from "same model without retrieval". The result is True for an absence
+    word, False for "with", and None when the phrase holds neither, so a baseline such
+    as "vanilla model" is not read as a mismatch.
+    """
+    if text is None:
+        return None
+    words = set(_TOKEN.findall(text.lower()))
+    if words & _WITHOUT:
+        return True
+    return False if "with" in words else None

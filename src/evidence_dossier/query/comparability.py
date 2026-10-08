@@ -21,7 +21,7 @@ from evidence_dossier.model import (
     Term,
 )
 from evidence_dossier.profiles import DomainProfile
-from evidence_dossier.query.text import overlap
+from evidence_dossier.query.text import has_without, overlap
 
 # Share of proposition tokens that a claim term must hold. Half, so a two word
 # measurement such as "factual hallucination" still matches "factual error rate".
@@ -212,6 +212,19 @@ def _comparator(proposition: QueryProposition, claim: EvidenceClaim) -> Dimensio
             reason=f"The {side} names no comparator, so the comparator dimension is open.",
         )
     score = _term_overlap(proposition.comparator, claim.comparator.name)
+    wanted = has_without(proposition.comparator)
+    reported = _first_marker(claim.comparator.name)
+    if wanted is not None and reported is not None and wanted != reported:
+        return DimensionResult(
+            dimension="comparator",
+            matched=False,
+            reason=(
+                f"The claim comparator {_label(claim.comparator.name)} is"
+                f" {'without' if reported else 'with'} the feature that the proposition comparator"
+                f" '{proposition.comparator}' is {'without' if wanted else 'with'}"
+                f" (overlap {score:.2f})."
+            ),
+        )
     matched = score >= MATCH_THRESHOLD
     return DimensionResult(
         dimension="comparator",
@@ -221,6 +234,13 @@ def _comparator(proposition: QueryProposition, claim: EvidenceClaim) -> Dimensio
             f" the proposition comparator '{proposition.comparator}' (overlap {score:.2f})."
         ),
     )
+
+
+def _first_marker(term: Term | None) -> bool | None:
+    if term is None:
+        return None
+    original = has_without(term.original)
+    return original if original is not None else has_without(term.canonical)
 
 
 def _measurement(proposition: QueryProposition, claim: EvidenceClaim) -> DimensionResult:
