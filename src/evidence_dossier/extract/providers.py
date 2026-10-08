@@ -8,6 +8,7 @@ repository never handles an API key.
 
 import hashlib
 import json
+import os
 import subprocess
 import tempfile
 from collections.abc import Callable, Mapping
@@ -99,8 +100,10 @@ type CommandRunner = Callable[[list[str], str], str]
 """Runs a command with the given text on stdin and returns its stdout."""
 
 
-def run_command(args: list[str], stdin: str) -> str:
+def run_command(args: list[str], stdin: str, env: Mapping[str, str] | None = None) -> str:
     """Run a command and return its stdout. A missing command or a failure raises ProviderError.
+
+    The env entries are added to the environment of the command.
 
     The command runs in an empty temporary directory, so a tool call that
     slips through the flags below still finds no repository files.
@@ -115,6 +118,7 @@ def run_command(args: list[str], stdin: str) -> str:
                 check=True,
                 cwd=cwd,
                 timeout=COMMAND_TIMEOUT,
+                env=None if env is None else {**os.environ, **env},
             )
     except FileNotFoundError as error:
         raise ProviderError(f"{args[0]} is not on PATH") from error
@@ -149,6 +153,17 @@ DENIED_TOOLS: tuple[str, ...] = (
 ISOLATION_SETTINGS = json.dumps({"permissions": {"allow": [], "deny": list(DENIED_TOOLS)}})
 
 
+# The command line tool caps one reply at a default number of output tokens. A long
+# reply that hits the cap continues in a second turn, and the JSON result then holds only
+# the last turn, a tail that starts mid-sentence. The recorded demo replies of the two
+# longest PubMed papers were such tails. 64000 is the largest cap of the models used here.
+MAX_OUTPUT_TOKENS = "64000"
+
+
+def _claude_runner(args: list[str], stdin: str) -> str:
+    return run_command(args, stdin, env={"CLAUDE_CODE_MAX_OUTPUT_TOKENS": MAX_OUTPUT_TOKENS})
+
+
 class ClaudeCliProvider:
     """Runs the claude command line tool in print mode with the prompt on stdin.
 
@@ -163,7 +178,7 @@ class ClaudeCliProvider:
     stored. Tests inject a fake runner in place of run_command.
     """
 
-    def __init__(self, model: str, runner: CommandRunner = run_command) -> None:
+    def __init__(self, model: str, runner: CommandRunner = _claude_runner) -> None:
         self._model = model
         self._runner = runner
 
@@ -207,6 +222,12 @@ def _reply_text(stdout: str) -> str:
         raise ProviderError(f"claude JSON result has no reply text: {stdout[:DETAIL_LIMIT]}")
     if result.get("is_error"):
         raise ProviderError(f"claude reported an error: {text[:DETAIL_LIMIT]}")
+    turns = result.get("num_turns")
+    if turns != 1:
+        raise ProviderError(
+            f"claude answered over {turns!r} turns, so the reply text may be only its last part:"
+            f" {text[-DETAIL_LIMIT:]}"
+        )
     stop_reason = result.get("stop_reason")
     if stop_reason != "end_turn":
         raise ProviderError(

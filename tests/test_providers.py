@@ -168,3 +168,31 @@ def test_run_command_stops_a_command_that_runs_past_the_timeout(
 
     with pytest.raises(ProviderError, match="did not finish within 0.2 seconds"):
         run_command(["sleep", "5"], PROMPT)
+
+
+def test_a_reply_that_continued_over_several_turns_is_refused_as_a_possible_tail() -> None:
+    def fake_runner(args: list[str], stdin: str) -> str:
+        return _cli_result('ins upregulated by treatment"}', num_turns=2)
+
+    with pytest.raises(ProviderError, match="over 2 turns"):
+        ClaudeCliProvider("claude-test-1", runner=fake_runner).complete(PROMPT)
+
+
+def test_the_default_runner_raises_the_output_token_cap(monkeypatch: pytest.MonkeyPatch) -> None:
+    seen: dict[str, object] = {}
+
+    def fake_run_command(args: list[str], stdin: str, env: dict[str, str] | None = None) -> str:
+        seen["env"] = env
+        return _cli_result("{}")
+
+    monkeypatch.setattr(providers, "run_command", fake_run_command)
+
+    ClaudeCliProvider("claude-test-1").complete(PROMPT)
+
+    assert seen["env"] == {"CLAUDE_CODE_MAX_OUTPUT_TOKENS": providers.MAX_OUTPUT_TOKENS}
+
+
+def test_run_command_adds_env_entries_to_the_environment() -> None:
+    assert (
+        run_command(["sh", "-c", 'printf %s "$DOSSIER_TEST"'], "", env={"DOSSIER_TEST": "7"}) == "7"
+    )
