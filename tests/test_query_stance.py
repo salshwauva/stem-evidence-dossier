@@ -1,4 +1,5 @@
 from collections.abc import Iterator
+from typing import Any
 
 import pytest
 
@@ -324,3 +325,27 @@ def test_a_different_baseline_withholds_a_firm_stance() -> None:
     assert result.stance is Stance.INDIRECT
     assert "human experts" not in result.reason
     assert "the same model without retrieval" in result.reason
+
+
+def test_a_failure_while_assessing_stores_no_proposition_and_no_assessment(
+    store: Store, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls = 0
+    classify = StanceClassifier.classify
+
+    def fail_on_the_second_claim(
+        self: StanceClassifier, *args: Any, **kwargs: Any
+    ) -> StanceAssessment:
+        nonlocal calls
+        calls += 1
+        if calls == 2:
+            raise RuntimeError("judge failed")
+        return classify(self, *args, **kwargs)
+
+    monkeypatch.setattr(StanceClassifier, "classify", fail_on_the_second_claim)
+
+    with pytest.raises(RuntimeError, match="judge failed"):
+        search_evidence(store, RAG_TEXT)
+
+    for table in ("query_propositions", "stance_assessments"):
+        assert store._conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0] == 0

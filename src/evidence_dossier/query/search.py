@@ -90,14 +90,12 @@ def search_evidence(
     classifier = StanceClassifier()
     items: list[EvidenceItem] = []
     assessments: list[StanceAssessment] = []
-    store.add_query_proposition(proposition)
     for candidate in candidates:
         claim = candidate.claim
         comparability = engine.assess(
             proposition, claim, get_profile(claim.research_context.domain)
         )
         assessment = classifier.classify(proposition, claim, comparability)
-        store.add_stance_assessment(assessment)
         assessments.append(assessment)
         span = claim.evidence_span
         items.append(
@@ -117,6 +115,11 @@ def search_evidence(
                 ),
             )
         )
+    # Store the proposition and every assessment as one unit, so an error leaves no partial rows.
+    with store.transaction():
+        store.add_query_proposition(proposition)
+        for assessment in assessments:
+            store.add_stance_assessment(assessment)
     groups = tuple(
         StanceGroup(stance=stance, items=tuple(item for item in items if item.stance is stance))
         for stance in STANCE_ORDER
