@@ -34,6 +34,7 @@ from evidence_dossier.query import (
     ComparatorError,
     JudgmentCache,
     ModelComparator,
+    ModelQueryParser,
     parse_query,
 )
 from evidence_dossier.query.model_comparator import asked_dimensions, build_prompt
@@ -87,6 +88,8 @@ def main() -> int:
     parser.add_argument("--db", required=True)
     parser.add_argument("--pairs", required=True, type=Path)
     parser.add_argument("--split", choices=("dev", "test"), required=True)
+    parser.add_argument("--parse-model", help="replay the parses of this model, as the pairs used")
+    parser.add_argument("--parses", type=Path, default=Path("parses"))
     parser.add_argument("--arm", action="append", default=[], metavar="NAME=MODEL:BATCH:INPUT")
     parser.add_argument(
         "--run", action="store_true", help="make live model calls for missing judgments"
@@ -106,7 +109,8 @@ def main() -> int:
     scores: dict[str, ArmScore] = {}
     with Store(args.db) as store:
         claims = _load_claims(store, chosen)
-        propositions = {p.query: parse_query(p.query) for p in chosen}
+        parse = _replay_parser(args.parse_model, args.parses)
+        propositions = {p.query: parse(p.query) for p in chosen}
 
         def per_pair(make: Callable[[QueryProposition, EvidenceClaim], dict[str, str]]) -> Verdicts:
             return {p.pair_id: make(propositions[p.query], claims[p.claim_id]) for p in chosen}
@@ -161,6 +165,13 @@ def main() -> int:
             print("  gate:", "pass" if result.passed else "fail: " + "; ".join(result.reasons))
         print()
     return 0
+
+
+def _replay_parser(model: str | None, folder: Path) -> Callable[[str], QueryProposition]:
+    """The parser the pairs were drafted with. It only replays, so the benchmark makes no parse call."""
+    if model is None:
+        return parse_query
+    return ModelQueryParser(None, model_id=f"claude-cli/{model}", cache=folder).parse
 
 
 def _live(model: str) -> Callable[[str], str]:

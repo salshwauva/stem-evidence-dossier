@@ -13,6 +13,7 @@ import argparse
 import json
 import random
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 from evidence_dossier.evaluate.judge import JudgePair
@@ -23,9 +24,22 @@ from evidence_dossier.evaluate.judge_sheet import (
     write_key,
     write_sheet,
 )
-from evidence_dossier.query import Retriever, parse_query
+from evidence_dossier.extract import ClaudeCliProvider
+from evidence_dossier.model import QueryProposition
+from evidence_dossier.query import ModelQueryParser, QueryParseError, Retriever, parse_query
 from evidence_dossier.query.model_comparator import shown_inputs
 from evidence_dossier.store import Store
+
+
+def _parse_function(model: str | None, folder: Path) -> Callable[[str], QueryProposition]:
+    """Return the parser search uses: the rules, or the model path with its recorded parses."""
+    if model is None:
+        return parse_query
+    provider = ClaudeCliProvider(model)
+    parser = ModelQueryParser(
+        lambda prompt: provider.complete(prompt).text, model_id=f"claude-cli/{model}", cache=folder
+    )
+    return parser.parse
 
 
 def main() -> int:
@@ -39,8 +53,11 @@ def main() -> int:
     parser.add_argument("--per-work", type=int, default=8, help="most pairs from one work")
     parser.add_argument("--seed", default="judge-pairs-1")
     parser.add_argument("--no-passage", action="store_true")
+    parser.add_argument("--parse-model", help="read the queries with this model, as search does")
+    parser.add_argument("--parses", type=Path, default=Path("parses"))
     args = parser.parse_args()
     queries = json.loads(args.queries.read_text(encoding="utf-8"))
+    parse = _parse_function(args.parse_model, args.parses)
     args.out.mkdir(parents=True, exist_ok=True)
     rng = random.Random(args.seed)
     pairs: list[JudgePair] = []
@@ -48,7 +65,7 @@ def main() -> int:
     per_work: dict[str, int] = {}
     with Store(args.db) as store:
         for query in queries:
-            proposition = parse_query(query["text"])
+            proposition = parse(query["text"])
             if query["origin"] == "reverse":
                 claim_ids = [query["claim_id"]]
             else:
@@ -82,7 +99,7 @@ def main() -> int:
             claim = store.get_claim(pair.claim_id)
             assert claim is not None
             question, claim_text, asked = shown_inputs(
-                parse_query(pair.query), claim, include_passage=not args.no_passage
+                parse(pair.query), claim, include_passage=not args.no_passage
             )
             rows.append(SheetRow(pair, question, claim_text, asked, splits[pair.pair_id]))
     ordered = shuffled(rows, args.seed)
@@ -97,5 +114,13 @@ def main() -> int:
     return 0
 
 
+def run() -> int:
+    try:
+        return main()
+    except QueryParseError as error:
+        print(f"error: {error}", file=sys.stderr)
+        return 1
+
+
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(run())
