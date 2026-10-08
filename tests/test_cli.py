@@ -1,5 +1,6 @@
 import io
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -488,3 +489,67 @@ def test_the_demo_prints_a_partial_run_and_exits_0(tmp_path: Path, demo_dir: Pat
 
     assert status == 0
     assert ": PARTIAL, 1 claims" in out
+
+
+class UnknownJudge:
+    """An extraction provider stand-in that answers every asked dimension with unknown."""
+
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def complete(self, prompt: str) -> ProviderResponse:
+        self.calls += 1
+        judgments = []
+        for claim_id, asked in re.findall(r"<<<BEGIN CLAIM (\S+)>>>\njudge: ([^\n]+)", prompt):
+            item: dict[str, Any] = {"claim_id": claim_id}
+            for name in ("subject", "comparator", "measurement"):
+                item[name] = (
+                    {"verdict": "unknown", "quote": None, "reason": "The inputs do not settle it."}
+                    if name in asked
+                    else None
+                )
+            judgments.append(item)
+        text = json.dumps({"schema_version": "judge-v1", "judgments": judgments})
+        return ProviderResponse(model_identifier="claude-cli/fake", text=text)
+
+
+def test_search_with_a_judge_records_judgments_and_replays_them(
+    seeded_db: str, tmp_path: Path
+) -> None:
+    folder = tmp_path / "judgments"
+    argv = ["--db", seeded_db, "search", RAG_TEXT, "--judge", "fake", "--judgments", str(folder)]
+    first = UnknownJudge()
+
+    status, out, _ = invoke(argv, provider=first)
+
+    assert status == 0
+    assert "INSUFFICIENTLY_COMPARABLE" in out
+    assert "The judge says unknown on the subject" in out
+    assert first.calls > 0
+    assert len(list(folder.glob("*.json"))) == first.calls
+
+    second = UnknownJudge()
+    status, replayed, _ = invoke(argv, provider=second)
+
+    assert status == 0
+    assert second.calls == 0
+    assert replayed == out
+
+
+def test_search_with_a_failing_judge_prints_the_error_and_exits_1(
+    seeded_db: str, tmp_path: Path
+) -> None:
+    class Broken:
+        def complete(self, prompt: str) -> ProviderResponse:
+            raise ProviderError("claude exited with status 1")
+
+    folder = tmp_path / "judgments"
+    argv = ["--db", seeded_db, "search", RAG_TEXT, "--judge", "fake", "--judgments", str(folder)]
+
+    status, out, err = invoke(argv, provider=Broken())
+
+    assert status == 1
+    assert out == ""
+    assert err.startswith("error: the judge failed for claims")
+    assert "claude exited with status 1" in err
+    assert not folder.exists()

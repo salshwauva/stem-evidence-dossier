@@ -26,6 +26,15 @@ from evidence_dossier.evaluate.gold import (
     Split,
     load_dataset,
 )
+from evidence_dossier.evaluate.judge import (
+    ArmScore,
+    DimensionScore,
+    Gate,
+    GateResult,
+    JudgePair,
+    apply_gate,
+    score_arm,
+)
 from evidence_dossier.evaluate.matching import (
     OVERLAP_THRESHOLD,
     Matching,
@@ -46,7 +55,7 @@ from evidence_dossier.evaluate.run import (
     gold_keys,
     stored_claims,
 )
-from evidence_dossier.evaluate.scores import PRF, Counts
+from evidence_dossier.evaluate.scores import PRF, Counts, wilson_interval
 from evidence_dossier.evaluate.split import DatasetSplitter
 from evidence_dossier.evaluate.stance import (
     ComparabilityMiss,
@@ -71,19 +80,24 @@ __all__ = [
     "NOT_ASSESSABLE",
     "OVERLAP_THRESHOLD",
     "PRF",
+    "ArmScore",
     "ComparabilityMiss",
     "Counts",
     "Dataset",
     "DatasetSplitter",
+    "DimensionScore",
     "EvaluationReport",
     "ExtractionEvaluation",
     "Fetch",
     "FieldError",
     "FieldScores",
+    "Gate",
+    "GateResult",
     "GoldClaim",
     "GoldDocument",
     "GoldRetrieval",
     "GoldStance",
+    "JudgePair",
     "Matching",
     "QueryRetrievalScore",
     "RelationshipError",
@@ -97,6 +111,7 @@ __all__ = [
     "StanceEvaluation",
     "StancePrediction",
     "StoppedTrial",
+    "apply_gate",
     "draw_batch",
     "evaluate_store",
     "fetch_stopped_trials",
@@ -107,10 +122,12 @@ __all__ = [
     "run_extraction_evaluation",
     "run_retrieval_evaluation",
     "run_stance_evaluation",
+    "score_arm",
     "span_jaccard",
     "spans_overlap",
     "stored_claims",
     "term_value",
+    "wilson_interval",
     "write_key",
     "write_sheet",
 ]

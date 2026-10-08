@@ -18,6 +18,7 @@ from evidence_dossier.model import (
 )
 from evidence_dossier.profiles import get_profile
 from evidence_dossier.query.comparability import ComparabilityEngine
+from evidence_dossier.query.model_comparator import ModelComparator
 from evidence_dossier.query.parser import parse_query
 from evidence_dossier.query.retrieval import Candidate, Retriever
 from evidence_dossier.query.stance import StanceClassifier
@@ -80,12 +81,20 @@ def search_evidence(
     dataset: str | None = None,
     system: str | None = None,
     population: str | None = None,
+    comparator: ModelComparator | None = None,
 ) -> EvidenceResults:
-    """Run the pipeline for a proposition text and store the proposition and its assessments."""
+    """Run the pipeline for a proposition text and store the proposition and its assessments.
+
+    With a comparator, a model judges the meaning based dimensions of every candidate
+    before anything is stored. A judge failure raises ComparatorError and stores nothing.
+    """
     proposition = parse_query(
         text, domain=domain, dataset=dataset, system=system, population=population
     )
     candidates = Retriever(store).retrieve(proposition, source_level=source_level, limit=limit)
+    judgments = (
+        {} if comparator is None else comparator.judge(proposition, [c.claim for c in candidates])
+    )
     engine = ComparabilityEngine()
     classifier = StanceClassifier()
     items: list[EvidenceItem] = []
@@ -93,7 +102,7 @@ def search_evidence(
     for candidate in candidates:
         claim = candidate.claim
         comparability = engine.assess(
-            proposition, claim, get_profile(claim.research_context.domain)
+            proposition, claim, get_profile(claim.research_context.domain), judgments.get(claim.id)
         )
         assessment = classifier.classify(proposition, claim, comparability)
         assessments.append(assessment)

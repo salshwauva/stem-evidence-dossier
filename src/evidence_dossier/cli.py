@@ -41,10 +41,18 @@ from evidence_dossier.ingest import (
 from evidence_dossier.ingest.http import INDEX_FILE
 from evidence_dossier.model import Domain, EvidenceClaim, FrozenModel, Term
 from evidence_dossier.normalize import normalize_claim
-from evidence_dossier.query import EvidenceItem, EvidenceResults, search_evidence
+from evidence_dossier.query import (
+    ComparatorError,
+    EvidenceItem,
+    EvidenceResults,
+    JudgmentCache,
+    ModelComparator,
+    search_evidence,
+)
 from evidence_dossier.store import Store
 
 DEFAULT_DB = "dossier.db"
+DEFAULT_JUDGMENTS = "judgments"
 # Seconds between two requests. The arXiv API asks for three. NCBI allows three
 # requests a second without an API key.
 ARXIV_INTERVAL = 3.0
@@ -109,13 +117,33 @@ def run(
                 return 1 if summary.invalid or summary.failed else 0
             if args.command == "search":
                 domain = None if args.domain is None else Domain(args.domain)
-                results = search_evidence(store, args.text, domain=domain, limit=args.limit)
+                results = search_evidence(
+                    store,
+                    args.text,
+                    domain=domain,
+                    limit=args.limit,
+                    comparator=_comparator(args.judge, Path(args.judgments), provider),
+                )
                 _print_results(store, results, out)
                 return 0
             return _print_claim(store, args.claim_id, out, err)
-    except (LookupError, ProviderError, httpx.HTTPError) as error:
+    except (LookupError, ProviderError, ComparatorError, httpx.HTTPError) as error:
         print(f"error: {error}", file=err)
         return 1
+
+
+def _comparator(
+    model: str | None, folder: Path, provider: ExtractionProvider | None
+) -> ModelComparator | None:
+    """Build the judge for --judge, or None for the rules alone."""
+    if model is None:
+        return None
+    chosen = provider or ClaudeCliProvider(model)
+    return ModelComparator(
+        lambda prompt: chosen.complete(prompt).text,
+        model_id=f"claude-cli/{model}",
+        cache=JudgmentCache(folder),
+    )
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -138,6 +166,16 @@ def _parser() -> argparse.ArgumentParser:
     search.add_argument("text")
     search.add_argument("--domain", choices=[domain.value for domain in Domain])
     search.add_argument("--limit", type=int, default=20)
+    search.add_argument(
+        "--judge",
+        metavar="MODEL",
+        help="judge subject, comparator and measurement with this model (claude command line tool)",
+    )
+    search.add_argument(
+        "--judgments",
+        default=DEFAULT_JUDGMENTS,
+        help=f"folder that holds validated judgments, replayed before any call (default {DEFAULT_JUDGMENTS})",
+    )
 
     claim = commands.add_parser("claim", help="show one claim with its context and passage")
     claim.add_argument("claim_id")
