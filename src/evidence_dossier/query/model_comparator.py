@@ -40,6 +40,7 @@ from evidence_dossier.query.judgment import (
     JudgeReply,
     Verdict,
 )
+from evidence_dossier.query.text import unfence
 
 PROMPT_VERSION = "judge-prompt-v1"
 DIMENSIONS = ("subject", "comparator", "measurement")
@@ -282,7 +283,7 @@ class ModelComparator:
         self, proposition: QueryProposition, batch: Sequence[EvidenceClaim], reply: str
     ) -> tuple[ClaimJudgment, ...]:
         try:
-            parsed = JudgeReply.model_validate_json(_unfence(reply))
+            parsed = JudgeReply.model_validate_json(unfence(reply))
         except ValidationError as error:
             fields = "; ".join(
                 f"{'.'.join(str(part) for part in item['loc']) or 'the object'}: {item['msg']}"
@@ -331,13 +332,6 @@ def _require_quote(judgment: DimensionJudgment, shown: str) -> DimensionJudgment
     note = " (no quote in the inputs, so the verdict was set to unknown)"
     reason = judgment.reason[: REASON_LIMIT - len(note)] + note
     return DimensionJudgment(verdict=Verdict.UNKNOWN, quote=None, reason=reason)
-
-
-def _unfence(reply: str) -> str:
-    """Accept one JSON object, bare or inside one fenced block. Prose around it fails."""
-    text = reply.strip()
-    fenced = re.fullmatch(r"```[A-Za-z]*\n(.*)\n```", text, flags=re.DOTALL)
-    return fenced.group(1) if fenced else text
 
 
 def _batches(claims: Sequence[EvidenceClaim], size: int) -> Iterator[Sequence[EvidenceClaim]]:

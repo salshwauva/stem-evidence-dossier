@@ -17,6 +17,7 @@ from evidence_dossier.query.model_comparator import (
     JudgmentCache,
     ModelComparator,
 )
+from evidence_dossier.query.model_parser import ModelQueryParser, QueryParseError
 from evidence_dossier.query.parser import parse_query
 from evidence_dossier.query.polarity import POLARITY_VERSION, Polarity, polarity_of
 from evidence_dossier.query.retrieval import Candidate, Retriever
@@ -47,8 +48,10 @@ __all__ = [
     "EvidenceResults",
     "JudgmentCache",
     "ModelComparator",
+    "ModelQueryParser",
     "Polarity",
     "Provenance",
+    "QueryParseError",
     "QueryProposition",
     "Retriever",
     "StanceAssessment",

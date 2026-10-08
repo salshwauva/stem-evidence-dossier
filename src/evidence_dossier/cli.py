@@ -47,12 +47,15 @@ from evidence_dossier.query import (
     EvidenceResults,
     JudgmentCache,
     ModelComparator,
+    ModelQueryParser,
+    QueryParseError,
     search_evidence,
 )
 from evidence_dossier.store import Store
 
 DEFAULT_DB = "dossier.db"
 DEFAULT_JUDGMENTS = "judgments"
+DEFAULT_PARSES = "parses"
 # Seconds between two requests. The arXiv API asks for three. NCBI allows three
 # requests a second without an API key.
 ARXIV_INTERVAL = 3.0
@@ -123,11 +126,18 @@ def run(
                     domain=domain,
                     limit=args.limit,
                     comparator=_comparator(args.judge, Path(args.judgments), provider),
+                    parser=_parser_for(args.parse_model, Path(args.parses), provider),
                 )
                 _print_results(store, results, out)
                 return 0
             return _print_claim(store, args.claim_id, out, err)
-    except (LookupError, ProviderError, ComparatorError, httpx.HTTPError) as error:
+    except (
+        LookupError,
+        ProviderError,
+        ComparatorError,
+        QueryParseError,
+        httpx.HTTPError,
+    ) as error:
         print(f"error: {error}", file=err)
         return 1
 
@@ -143,6 +153,18 @@ def _comparator(
         lambda prompt: chosen.complete(prompt).text,
         model_id=f"claude-cli/{model}",
         cache=JudgmentCache(folder),
+    )
+
+
+def _parser_for(
+    model: str | None, folder: Path, provider: ExtractionProvider | None
+) -> ModelQueryParser | None:
+    """Build the model query parser for --parse-model, or None for the rules."""
+    if model is None:
+        return None
+    chosen = provider or ClaudeCliProvider(model)
+    return ModelQueryParser(
+        lambda prompt: chosen.complete(prompt).text, model_id=f"claude-cli/{model}", cache=folder
     )
 
 
@@ -170,6 +192,16 @@ def _parser() -> argparse.ArgumentParser:
         "--judge",
         metavar="MODEL",
         help="judge subject, comparator and measurement with this model (claude command line tool)",
+    )
+    search.add_argument(
+        "--parse-model",
+        metavar="MODEL",
+        help="read the proposition and propose search terms with this model (claude command line tool)",
+    )
+    search.add_argument(
+        "--parses",
+        default=DEFAULT_PARSES,
+        help=f"folder that holds validated parses, replayed before any call (default {DEFAULT_PARSES})",
     )
     search.add_argument(
         "--judgments",

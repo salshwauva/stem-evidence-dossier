@@ -80,3 +80,10 @@ def has_without(text: str | None) -> bool | None:
     if words & _WITHOUT:
         return True
     return False if "with" in words else None
+
+
+def unfence(reply: str) -> str:
+    """Accept one JSON object, bare or inside one fenced block. Prose around it fails."""
+    text = reply.strip()
+    fenced = re.fullmatch(r"```[A-Za-z]*\n(.*)\n```", text, flags=re.DOTALL)
+    return fenced.group(1) if fenced else text

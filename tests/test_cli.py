@@ -553,3 +553,76 @@ def test_search_with_a_failing_judge_prints_the_error_and_exits_1(
     assert err.startswith("error: the judge failed for claims")
     assert "claude exited with status 1" in err
     assert not folder.exists()
+
+
+class ParseModel:
+    """A provider stand-in that answers every prompt with one parse of the RAG question."""
+
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def complete(self, prompt: str) -> ProviderResponse:
+        self.calls += 1
+        text = json.dumps(
+            {
+                "subject": "retrieval-augmented generation",
+                "relationship": "reduces",
+                "measurement": "factual hallucination",
+                "comparator": "the same model without retrieval",
+                "expected_direction": "DECREASED",
+                "search_terms": ["RAG", "grounded generation"],
+            }
+        )
+        return ProviderResponse(model_identifier="claude-cli/fake", text=text)
+
+
+def test_search_with_a_parse_model_reads_the_query_with_the_model_and_replays_it(
+    seeded_db: str, tmp_path: Path
+) -> None:
+    folder = tmp_path / "parses"
+    argv = ["--db", seeded_db, "search", RAG_TEXT, "--parse-model", "fake", "--parses", str(folder)]
+    first = ParseModel()
+
+    status, out, _ = invoke(argv, provider=first)
+
+    assert status == 0
+    assert "the model reply produced this parse" in out
+    assert first.calls == 1
+    assert len(list(folder.glob("*.json"))) == 1
+
+    second = ParseModel()
+    status, replayed, _ = invoke(argv, provider=second)
+
+    assert status == 0
+    assert second.calls == 0
+    assert replayed == out
+    with Store(seeded_db) as store:
+        row = store._conn.execute("SELECT search_terms FROM query_propositions").fetchone()
+        assert json.loads(row[0]) == ["RAG", "grounded generation"]
+
+
+def test_search_with_a_failing_parse_model_prints_the_error_and_exits_1(
+    seeded_db: str, tmp_path: Path
+) -> None:
+    class Broken:
+        def complete(self, prompt: str) -> ProviderResponse:
+            raise ProviderError("claude exited with status 1")
+
+    argv = [
+        "--db",
+        seeded_db,
+        "search",
+        RAG_TEXT,
+        "--parse-model",
+        "fake",
+        "--parses",
+        str(tmp_path / "parses"),
+    ]
+
+    status, out, err = invoke(argv, provider=Broken())
+
+    assert status == 1
+    assert out == ""
+    assert err.startswith("error: the model parse failed")
+    with Store(seeded_db) as store:
+        assert store._conn.execute("SELECT COUNT(*) FROM query_propositions").fetchone()[0] == 0

@@ -8,7 +8,12 @@ import pytest
 from evidence_dossier.store import MIGRATIONS_DIR, Store, apply_migrations
 from tests.factories import computer_science_paper
 
-CORE_MIGRATIONS = ["0001_core.sql", "0002_query.sql", "0003_fts_porter.sql"]
+CORE_MIGRATIONS = [
+    "0001_core.sql",
+    "0002_query.sql",
+    "0003_fts_porter.sql",
+    "0004_search_terms.sql",
+]
 
 
 def _schema(conn: sqlite3.Connection) -> list[Any]:
@@ -44,13 +49,13 @@ def test_new_migration_file_gets_applied_without_code_changes(tmp_path: Path) ->
     shutil.copytree(MIGRATIONS_DIR, migrations)
     conn = sqlite3.connect(":memory:")
     apply_migrations(conn, migrations)
-    (migrations / "0004_extra.sql").write_text("CREATE TABLE extra (id TEXT PRIMARY KEY);\n")
+    (migrations / "0005_extra.sql").write_text("CREATE TABLE extra (id TEXT PRIMARY KEY);\n")
 
     applied = apply_migrations(conn, migrations)
 
-    assert applied == ["0004_extra.sql"]
+    assert applied == ["0005_extra.sql"]
     assert "extra" in _tables(conn)
-    assert _versions(conn) == [(name,) for name in (*CORE_MIGRATIONS, "0004_extra.sql")]
+    assert _versions(conn) == [(name,) for name in (*CORE_MIGRATIONS, "0005_extra.sql")]
     conn.close()
 
 
@@ -59,7 +64,7 @@ def test_failed_migration_leaves_no_partial_schema(tmp_path: Path) -> None:
     shutil.copytree(MIGRATIONS_DIR, migrations)
     conn = sqlite3.connect(":memory:")
     apply_migrations(conn, migrations)
-    (migrations / "0004_broken.sql").write_text(
+    (migrations / "0005_broken.sql").write_text(
         "CREATE TABLE half (id TEXT PRIMARY KEY);\nCREATE TABLE half (id TEXT PRIMARY KEY);\n"
     )
 

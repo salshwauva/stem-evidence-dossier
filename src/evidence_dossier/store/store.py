@@ -37,7 +37,7 @@ from evidence_dossier.store.migrate import apply_migrations
 # Record fields that the tables hold as JSON text.
 _WORK_JSON = ("authors", "external_identifiers")
 _RUN_JSON = ("errors",)
-_QUERY_JSON = ("parse_notes",)
+_QUERY_JSON = ("parse_notes", "search_terms")
 _DOSSIER_JSON = ("corpus_scope", "counts")
 
 
