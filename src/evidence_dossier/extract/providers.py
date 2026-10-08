@@ -91,6 +91,10 @@ class RecordingProvider:
         return response
 
 
+# Seconds before a command is stopped. A full text extraction on a large model can take
+# minutes, and a hung process would otherwise block the caller for good.
+COMMAND_TIMEOUT = 900.0
+
 type CommandRunner = Callable[[list[str], str], str]
 """Runs a command with the given text on stdin and returns its stdout."""
 
@@ -104,10 +108,20 @@ def run_command(args: list[str], stdin: str) -> str:
     try:
         with tempfile.TemporaryDirectory() as cwd:
             completed = subprocess.run(
-                args, input=stdin, capture_output=True, text=True, check=True, cwd=cwd
+                args,
+                input=stdin,
+                capture_output=True,
+                text=True,
+                check=True,
+                cwd=cwd,
+                timeout=COMMAND_TIMEOUT,
             )
     except FileNotFoundError as error:
         raise ProviderError(f"{args[0]} is not on PATH") from error
+    except subprocess.TimeoutExpired as error:
+        raise ProviderError(
+            f"{args[0]} did not finish within {COMMAND_TIMEOUT:g} seconds"
+        ) from error
     except subprocess.CalledProcessError as error:
         # The claude command line tool prints a login failure on stdout, not stderr.
         detail = str(error.stderr).strip() or str(error.stdout).strip()

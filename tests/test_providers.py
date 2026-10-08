@@ -11,6 +11,7 @@ from evidence_dossier.extract import (
     RecordedProvider,
     RecordingProvider,
     prompt_key,
+    providers,
 )
 from evidence_dossier.extract.providers import DENIED_TOOLS, DETAIL_LIMIT, run_command
 
@@ -158,3 +159,12 @@ def test_run_command_cuts_long_output_in_the_error() -> None:
 
 def test_run_command_returns_stdout() -> None:
     assert run_command(["cat"], PROMPT) == PROMPT
+
+
+def test_run_command_stops_a_command_that_runs_past_the_timeout(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(providers, "COMMAND_TIMEOUT", 0.2)
+
+    with pytest.raises(ProviderError, match="did not finish within 0.2 seconds"):
+        run_command(["sleep", "5"], PROMPT)
