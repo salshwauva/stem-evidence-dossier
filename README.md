@@ -133,7 +133,7 @@ These checks establish where a passage is. They do not establish that a scientif
 
 The parser turns query text into a typed proposition with a fixed table of rules and no model call. It matches one relationship verb, takes the subject from the words in front of it, and takes the measurement and the comparator from the words after it. The table holds the increase, reduce, improve, worsen, no change and outperform families, and it reads a negation in front of a verb, so "does not reduce" never parses as "reduces". The parser does not understand the sentence. A verb the table does not hold gives the relationship "unknown", and the stance classifier then answers indirect. Every rule that fires lands in `parse_notes`, which the API returns next to the proposition.
 
-A benchmark measures how far the rules reach. It holds 30 propositions across computer science, biology, and the physical and engineering domains, each with the subject, relationship, measurement and comparator that a correct parse yields. Every label was written before the parser ran on the text.
+A benchmark measures how far the rules reach. It holds 30 propositions across computer science, biology, and the physical and engineering domains, each with the subject, relationship, measurement and comparator that a correct parse yields.
 
 ```sh
 .venv/bin/python -m tests.query_parse_benchmark

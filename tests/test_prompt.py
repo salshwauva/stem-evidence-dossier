@@ -14,10 +14,11 @@ def test_prompt_states_the_version_the_schema_and_the_rules() -> None:
     with Store(":memory:") as store:
         corpus = paper_corpus(store)
 
-    assert PROMPT_VERSION == "claims-v1"
+    assert PROMPT_VERSION == "claims-v2"
     assert f"Prompt version: {PROMPT_VERSION}" in corpus.prompt
     assert json.dumps(CandidateClaims.model_json_schema(), sort_keys=True) in corpus.prompt
     assert TASK_TEXT in corpus.prompt
+    assert "full noun phrase that stands alone" in TASK_TEXT
     assert DATA_TEXT in corpus.prompt
 
 
