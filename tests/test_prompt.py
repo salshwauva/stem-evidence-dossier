@@ -3,7 +3,15 @@ import json
 import pytest
 
 from evidence_dossier.extract import PROMPT_VERSION, CandidateClaims, build_prompt
-from evidence_dossier.extract.prompt import DATA_TEXT, SECTION_BEGIN, SECTION_END, TASK_TEXT
+from evidence_dossier.extract.prompt import (
+    DATA_TEXT,
+    LIMIT_TEXT,
+    LONG_DOCUMENT_CHARS,
+    MAX_LONG_CLAIMS,
+    SECTION_BEGIN,
+    SECTION_END,
+    TASK_TEXT,
+)
 from evidence_dossier.model import Domain
 from evidence_dossier.profiles import get_profile
 from evidence_dossier.store import Store
@@ -81,3 +89,24 @@ def test_prompt_changes_when_the_sections_change() -> None:
     profile = get_profile(Domain.COMPUTER_SCIENCE)
 
     assert build_prompt(corpus.document, corpus.sections[:1], profile) != corpus.prompt
+
+
+def test_a_long_document_gets_the_claim_limit_and_a_short_one_does_not() -> None:
+    long_text = "x" * (LONG_DOCUMENT_CHARS + 1)
+    with Store(":memory:") as store:
+        short = add_paper(store, "2409.00005", (RESULTS_TEXT,))
+        long = add_paper(store, "2409.00006", (long_text,))
+
+    assert LIMIT_TEXT not in short.prompt
+    assert LIMIT_TEXT in long.prompt
+    assert f"at most {MAX_LONG_CLAIMS} claims" in long.prompt
+    assert (
+        long.prompt.index(TASK_TEXT) < long.prompt.index(LIMIT_TEXT) < long.prompt.index("Schema:")
+    )
+
+
+def test_the_limit_starts_above_the_threshold() -> None:
+    with Store(":memory:") as store:
+        at = add_paper(store, "2409.00007", ("x" * LONG_DOCUMENT_CHARS,))
+
+    assert LIMIT_TEXT not in at.prompt
