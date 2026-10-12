@@ -1,0 +1,19 @@
+{
+  "subject": "Prompt caching",
+  "relationship": "cut",
+  "measurement": "median latency",
+  "comparator": "uncached requests",
+  "expected_direction": "DECREASED",
+  "search_terms": [
+    "prompt cache",
+    "KV cache reuse",
+    "prefix caching",
+    "context caching",
+    "time to first token",
+    "TTFT",
+    "response time",
+    "inference speedup",
+    "large language model serving",
+    "P50 latency"
+  ]
+}

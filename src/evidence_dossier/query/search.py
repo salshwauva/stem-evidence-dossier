@@ -18,7 +18,8 @@ from evidence_dossier.model import (
 )
 from evidence_dossier.profiles import get_profile
 from evidence_dossier.query.comparability import ComparabilityEngine
-from evidence_dossier.query.parser import parse_query
+from evidence_dossier.query.model_comparator import ModelComparator
+from evidence_dossier.query.parser import QueryParser, parse_query
 from evidence_dossier.query.retrieval import Candidate, Retriever
 from evidence_dossier.query.stance import StanceClassifier
 from evidence_dossier.store import Store
@@ -80,24 +81,32 @@ def search_evidence(
     dataset: str | None = None,
     system: str | None = None,
     population: str | None = None,
+    comparator: ModelComparator | None = None,
+    parser: QueryParser | None = None,
 ) -> EvidenceResults:
-    """Run the pipeline for a proposition text and store the proposition and its assessments."""
-    proposition = parse_query(
-        text, domain=domain, dataset=dataset, system=system, population=population
-    )
+    """Run the pipeline for a proposition text and store the proposition and its assessments.
+
+    With a parser, that parser reads the text in place of the rules; a ModelQueryParser
+    raises QueryParseError and stores nothing when its call fails.
+    With a comparator, a model judges the meaning based dimensions of every candidate
+    before anything is stored. A judge failure raises ComparatorError and stores nothing.
+    """
+    parse = parser.parse if parser is not None else parse_query
+    proposition = parse(text, domain=domain, dataset=dataset, system=system, population=population)
     candidates = Retriever(store).retrieve(proposition, source_level=source_level, limit=limit)
+    judgments = (
+        {} if comparator is None else comparator.judge(proposition, [c.claim for c in candidates])
+    )
     engine = ComparabilityEngine()
     classifier = StanceClassifier()
     items: list[EvidenceItem] = []
     assessments: list[StanceAssessment] = []
-    store.add_query_proposition(proposition)
     for candidate in candidates:
         claim = candidate.claim
         comparability = engine.assess(
-            proposition, claim, get_profile(claim.research_context.domain)
+            proposition, claim, get_profile(claim.research_context.domain), judgments.get(claim.id)
         )
         assessment = classifier.classify(proposition, claim, comparability)
-        store.add_stance_assessment(assessment)
         assessments.append(assessment)
         span = claim.evidence_span
         items.append(
@@ -117,6 +126,11 @@ def search_evidence(
                 ),
             )
         )
+    # Store the proposition and every assessment as one unit, so an error leaves no partial rows.
+    with store.transaction():
+        store.add_query_proposition(proposition)
+        for assessment in assessments:
+            store.add_stance_assessment(assessment)
     groups = tuple(
         StanceGroup(stance=stance, items=tuple(item for item in items if item.stance is stance))
         for stance in STANCE_ORDER

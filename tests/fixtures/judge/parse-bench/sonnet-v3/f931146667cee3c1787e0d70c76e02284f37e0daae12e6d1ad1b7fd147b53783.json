@@ -1,0 +1,19 @@
+{
+  "subject": "retrieval-augmented generation",
+  "relationship": "reduces",
+  "measurement": "factual hallucination",
+  "comparator": "the same model without retrieval",
+  "expected_direction": "DECREASED",
+  "search_terms": [
+    "RAG",
+    "retrieval augmented language models",
+    "hallucination rate",
+    "factuality",
+    "factual consistency",
+    "faithfulness",
+    "knowledge-grounded generation",
+    "closed-book baseline",
+    "open-domain question answering",
+    "large language models"
+  ]
+}

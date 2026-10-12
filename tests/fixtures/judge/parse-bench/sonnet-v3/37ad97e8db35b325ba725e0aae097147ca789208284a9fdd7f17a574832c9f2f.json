@@ -1,0 +1,19 @@
+{
+  "subject": "high salt intake",
+  "relationship": "affect",
+  "measurement": "endothelial function",
+  "comparator": null,
+  "expected_direction": null,
+  "search_terms": [
+    "dietary sodium",
+    "sodium chloride",
+    "high sodium diet",
+    "salt loading",
+    "flow-mediated dilation",
+    "FMD",
+    "vascular endothelium",
+    "endothelial dysfunction",
+    "nitric oxide bioavailability",
+    "arterial stiffness"
+  ]
+}

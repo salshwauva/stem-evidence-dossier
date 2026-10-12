@@ -9,8 +9,8 @@ from evidence_dossier.model.enums import ValidationStatus
 class ExtractionRun(FrozenModel):
     """One extractor call on one source document.
 
-    The raw response and the errors stay stored when validation fails, so
-    invalid output stays available for analysis.
+    The raw response and the errors stay stored when validation fails, in
+    whole or for some claims, so flawed output stays available for analysis.
     """
 
     id: str

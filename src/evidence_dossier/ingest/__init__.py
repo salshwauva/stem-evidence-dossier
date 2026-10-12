@@ -8,7 +8,14 @@ recorded fixtures.
 from evidence_dossier.ingest.adapter import FetchedText, LiteratureSourceAdapter, SourceHit
 from evidence_dossier.ingest.arxiv import ArxivAdapter
 from evidence_dossier.ingest.domains import PUBMED_DOMAIN, arxiv_category_domain, pubmed_domain
-from evidence_dossier.ingest.http import HttpClient, HttpxClient, PacedHttpClient
+from evidence_dossier.ingest.http import (
+    HttpClient,
+    HttpxClient,
+    PacedHttpClient,
+    RecordingHttpClient,
+    ReplayHttpClient,
+    request_key,
+)
 from evidence_dossier.ingest.pipeline import IngestResult, ingest_work
 from evidence_dossier.ingest.pubmed import PubMedAdapter
 from evidence_dossier.ingest.sections import HEADING_TYPES, SectionParser, section_type_for_heading
@@ -24,10 +31,13 @@ __all__ = [
     "LiteratureSourceAdapter",
     "PacedHttpClient",
     "PubMedAdapter",
+    "RecordingHttpClient",
+    "ReplayHttpClient",
     "SectionParser",
     "SourceHit",
     "arxiv_category_domain",
     "pubmed_domain",
     "ingest_work",
+    "request_key",
     "section_type_for_heading",
 ]

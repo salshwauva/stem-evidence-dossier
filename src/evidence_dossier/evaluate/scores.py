@@ -78,3 +78,18 @@ class PRF(FrozenModel):
             f1=mean(p.f1 for p in listed),
             support=sum(p.support for p in listed),
         )
+
+
+def wilson_interval(successes: int, total: int, z: float = 1.96) -> tuple[float, float] | None:
+    """Return the Wilson score interval for a share, or None when there is nothing to count.
+
+    The default z gives a 95% interval. The interval stays inside [0, 1] and is not
+    degenerate at 0 or at total, which is why it fits the small counts of a pilot.
+    """
+    if total == 0:
+        return None
+    p = successes / total
+    denominator = 1 + z * z / total
+    centre = (p + z * z / (2 * total)) / denominator
+    margin = z * ((p * (1 - p) / total + z * z / (4 * total * total)) ** 0.5) / denominator
+    return max(0.0, centre - margin), min(1.0, centre + margin)

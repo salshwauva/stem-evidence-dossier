@@ -11,6 +11,13 @@ from evidence_dossier.query.comparability import (
     ComparabilityEngine,
     DimensionResult,
 )
+from evidence_dossier.query.judgment import ClaimJudgment, DimensionJudgment, Verdict
+from evidence_dossier.query.model_comparator import (
+    ComparatorError,
+    JudgmentCache,
+    ModelComparator,
+)
+from evidence_dossier.query.model_parser import ModelQueryParser, QueryParseError
 from evidence_dossier.query.parser import parse_query
 from evidence_dossier.query.polarity import POLARITY_VERSION, Polarity, polarity_of
 from evidence_dossier.query.retrieval import Candidate, Retriever
@@ -30,19 +37,27 @@ __all__ = [
     "POLARITY_VERSION",
     "STANCE_ORDER",
     "Candidate",
+    "ClaimJudgment",
     "ComparabilityAssessment",
     "ComparabilityEngine",
+    "ComparatorError",
+    "DimensionJudgment",
     "DimensionResult",
     "Dossier",
     "EvidenceItem",
     "EvidenceResults",
+    "JudgmentCache",
+    "ModelComparator",
+    "ModelQueryParser",
     "Polarity",
     "Provenance",
+    "QueryParseError",
     "QueryProposition",
     "Retriever",
     "StanceAssessment",
     "StanceClassifier",
     "StanceGroup",
+    "Verdict",
     "build_dossier",
     "parse_query",
     "polarity_of",

@@ -1,0 +1,19 @@
+{
+  "subject": "static type checking in large codebases",
+  "relationship": "lowers",
+  "measurement": "defect rate",
+  "comparator": null,
+  "expected_direction": "DECREASED",
+  "search_terms": [
+    "static typing",
+    "type systems",
+    "bug density",
+    "software defects",
+    "fault rate",
+    "large-scale software",
+    "TypeScript",
+    "type annotations",
+    "code quality",
+    "empirical study"
+  ]
+}

@@ -19,10 +19,21 @@ class Candidate(FrozenModel):
 
 
 def query_terms(proposition: QueryProposition) -> tuple[str, ...]:
-    """Return the search terms of a proposition: subject, measurement and comparator tokens."""
+    """Return the search terms of a proposition: subject, measurement and comparator tokens.
+
+    The terms a model proposed (search_terms) come last, so they widen the search.
+    """
     return tokens(
         " ".join(
-            filter(None, (proposition.subject, proposition.measurement, proposition.comparator))
+            filter(
+                None,
+                (
+                    proposition.subject,
+                    proposition.measurement,
+                    proposition.comparator,
+                    *proposition.search_terms,
+                ),
+            )
         )
     )
 

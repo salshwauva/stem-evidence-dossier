@@ -11,7 +11,7 @@ from evidence_dossier.query.text import tokens
 
 
 def test_the_table_carries_a_version_that_the_stance_reason_can_name() -> None:
-    assert POLARITY_VERSION == "polarity-v2"
+    assert POLARITY_VERSION == "polarity-v3"
 
 
 @pytest.mark.parametrize(
@@ -62,16 +62,17 @@ def test_a_physics_measurement_keeps_no_direction(name: str) -> None:
     assert polarity_of(name) is None
 
 
-@pytest.mark.parametrize("name", ["refusal rate", "annotation error", "Crash-Rate"])
-def test_a_name_that_ends_in_rate_or_error_is_lower_is_better(name: str) -> None:
-    """The suffix rule answers for names that the seeded table does not list."""
-    assert fold(name) not in TABLE
-    assert polarity_of(name) is Polarity.LOWER_IS_BETTER
-
-
-@pytest.mark.parametrize("name", ["error bar chart", "rated throughput"])
-def test_the_suffix_rule_reads_the_last_token_only(name: str) -> None:
+@pytest.mark.parametrize(
+    "name",
+    ["success rate", "pass rate", "recovery rate", "survival rate", "hit rate", "refusal rate"],
+)
+def test_a_trailing_rate_gives_no_polarity(name: str) -> None:
+    """A rate can count good outcomes or bad ones, so only a listed key has a direction."""
     assert polarity_of(name) is None
+
+
+def test_a_listed_rate_keeps_its_polarity() -> None:
+    assert polarity_of("error rate") is Polarity.LOWER_IS_BETTER
 
 
 @pytest.mark.parametrize("name", [None, "", "   ", "widget sparkle", "answer quality"])

@@ -1,0 +1,19 @@
+{
+  "subject": "The palladium catalyst",
+  "relationship": "raises",
+  "measurement": "the isolated yield",
+  "comparator": "the uncatalysed route",
+  "expected_direction": "INCREASED",
+  "search_terms": [
+    "Pd catalyst",
+    "palladium catalysis",
+    "Pd-catalyzed reaction",
+    "product yield",
+    "reaction yield",
+    "isolated product yield",
+    "uncatalyzed reaction",
+    "catalyst-free",
+    "non-catalytic pathway",
+    "catalytic vs uncatalyzed"
+  ]
+}

@@ -1,7 +1,7 @@
 # ADR 0012: One query parser protocol, with the rules as the default
 
 ## Status
-Accepted, 2026-09-12
+Accepted, 2026-09-12. The sentence that keeps a model out of the evidence verdicts is reversed for three dimensions by ADR 0015. The fallback of the model parser is replaced by an error in ADR 0016.
 
 ## Context
 ADR 0006 chose a fixed set of rules over a model call and named the cost: a proposition phrased outside the verb table parses with the relationship "unknown", and the stance classifier then answers INDIRECT. Plan section 36 says to start simple and to add machinery only when a benchmark shows the simple path failing. No benchmark measured the parse, so the size of that cost was a guess.

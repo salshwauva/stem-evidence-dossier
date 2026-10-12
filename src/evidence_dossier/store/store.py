@@ -37,7 +37,7 @@ from evidence_dossier.store.migrate import apply_migrations
 # Record fields that the tables hold as JSON text.
 _WORK_JSON = ("authors", "external_identifiers")
 _RUN_JSON = ("errors",)
-_QUERY_JSON = ("parse_notes",)
+_QUERY_JSON = ("parse_notes", "search_terms")
 _DOSSIER_JSON = ("corpus_scope", "counts")
 
 
@@ -135,7 +135,7 @@ class Store:
         return _load(Study, self._fetch("studies", study_id))
 
     def add_extraction_run(self, run: ExtractionRun) -> None:
-        """Store an extraction run. An INVALID run keeps its raw response and its errors."""
+        """Store an extraction run. A PARTIAL or INVALID run keeps its raw response and its errors."""
         self._insert("extraction_runs", _dump(run, _RUN_JSON))
 
     def get_extraction_run(self, run_id: str) -> ExtractionRun | None:

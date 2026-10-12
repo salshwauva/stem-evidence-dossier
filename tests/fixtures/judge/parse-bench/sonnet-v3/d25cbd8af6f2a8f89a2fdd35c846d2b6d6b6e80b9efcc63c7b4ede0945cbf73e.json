@@ -1,0 +1,19 @@
+{
+  "subject": "Quantization to 4 bits",
+  "relationship": "does not reduce",
+  "measurement": "accuracy on reasoning benchmarks",
+  "comparator": null,
+  "expected_direction": null,
+  "search_terms": [
+    "INT4",
+    "4-bit weight quantization",
+    "low-bit LLM compression",
+    "post-training quantization",
+    "PTQ",
+    "GPTQ",
+    "AWQ",
+    "model compression",
+    "GSM8K",
+    "task performance"
+  ]
+}

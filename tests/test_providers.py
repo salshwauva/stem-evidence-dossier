@@ -9,7 +9,9 @@ from evidence_dossier.extract import (
     ProviderError,
     ProviderResponse,
     RecordedProvider,
+    RecordingProvider,
     prompt_key,
+    providers,
 )
 from evidence_dossier.extract.providers import DENIED_TOOLS, DETAIL_LIMIT, run_command
 
@@ -38,18 +40,42 @@ def test_recorded_provider_names_the_missing_key(tmp_path: Path) -> None:
         provider.complete("another prompt")
 
 
+def test_a_recording_provider_saves_a_reply_that_recorded_provider_replays(
+    tmp_path: Path,
+) -> None:
+    live = RecordedProvider({prompt_key(PROMPT): RESPONSE})
+
+    assert RecordingProvider(live, tmp_path).complete(PROMPT) == RESPONSE
+    assert RecordedProvider(fixture_dir=tmp_path).complete(PROMPT) == RESPONSE
+
+
+def _cli_result(text: str, **fields: object) -> str:
+    """Return the JSON that `claude -p --output-format json` prints."""
+    return json.dumps(
+        {
+            "type": "result",
+            "is_error": False,
+            "stop_reason": "end_turn",
+            "terminal_reason": "completed",
+            "num_turns": 1,
+            "result": text,
+            **fields,
+        }
+    )
+
+
 def test_claude_cli_provider_sends_the_prompt_on_stdin_to_the_claude_command() -> None:
     calls: list[tuple[list[str], str]] = []
 
     def fake_runner(args: list[str], stdin: str) -> str:
         calls.append((args, stdin))
-        return "  {}\n"
+        return _cli_result("  {}\n")
 
     response = ClaudeCliProvider("claude-test-1", runner=fake_runner).complete(PROMPT)
 
     ((args, stdin),) = calls
     assert stdin == PROMPT
-    assert args[:6] == ["claude", "-p", "--output-format", "text", "--model", "claude-test-1"]
+    assert args[:6] == ["claude", "-p", "--output-format", "json", "--model", "claude-test-1"]
     assert response == ProviderResponse(model_identifier="claude-cli/claude-test-1", text="  {}\n")
 
 
@@ -59,7 +85,7 @@ def test_claude_cli_provider_grants_no_tool_and_loads_no_settings() -> None:
 
     def fake_runner(args: list[str], stdin: str) -> str:
         calls.append(args)
-        return "{}"
+        return _cli_result("{}")
 
     ClaudeCliProvider("claude-test-1", runner=fake_runner).complete(PROMPT)
 
@@ -74,6 +100,26 @@ def test_claude_cli_provider_grants_no_tool_and_loads_no_settings() -> None:
     settings = json.loads(args[args.index("--settings") + 1])
     assert settings["permissions"]["allow"] == []
     assert set(settings["permissions"]["deny"]) == set(DENIED_TOOLS)
+
+
+@pytest.mark.parametrize(
+    ("stdout", "expected"),
+    [
+        ("not json at all", "printed no JSON result"),
+        ('{"type": "result"}', "has no reply text"),
+        (_cli_result("Failed to authenticate", is_error=True), "reported an error: Failed"),
+        (_cli_result('{"studies": [', stop_reason="max_tokens"), "stop_reason 'max_tokens'"),
+        (_cli_result("{}", stop_reason=None), "stop_reason None"),
+    ],
+    ids=["not_json", "no_result", "is_error", "max_tokens", "no_stop_reason"],
+)
+def test_claude_cli_provider_raises_on_a_result_that_is_not_a_finished_reply(
+    stdout: str, expected: str
+) -> None:
+    provider = ClaudeCliProvider("claude-test-1", runner=lambda args, stdin: stdout)
+
+    with pytest.raises(ProviderError, match=expected):
+        provider.complete(PROMPT)
 
 
 @pytest.mark.skipif(
@@ -113,3 +159,40 @@ def test_run_command_cuts_long_output_in_the_error() -> None:
 
 def test_run_command_returns_stdout() -> None:
     assert run_command(["cat"], PROMPT) == PROMPT
+
+
+def test_run_command_stops_a_command_that_runs_past_the_timeout(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(providers, "COMMAND_TIMEOUT", 0.2)
+
+    with pytest.raises(ProviderError, match="did not finish within 0.2 seconds"):
+        run_command(["sleep", "5"], PROMPT)
+
+
+def test_a_reply_that_continued_over_several_turns_is_refused_as_a_possible_tail() -> None:
+    def fake_runner(args: list[str], stdin: str) -> str:
+        return _cli_result('ins upregulated by treatment"}', num_turns=2)
+
+    with pytest.raises(ProviderError, match="over 2 turns"):
+        ClaudeCliProvider("claude-test-1", runner=fake_runner).complete(PROMPT)
+
+
+def test_the_default_runner_raises_the_output_token_cap(monkeypatch: pytest.MonkeyPatch) -> None:
+    seen: dict[str, object] = {}
+
+    def fake_run_command(args: list[str], stdin: str, env: dict[str, str] | None = None) -> str:
+        seen["env"] = env
+        return _cli_result("{}")
+
+    monkeypatch.setattr(providers, "run_command", fake_run_command)
+
+    ClaudeCliProvider("claude-test-1").complete(PROMPT)
+
+    assert seen["env"] == {"CLAUDE_CODE_MAX_OUTPUT_TOKENS": providers.MAX_OUTPUT_TOKENS}
+
+
+def test_run_command_adds_env_entries_to_the_environment() -> None:
+    assert (
+        run_command(["sh", "-c", 'printf %s "$DOSSIER_TEST"'], "", env={"DOSSIER_TEST": "7"}) == "7"
+    )

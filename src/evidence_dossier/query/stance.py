@@ -70,6 +70,12 @@ def _decide(
             "The subject and outcome match, but the evidence directness dimension fails:"
             " the claim does not measure the proposition measurement itself."
         )
+    if proposition.comparator is not None and not assessment.matched("comparator"):
+        # A result against another baseline says nothing about the requested comparison.
+        return Stance.INDIRECT, (
+            "The subject and outcome match, but the comparator dimension fails: the claim"
+            f" does not report the comparison with '{proposition.comparator}'."
+        )
     actual = claim.result.direction
     expected = proposition.expected_direction
     if expected is None:

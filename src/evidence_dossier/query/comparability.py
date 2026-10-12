@@ -21,7 +21,8 @@ from evidence_dossier.model import (
     Term,
 )
 from evidence_dossier.profiles import DomainProfile
-from evidence_dossier.query.text import overlap
+from evidence_dossier.query.judgment import ClaimJudgment, DimensionJudgment, Verdict
+from evidence_dossier.query.text import has_without, overlap
 
 # Share of proposition tokens that a claim term must hold. Half, so a two word
 # measurement such as "factual hallucination" still matches "factual error rate".
@@ -67,6 +68,9 @@ class DimensionResult(FrozenModel):
     dimension: str
     matched: bool
     reason: str
+    # Set when a model judged the dimension: its verdict and the quote behind it.
+    verdict: Verdict | None = None
+    evidence: str | None = None
 
 
 class ComparabilityAssessment(FrozenModel):
@@ -86,16 +90,25 @@ class ComparabilityEngine:
     """Scores the generic dimensions and derives the overall level."""
 
     def assess(
-        self, proposition: QueryProposition, claim: EvidenceClaim, profile: DomainProfile
+        self,
+        proposition: QueryProposition,
+        claim: EvidenceClaim,
+        profile: DomainProfile,
+        judgment: ClaimJudgment | None = None,
     ) -> ComparabilityAssessment:
+        """Score the dimensions. A judgment replaces the word overlap on the dimensions it covers."""
+        subject = _judged(judgment, "subject") or _subject(proposition, claim)
+        measurement = _judged(judgment, "measurement") or _measurement(proposition, claim)
         dimensions = (
-            _subject(proposition, claim),
-            _method(proposition, claim),
+            subject,
+            _method(proposition, claim) if judgment is None else _method_follows(subject),
             _context(proposition, claim),
-            _comparator(proposition, claim),
-            _measurement(proposition, claim),
+            _judged_comparator(judgment, proposition, claim) or _comparator(proposition, claim),
+            measurement,
             _conditions(proposition, claim, profile),
-            _directness(proposition, claim),
+            _directness(proposition, claim)
+            if judgment is None
+            else _directness_follows(measurement, claim),
         )
         matched = {result.dimension for result in dimensions if result.matched}
         return ComparabilityAssessment(level=_level(matched), dimensions=dimensions)
@@ -113,6 +126,56 @@ def _level(matched: set[str]) -> ComparabilityLevel:
     return ComparabilityLevel.MODERATE
 
 
+def _judged(judgment: ClaimJudgment | None, name: str) -> DimensionResult | None:
+    """Return the dimension result for a judged dimension, or None when the rules decide it."""
+    given: DimensionJudgment | None = None if judgment is None else getattr(judgment, name)
+    if given is None:
+        return None
+    return DimensionResult(
+        dimension=name,
+        matched=given.verdict is Verdict.MATCH,
+        reason=f"The judge says {given.verdict} on the {name}: {given.reason}",
+        verdict=given.verdict,
+        evidence=given.quote,
+    )
+
+
+def _judged_comparator(
+    judgment: ClaimJudgment | None, proposition: QueryProposition, claim: EvidenceClaim
+) -> DimensionResult | None:
+    """A model match cannot override a with and without conflict between the two baselines."""
+    result = _judged(judgment, "comparator")
+    if result is None or not result.matched or claim.comparator is None:
+        return result
+    wanted = has_without(proposition.comparator)
+    reported = _first_marker(claim.comparator.name)
+    if wanted is not None and reported is not None and wanted != reported:
+        return _comparator(proposition, claim)
+    return result
+
+
+def _method_follows(subject: DimensionResult) -> DimensionResult:
+    """With a judge, the subject verdict covers the method, as a spelled out method does."""
+    return DimensionResult(
+        dimension="method",
+        matched=subject.matched,
+        reason="The method follows the subject verdict.",
+    )
+
+
+def _directness_follows(measurement: DimensionResult, claim: EvidenceClaim) -> DimensionResult:
+    """Direct evidence is a matched measurement in an empirical claim."""
+    empirical = claim.claim_type is not ClaimType.THEORETICAL
+    matched = measurement.matched and empirical
+    if not empirical:
+        reason = f"The claim is {claim.claim_type}, so it measures nothing directly."
+    elif matched:
+        reason = "The measurement verdict is a match, so the claim measures it directly."
+    else:
+        reason = "The measurement verdict is not a match, so the claim is not direct evidence."
+    return DimensionResult(dimension="evidence directness", matched=matched, reason=reason)
+
+
 def _term_overlap(query_text: str | None, term: Term | None) -> float:
     if term is None:
         return 0.0
@@ -125,6 +188,20 @@ def _label(term: Term | None) -> str:
 
 def _subject(proposition: QueryProposition, claim: EvidenceClaim) -> DimensionResult:
     score = _term_overlap(proposition.subject, claim.subject)
+    if score < MATCH_THRESHOLD and claim.method is not None:
+        # An extractor often names the subject by an acronym or a short form ("RAG
+        # models") and spells the method out. The method then carries the subject.
+        method_score = _term_overlap(proposition.subject, claim.method.name)
+        if method_score >= MATCH_THRESHOLD:
+            return DimensionResult(
+                dimension="subject",
+                matched=True,
+                reason=(
+                    f"The claim subject {_label(claim.subject)} lacks the proposition subject"
+                    f" '{proposition.subject}' (overlap {score:.2f}), but its method"
+                    f" {_label(claim.method.name)} holds it (overlap {method_score:.2f})."
+                ),
+            )
     matched = score >= MATCH_THRESHOLD
     return DimensionResult(
         dimension="subject",
@@ -198,6 +275,19 @@ def _comparator(proposition: QueryProposition, claim: EvidenceClaim) -> Dimensio
             reason=f"The {side} names no comparator, so the comparator dimension is open.",
         )
     score = _term_overlap(proposition.comparator, claim.comparator.name)
+    wanted = has_without(proposition.comparator)
+    reported = _first_marker(claim.comparator.name)
+    if wanted is not None and reported is not None and wanted != reported:
+        return DimensionResult(
+            dimension="comparator",
+            matched=False,
+            reason=(
+                f"The claim comparator {_label(claim.comparator.name)} is"
+                f" {'without' if reported else 'with'} the feature that the proposition comparator"
+                f" '{proposition.comparator}' is {'without' if wanted else 'with'}"
+                f" (overlap {score:.2f})."
+            ),
+        )
     matched = score >= MATCH_THRESHOLD
     return DimensionResult(
         dimension="comparator",
@@ -207,6 +297,13 @@ def _comparator(proposition: QueryProposition, claim: EvidenceClaim) -> Dimensio
             f" the proposition comparator '{proposition.comparator}' (overlap {score:.2f})."
         ),
     )
+
+
+def _first_marker(term: Term | None) -> bool | None:
+    if term is None:
+        return None
+    original = has_without(term.original)
+    return original if original is not None else has_without(term.canonical)
 
 
 def _measurement(proposition: QueryProposition, claim: EvidenceClaim) -> DimensionResult:

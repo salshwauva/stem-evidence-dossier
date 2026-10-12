@@ -160,7 +160,7 @@ def test_paragraphs_directly_under_the_body_give_one_section_first() -> None:
     ]
 
 
-def test_a_thin_space_at_the_edge_of_a_table_cell_stays() -> None:
+def test_a_thin_space_at_the_edge_of_a_table_cell_drops_out() -> None:
     fetched = jats(
         body=(
             "<table-wrap><label>Table 1</label><table><tr><td>\u2009-4.2</td><td>12\u2009</td>"
@@ -168,22 +168,34 @@ def test_a_thin_space_at_the_edge_of_a_table_cell_stays() -> None:
         )
     )
     (section,) = SectionParser().parse(fetched, "doc")
-    assert section.text == "\u2009-4.2\t12\u2009"
+    assert section.text == "-4.2\t12"
 
 
 def test_a_space_run_between_inline_elements_becomes_one_space() -> None:
-    """The formatting newline between two inline elements reads as a space. A thin space stays."""
+    """The formatting newline between two inline elements reads as a space."""
     fetched = jats(
         body=(
             "<sec><title>Methods</title><p>Mice carrying <italic>Ttbk2</italic>\n"
-            "<sup>fl/fl</sup> alleles were tested at 20\u2009min intervals in AD.\n"
+            "<sup>fl/fl</sup> alleles were tested at 20 min intervals in AD.\n"
             "<sup><xref>1</xref></sup></p></sec>"
         )
     )
     (section,) = SectionParser().parse(fetched, "doc")
-    assert section.text == (
-        "Mice carrying Ttbk2 fl/fl alleles were tested at 20\u2009min intervals in AD. 1"
+    assert (
+        section.text == "Mice carrying Ttbk2 fl/fl alleles were tested at 20 min intervals in AD. 1"
     )
+
+
+def test_a_thin_or_no_break_space_becomes_a_plain_space() -> None:
+    """A model copies these as a plain space, so the stored text holds a plain space."""
+    fetched = jats(
+        body=(
+            "<sec><title>Methods</title><p>Mice were tested at 20\u2009min intervals\u00a0in AD,"
+            " then 5\u202f\u00b5m apart.</p></sec>"
+        )
+    )
+    (section,) = SectionParser().parse(fetched, "doc")
+    assert section.text == "Mice were tested at 20 min intervals in AD, then 5 \u00b5m apart."
 
 
 def test_empty_text_gives_no_section() -> None:

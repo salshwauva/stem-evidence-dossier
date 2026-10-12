@@ -1,0 +1,19 @@
+{
+  "subject": "Chronic sleep restriction",
+  "relationship": "worsens",
+  "measurement": "memory consolidation",
+  "comparator": "an eight hour schedule",
+  "expected_direction": "WORSENED",
+  "search_terms": [
+    "sleep deprivation",
+    "short sleep duration",
+    "partial sleep loss",
+    "insufficient sleep",
+    "declarative memory",
+    "memory retention",
+    "sleep-dependent memory",
+    "8-hour sleep opportunity",
+    "sleep extension",
+    "cognitive performance"
+  ]
+}

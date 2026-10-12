@@ -1,0 +1,19 @@
+{
+  "subject": "gradient checkpointing",
+  "relationship": "degrade",
+  "measurement": "training throughput",
+  "comparator": "full activation storage",
+  "expected_direction": "WORSENED",
+  "search_terms": [
+    "activation checkpointing",
+    "activation recomputation",
+    "rematerialization",
+    "recomputation overhead",
+    "memory-compute tradeoff",
+    "training speed",
+    "samples per second",
+    "tokens per second",
+    "activation memory",
+    "store all activations"
+  ]
+}

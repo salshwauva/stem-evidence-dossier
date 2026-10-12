@@ -1,0 +1,19 @@
+{
+  "subject": "Hydrogen embrittlement",
+  "relationship": "degrade",
+  "measurement": "fatigue life in pipeline steel",
+  "comparator": null,
+  "expected_direction": "WORSENED",
+  "search_terms": [
+    "hydrogen-induced cracking",
+    "hydrogen-assisted fatigue",
+    "fatigue crack growth",
+    "hydrogen charging",
+    "hydrogen environment",
+    "X70 steel",
+    "X52 steel",
+    "high-cycle fatigue",
+    "natural gas pipeline",
+    "hydrogen blending"
+  ]
+}

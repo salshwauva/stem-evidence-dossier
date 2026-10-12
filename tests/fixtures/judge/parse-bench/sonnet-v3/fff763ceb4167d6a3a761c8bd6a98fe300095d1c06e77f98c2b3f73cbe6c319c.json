@@ -1,0 +1,19 @@
+{
+  "subject": "annealing at 600 C",
+  "relationship": "improve",
+  "measurement": "tensile strength of the alloy",
+  "comparator": null,
+  "expected_direction": "IMPROVED",
+  "search_terms": [
+    "heat treatment",
+    "thermal treatment",
+    "ultimate tensile strength",
+    "UTS",
+    "yield strength",
+    "mechanical properties",
+    "recrystallization",
+    "grain size",
+    "microstructure",
+    "hardness"
+  ]
+}

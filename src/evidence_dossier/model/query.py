@@ -38,6 +38,10 @@ class QueryProposition(FrozenModel):
     system: str | None = None
     population: str | None = None
     parse_notes: tuple[str, ...] = ()
+    # Words a paper might use for the subject, the measurement or the comparator: synonyms,
+    # acronyms, long forms. A model proposes them. They widen retrieval and nothing else,
+    # so no comparability verdict reads them.
+    search_terms: tuple[str, ...] = ()
 
 
 class StanceAssessment(FrozenModel):

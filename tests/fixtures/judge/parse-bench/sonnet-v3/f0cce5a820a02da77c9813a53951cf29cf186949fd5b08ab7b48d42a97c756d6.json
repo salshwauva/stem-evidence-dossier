@@ -1,0 +1,19 @@
+{
+  "subject": "lithium iron phosphate cells",
+  "relationship": "underperform",
+  "measurement": "energy density",
+  "comparator": "NMC cells",
+  "expected_direction": "WORSENED",
+  "search_terms": [
+    "LFP",
+    "LiFePO4",
+    "lithium nickel manganese cobalt oxide",
+    "NCM",
+    "gravimetric energy density",
+    "volumetric energy density",
+    "specific energy",
+    "Wh/kg",
+    "Wh/L",
+    "lithium-ion battery cathode comparison"
+  ]
+}

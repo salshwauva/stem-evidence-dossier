@@ -1,0 +1,19 @@
+{
+  "subject": "Graphene doping",
+  "relationship": "lowers",
+  "measurement": "sheet resistance",
+  "comparator": "pristine films",
+  "expected_direction": "DECREASED",
+  "search_terms": [
+    "doped graphene",
+    "chemical doping",
+    "p-type doping",
+    "n-type doping",
+    "Rs",
+    "sheet resistivity",
+    "electrical conductivity",
+    "transparent conductive film",
+    "undoped graphene",
+    "as-grown graphene"
+  ]
+}

@@ -1,9 +1,10 @@
-"""The evidence-dossier command: ingest, extract, search, claim and serve (plan section 58).
+"""The evidence-dossier command: ingest, extract, search, claim, serve and demo (plan section 58).
 
 The command composes the pipeline, so it imports the other subpackages and no
 subpackage imports it, the same exception that api holds. run() takes the
 HTTP client and the extraction provider as arguments, so tests pass recorded
-ones and no test opens a network connection.
+ones and no test opens a network connection. The demo command rebuilds a
+store from recorded replies, so it needs no network and no key.
 """
 
 import argparse
@@ -12,7 +13,8 @@ import sys
 import textwrap
 from collections.abc import Sequence
 from datetime import UTC, datetime
-from typing import TextIO
+from pathlib import Path
+from typing import Literal, TextIO
 
 import httpx
 
@@ -20,28 +22,60 @@ from evidence_dossier.extract import (
     ClaudeCliProvider,
     ExtractionProvider,
     ProviderError,
+    RecordedProvider,
+    RecordingProvider,
     extract_document,
 )
 from evidence_dossier.ingest import (
     ArxivAdapter,
     HttpClient,
     HttpxClient,
+    IngestResult,
     LiteratureSourceAdapter,
     PacedHttpClient,
     PubMedAdapter,
+    RecordingHttpClient,
+    ReplayHttpClient,
     ingest_work,
 )
-from evidence_dossier.model import Domain, EvidenceClaim, Term
+from evidence_dossier.ingest.http import INDEX_FILE
+from evidence_dossier.model import Domain, EvidenceClaim, FrozenModel, Term
 from evidence_dossier.normalize import normalize_claim
-from evidence_dossier.query import EvidenceItem, EvidenceResults, search_evidence
+from evidence_dossier.query import (
+    ComparatorError,
+    EvidenceItem,
+    EvidenceResults,
+    JudgmentCache,
+    ModelComparator,
+    ModelQueryParser,
+    QueryParseError,
+    search_evidence,
+)
 from evidence_dossier.store import Store
 
 DEFAULT_DB = "dossier.db"
+DEFAULT_JUDGMENTS = "judgments"
+DEFAULT_PARSES = "parses"
 # Seconds between two requests. The arXiv API asks for three. NCBI allows three
 # requests a second without an API key.
 ARXIV_INTERVAL = 3.0
 NCBI_INTERVAL = 0.34
 WIDTH = 88
+
+type Source = Literal["arxiv", "pubmed"]
+
+
+class DemoWork(FrozenModel):
+    source: Source
+    identifier: str
+
+
+class DemoCorpus(FrozenModel):
+    """The demo/corpus.json file: the works of the demo store and the queries it answers."""
+
+    note: str
+    works: tuple[DemoWork, ...]
+    queries: tuple[str, ...]
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -65,21 +99,73 @@ def run(
     if args.command == "serve":
         return _serve(args.db, args.gold, err)
     try:
+        if args.command == "demo":
+            return _demo(
+                args.db,
+                Path(args.demo_dir),
+                args.record,
+                args.model,
+                tuple(args.only),
+                out,
+                err,
+                http,
+                provider,
+            )
         with Store(args.db) as store:
             if args.command == "ingest":
                 return _ingest(store, args.source, args.identifiers, http, out)
             if args.command == "extract":
                 chosen = provider or ClaudeCliProvider(args.model)
-                return _extract(store, args.document_ids, chosen, out)
+                summary = _extract(store, args.document_ids, chosen, out)
+                return 1 if summary.invalid or summary.failed else 0
             if args.command == "search":
                 domain = None if args.domain is None else Domain(args.domain)
-                results = search_evidence(store, args.text, domain=domain, limit=args.limit)
+                results = search_evidence(
+                    store,
+                    args.text,
+                    domain=domain,
+                    limit=args.limit,
+                    comparator=_comparator(args.judge, Path(args.judgments), provider),
+                    parser=_parser_for(args.parse_model, Path(args.parses), provider),
+                )
                 _print_results(store, results, out)
                 return 0
             return _print_claim(store, args.claim_id, out, err)
-    except (LookupError, ProviderError, httpx.HTTPError) as error:
+    except (
+        LookupError,
+        ProviderError,
+        ComparatorError,
+        QueryParseError,
+        httpx.HTTPError,
+    ) as error:
         print(f"error: {error}", file=err)
         return 1
+
+
+def _comparator(
+    model: str | None, folder: Path, provider: ExtractionProvider | None
+) -> ModelComparator | None:
+    """Build the judge for --judge, or None for the rules alone."""
+    if model is None:
+        return None
+    chosen = provider or ClaudeCliProvider(model)
+    return ModelComparator(
+        lambda prompt: chosen.complete(prompt).text,
+        model_id=f"claude-cli/{model}",
+        cache=JudgmentCache(folder),
+    )
+
+
+def _parser_for(
+    model: str | None, folder: Path, provider: ExtractionProvider | None
+) -> ModelQueryParser | None:
+    """Build the model query parser for --parse-model, or None for the rules."""
+    if model is None:
+        return None
+    chosen = provider or ClaudeCliProvider(model)
+    return ModelQueryParser(
+        lambda prompt: chosen.complete(prompt).text, model_id=f"claude-cli/{model}", cache=folder
+    )
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -102,19 +188,58 @@ def _parser() -> argparse.ArgumentParser:
     search.add_argument("text")
     search.add_argument("--domain", choices=[domain.value for domain in Domain])
     search.add_argument("--limit", type=int, default=20)
+    search.add_argument(
+        "--judge",
+        metavar="MODEL",
+        help="judge subject, comparator and measurement with this model (claude command line tool)",
+    )
+    search.add_argument(
+        "--parse-model",
+        metavar="MODEL",
+        help="read the proposition and propose search terms with this model (claude command line tool)",
+    )
+    search.add_argument(
+        "--parses",
+        default=DEFAULT_PARSES,
+        help=f"folder that holds validated parses, replayed before any call (default {DEFAULT_PARSES})",
+    )
+    search.add_argument(
+        "--judgments",
+        default=DEFAULT_JUDGMENTS,
+        help=f"folder that holds validated judgments, replayed before any call (default {DEFAULT_JUDGMENTS})",
+    )
 
     claim = commands.add_parser("claim", help="show one claim with its context and passage")
     claim.add_argument("claim_id")
 
     serve = commands.add_parser("serve", help="serve the API on http://127.0.0.1:8000")
     serve.add_argument("--gold", help="gold directory for GET /evaluation")
+
+    demo = commands.add_parser("demo", help="build a new store from the recorded demo corpus")
+    demo.add_argument("--demo-dir", default="demo", help="folder with corpus.json (default demo)")
+    demo.add_argument(
+        "--record", action="store_true", help="fetch and extract live, and save every reply"
+    )
+    demo.add_argument("--model", help="model for the claude command line tool, with --record")
+    demo.add_argument(
+        "--only",
+        action="append",
+        default=[],
+        metavar="SOURCE:ID",
+        help="with --record, record only this corpus entry (such as arxiv:2310.11511)"
+        " and keep the other recordings; repeat to name more entries",
+    )
     return parser
 
 
+def _live_client(source: str) -> HttpClient:
+    interval = ARXIV_INTERVAL if source == "arxiv" else NCBI_INTERVAL
+    return PacedHttpClient(HttpxClient(), interval)
+
+
 def _adapter(source: str, http: HttpClient | None) -> LiteratureSourceAdapter:
-    if source == "arxiv":
-        return ArxivAdapter(http or PacedHttpClient(HttpxClient(), ARXIV_INTERVAL))
-    return PubMedAdapter(http or PacedHttpClient(HttpxClient(), NCBI_INTERVAL))
+    client = http or _live_client(source)
+    return ArxivAdapter(client) if source == "arxiv" else PubMedAdapter(client)
 
 
 def _ingest(
@@ -126,29 +251,46 @@ def _ingest(
 ) -> int:
     adapter = _adapter(source, http)
     for identifier in identifiers:
-        result = ingest_work(store, adapter, identifier, fetched_at=datetime.now(UTC))
-        work = store.get_work(result.work_id)
-        title = "" if work is None else work.title
-        sections = "section" if result.section_count == 1 else "sections"
-        facts = [
-            result.document_id,
-            result.source_level.value,
-            f"{result.section_count} {sections}",
-            "stored" if result.stored else "unchanged",
-        ]
-        if result.license is not None:
-            facts.append(f"license {result.license}")
-        print(f"{source} {identifier}: {title}", file=out)
-        print(f"  {', '.join(facts)}", file=out)
-        if result.fetch_error is not None:
-            print(f"  full text failed, kept the fallback: {result.fetch_error}", file=out)
+        _ingest_one(store, adapter, source, identifier, out)
     return 0
+
+
+def _ingest_one(
+    store: Store, adapter: LiteratureSourceAdapter, source: str, identifier: str, out: TextIO
+) -> IngestResult:
+    result = ingest_work(store, adapter, identifier, fetched_at=datetime.now(UTC))
+    work = store.get_work(result.work_id)
+    title = "" if work is None else work.title
+    sections = "section" if result.section_count == 1 else "sections"
+    facts = [
+        result.document_id,
+        result.source_level.value,
+        f"{result.section_count} {sections}",
+        "stored" if result.stored else "unchanged",
+    ]
+    if result.license is not None:
+        facts.append(f"license {result.license}")
+    print(f"{source} {identifier}: {title}", file=out)
+    print(f"  {', '.join(facts)}", file=out)
+    if result.fetch_error is not None:
+        print(f"  full text failed, kept the fallback: {result.fetch_error}", file=out)
+    return result
+
+
+class ExtractSummary(FrozenModel):
+    """How the documents of one extract call ended."""
+
+    invalid: int = 0
+    # Documents with no reply or no stored run: a provider error, a missing
+    # document, or IDs that an earlier extraction holds.
+    failed: int = 0
 
 
 def _extract(
     store: Store, document_ids: Sequence[str], provider: ExtractionProvider, out: TextIO
-) -> int:
-    status = 0
+) -> ExtractSummary:
+    """Extract each document in turn. A document that fails prints its reason and the loop goes on."""
+    invalid = failed = 0
     for document_id in document_ids:
         try:
             run = extract_document(
@@ -157,7 +299,11 @@ def _extract(
         except sqlite3.IntegrityError as error:
             print(f"{document_id}: nothing stored, an earlier extraction holds its IDs", file=out)
             print(f"  {error}", file=out)
-            status = 1
+            failed += 1
+            continue
+        except (ProviderError, LookupError) as error:
+            print(f"{document_id}: nothing stored, no reply: {error}", file=out)
+            failed += 1
             continue
         document = store.get_source_document(document_id)
         work_id = "" if document is None else document.research_work_id
@@ -170,8 +316,8 @@ def _extract(
         for message in run.errors:
             print(f"  {message}", file=out)
         if run.errors:
-            status = 1
-    return status
+            invalid += 1
+    return ExtractSummary(invalid=invalid, failed=failed)
 
 
 def _print_results(store: Store, results: EvidenceResults, out: TextIO) -> None:
@@ -307,6 +453,159 @@ def _wrapped(out: TextIO, label: str, text: str, indent: int = 0) -> None:
         ),
         file=out,
     )
+
+
+def _demo(
+    db: str,
+    folder: Path,
+    record: bool,
+    model: str | None,
+    only: tuple[str, ...],
+    out: TextIO,
+    err: TextIO,
+    http: HttpClient | None,
+    provider: ExtractionProvider | None,
+) -> int:
+    """Build a new store from demo/corpus.json, extract every document, and run the queries.
+
+    Replay reads demo/http and demo/replies and opens no network connection.
+    Record fetches and extracts live, saves every reply there, and writes
+    demo/SOURCES.md with the title, authors and license of each work. Record
+    with --only runs live for the named entries and replays the rest, so one
+    failed paper does not cost a full recording.
+    """
+    corpus_path = folder / "corpus.json"
+    if not corpus_path.is_file():
+        print(f"error: {corpus_path} is missing; run from the repository root", file=err)
+        return 1
+    if only and not record:
+        print("error: --only needs --record", file=err)
+        return 1
+    if Path(db).exists():
+        print(f"error: {db} exists; the demo builds a new store, so pass another --db", file=err)
+        return 1
+    corpus = DemoCorpus.model_validate_json(corpus_path.read_text(encoding="utf-8"))
+    http_dir, replies_dir = folder / "http", folder / "replies"
+    entries = [_entry(work) for work in corpus.works]
+    live = set(only) if only else set(entries)
+    if record:
+        if model is None:
+            print("error: --record needs --model", file=err)
+            return 1
+        unknown = sorted(live - set(entries))
+        if unknown:
+            print(
+                f"error: --only: no corpus entry {', '.join(unknown)}; entries: {', '.join(entries)}",
+                file=err,
+            )
+            return 1
+        recordings = any(path.exists() and any(path.iterdir()) for path in (http_dir, replies_dir))
+        if only and not ((http_dir / INDEX_FILE).is_file() and replies_dir.is_dir()):
+            print(f"error: --only needs earlier recordings in {folder}", file=err)
+            return 1
+        if recordings and not only:
+            print(
+                f"error: {folder} holds recordings; delete http and replies to record again,"
+                " or pass --only to record single entries",
+                file=err,
+            )
+            return 1
+    replay = ReplayHttpClient(http_dir)
+    recorded = RecordedProvider(fixture_dir=replies_dir)
+    recording_provider = (
+        RecordingProvider(provider or ClaudeCliProvider(model), replies_dir)
+        if record and model is not None
+        else None
+    )
+
+    def client_for(work: DemoWork) -> HttpClient:
+        if record and _entry(work) in live:
+            return RecordingHttpClient(http or _live_client(work.source), http_dir)
+        return replay
+
+    def provider_for(work: DemoWork) -> ExtractionProvider:
+        return recording_provider if recording_provider and _entry(work) in live else recorded
+
+    with Store(db) as store:
+        results = [
+            _ingest_one(
+                store, _adapter(work.source, client_for(work)), work.source, work.identifier, out
+            )
+            for work in corpus.works
+        ]
+        if record:
+            _write_sources(store, corpus, results, folder / "SOURCES.md")
+        print(file=out)
+        summary = ExtractSummary()
+        for work, result in zip(corpus.works, results, strict=True):
+            part = _extract(store, [result.document_id], provider_for(work), out)
+            summary = ExtractSummary(
+                invalid=summary.invalid + part.invalid, failed=summary.failed + part.failed
+            )
+        first_claim: str | None = None
+        for text in corpus.queries:
+            print(file=out)
+            found = search_evidence(store, text)
+            _print_results(store, found, out)
+            if first_claim is None:
+                first_claim = next(
+                    (group.items[0].claim.id for group in found.groups if group.items), None
+                )
+    if first_claim is not None:
+        print(f"\nOpen one claim: evidence-dossier --db {db} claim {first_claim}", file=out)
+    if summary.failed:
+        documents = "document" if summary.failed == 1 else "documents"
+        if record:
+            print(
+                f"error: {summary.failed} {documents} got no reply. A failed recording keeps its"
+                " earlier reply. If the prompt, the schema or the section parser changed since"
+                " the last full recording, delete demo/http and demo/replies, then run"
+                " demo --record without --only.",
+                file=err,
+            )
+            return 1
+        print(
+            f"error: {summary.failed} {documents} had no recorded reply. The prompt, the schema"
+            " or the section parser changed since the recording, so the recorded replies no"
+            " longer match. Delete demo/http and demo/replies, then run demo --record.",
+            file=err,
+        )
+        return 1
+    return 0
+
+
+def _entry(work: DemoWork) -> str:
+    """Return the name of a corpus entry as --only takes it, such as arxiv:2310.11511."""
+    return f"{work.source}:{work.identifier}"
+
+
+def _write_sources(
+    store: Store, corpus: DemoCorpus, results: Sequence[IngestResult], path: Path
+) -> None:
+    lines = [
+        "# Sources",
+        "",
+        "The demo store holds these works. `evidence-dossier demo --record` writes this file.",
+        "arXiv metadata, the abstracts included, is CC0. PMC full text is stored only under",
+        "CC BY or CC0, and the store splits it into sections.",
+        "",
+        "| Work | Authors | Identifier | Text | License |",
+        "| --- | --- | --- | --- | --- |",
+    ]
+    for demo_work, result in zip(corpus.works, results, strict=True):
+        work = store.get_work(result.work_id)
+        if work is None:
+            continue
+        names = [author.name for author in work.authors]
+        authors = ", ".join(names[:3]) + (" et al." if len(names) > 3 else "")
+        identifier = f"{demo_work.source} {demo_work.identifier}"
+        if work.doi:
+            identifier += f", doi {work.doi}"
+        license_name = result.license or ("CC0" if demo_work.source == "arxiv" else "not reported")
+        lines.append(
+            f"| {work.title} | {authors} | {identifier} | {result.source_level.value} | {license_name} |"
+        )
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def _serve(db: str, gold: str | None, err: TextIO) -> int:

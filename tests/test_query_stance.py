@@ -1,4 +1,5 @@
 from collections.abc import Iterator
+from typing import Any
 
 import pytest
 
@@ -7,6 +8,7 @@ from evidence_dossier.model import (
     Domain,
     EvidenceClaim,
     Measurement,
+    Method,
     Result,
     ResultDirection,
     Stance,
@@ -91,6 +93,52 @@ def test_the_indirect_claim_fails_only_the_directness_dimension(store: Store) ->
     failed = [result.dimension for result in assessment.dimensions if not result.matched]
     assert failed == ["evidence directness"]
     assert "answer quality" in assessment.reasons()[-1]
+
+
+def _subject_dimension(claim: EvidenceClaim) -> tuple[bool, str]:
+    proposition = parse_query(RAG_TEXT, domain=Domain.COMPUTER_SCIENCE)
+    assessment = ComparabilityEngine().assess(
+        proposition, claim, get_profile(Domain.COMPUTER_SCIENCE)
+    )
+    (subject,) = (result for result in assessment.dimensions if result.dimension == "subject")
+    return subject.matched, subject.reason
+
+
+def test_a_method_that_holds_the_proposition_subject_carries_the_subject(store: Store) -> None:
+    """An acronym subject such as "RAG models" has no word in common with the spelled out subject."""
+    claim = store.get_claim("claim-supports")
+    assert claim is not None
+    acronym = claim.model_copy(
+        update={
+            "subject": Term(original="RAG models"),
+            "method": Method(name=Term(original="retrieval-augmented generation (RAG)")),
+        }
+    )
+
+    matched, reason = _subject_dimension(acronym)
+
+    assert matched
+    assert "lacks the proposition subject" in reason
+    assert "its method 'retrieval-augmented generation (RAG)' holds it" in reason
+
+
+def test_a_method_that_does_not_hold_the_proposition_subject_leaves_the_subject_unmatched(
+    store: Store,
+) -> None:
+    claim = store.get_claim("claim-supports")
+    assert claim is not None
+    other = claim.model_copy(
+        update={
+            "subject": Term(original="scaling"),
+            "method": Method(name=Term(original="large-scale knowledge probing")),
+        }
+    )
+
+    matched, reason = _subject_dimension(other)
+
+    assert not matched
+    assert reason.startswith("The claim subject 'scaling' lacks the proposition subject")
+    assert "its method" not in reason
 
 
 def test_search_evidence_groups_results_in_the_plan_order_and_stores_them(store: Store) -> None:
@@ -187,11 +235,13 @@ def test_an_improvement_on_an_unknown_measurement_is_indirect() -> None:
     assert POLARITY_VERSION in result.reason
 
 
-def test_the_suffix_rule_decides_a_measurement_the_table_does_not_list() -> None:
-    result = _improved_on("refusal rate")
+def test_an_improved_success_rate_is_indirect_not_lower_is_better() -> None:
+    """A trailing "rate" carries no direction. The expected DECREASED stays unresolved."""
+    result = _improved_on("success rate")
 
-    assert result.stance is Stance.SUPPORTS
-    assert "LOWER_IS_BETTER" in result.reason
+    assert result.stance is Stance.INDIRECT
+    assert "success rate" in result.reason
+    assert POLARITY_VERSION in result.reason
 
 
 def test_a_plain_same_direction_case_needs_no_polarity_table() -> None:
@@ -237,3 +287,65 @@ def test_a_worsening_on_a_higher_is_better_measurement_supports() -> None:
 
     assert result.stance is Stance.SUPPORTS
     assert "both as DECREASED" in result.reason
+
+
+def _with_comparator(claim: EvidenceClaim, name: str) -> EvidenceClaim:
+    assert claim.comparator is not None
+    return _variant(
+        claim, comparator=claim.comparator.model_copy(update={"name": Term(original=name)})
+    )
+
+
+def test_a_baseline_with_the_feature_does_not_match_a_baseline_without_it() -> None:
+    """Both phrases lose "with" and "without" as stopwords, so the marker decides."""
+    base, _ = stance_paper()
+    claim = _with_comparator(base.claim, "same model with retrieval")
+
+    result = _classify(RAG_TEXT, claim)
+
+    assert result.stance is Stance.INDIRECT
+    assert result.comparability is ComparabilityLevel.MODERATE
+    assert "comparator dimension fails" in result.reason
+
+
+def test_a_baseline_without_a_marker_still_matches_by_words() -> None:
+    base, _ = stance_paper()
+    claim = _with_comparator(base.claim, "same model without retrieval")
+
+    assert _classify(RAG_TEXT, claim).stance is Stance.SUPPORTS
+
+
+def test_a_different_baseline_withholds_a_firm_stance() -> None:
+    base, _ = stance_paper()
+    claim = _with_comparator(base.claim, "human experts")
+
+    result = _classify(RAG_TEXT, claim)
+
+    assert result.comparability is ComparabilityLevel.MODERATE
+    assert result.stance is Stance.INDIRECT
+    assert "human experts" not in result.reason
+    assert "the same model without retrieval" in result.reason
+
+
+def test_a_failure_while_assessing_stores_no_proposition_and_no_assessment(
+    store: Store, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls = 0
+    classify = StanceClassifier.classify
+
+    def fail_on_the_second_claim(
+        self: StanceClassifier, *args: Any, **kwargs: Any
+    ) -> StanceAssessment:
+        nonlocal calls
+        calls += 1
+        if calls == 2:
+            raise RuntimeError("judge failed")
+        return classify(self, *args, **kwargs)
+
+    monkeypatch.setattr(StanceClassifier, "classify", fail_on_the_second_claim)
+
+    with pytest.raises(RuntimeError, match="judge failed"):
+        search_evidence(store, RAG_TEXT)
+
+    for table in ("query_propositions", "stance_assessments"):
+        assert store._conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0] == 0

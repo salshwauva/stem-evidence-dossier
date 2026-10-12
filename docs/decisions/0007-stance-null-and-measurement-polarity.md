@@ -1,7 +1,7 @@
 # ADR 0007: A null stance of its own and a versioned measurement polarity table
 
 ## Status
-Accepted, 2026-09-12
+Accepted, 2026-09-12. The suffix rule was removed by ADR 0014.
 
 ## Context
 The stance classifier in `src/evidence_dossier/query/stance.py` turned a comparable claim into one of the six stances of plan section 39. Two of its rules did not follow the plan.

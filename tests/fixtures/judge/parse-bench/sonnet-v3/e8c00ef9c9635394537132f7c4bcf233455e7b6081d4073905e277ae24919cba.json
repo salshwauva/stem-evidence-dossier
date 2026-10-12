@@ -1,0 +1,19 @@
+{
+  "subject": "vitamin D supplementation",
+  "relationship": "have no effect on",
+  "measurement": "fracture risk",
+  "comparator": null,
+  "expected_direction": "UNCHANGED",
+  "search_terms": [
+    "cholecalciferol",
+    "ergocalciferol",
+    "vitamin D3",
+    "vitamin D2",
+    "25-hydroxyvitamin D",
+    "bone fracture",
+    "hip fracture",
+    "osteoporotic fracture",
+    "fracture incidence",
+    "bone mineral density"
+  ]
+}

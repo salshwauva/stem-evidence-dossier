@@ -3,23 +3,9 @@
 from collections.abc import Mapping
 from pathlib import Path
 
+from evidence_dossier.ingest import request_key
+
 FIXTURES_DIR = Path(__file__).parent / "fixtures" / "ingest"
-
-
-def request_key(url: str, params: Mapping[str, str]) -> str:
-    """Return the stable name of a request: the URL path and the parameters that pick a record.
-
-    A URL with no path, such as the root of the PMC cloud bucket, keys on its host.
-    """
-    host, _, path = url.split("://", 1)[-1].partition("/")
-    path = path.strip("/") or host
-    picked = {
-        name: params[name]
-        for name in ("db", "id", "ids", "id_list", "term", "search_query", "prefix")
-        if name in params
-    }
-    suffix = "&".join(f"{name}={value}" for name, value in picked.items())
-    return f"{path}?{suffix}" if suffix else path
 
 
 class RecordedHttpClient:

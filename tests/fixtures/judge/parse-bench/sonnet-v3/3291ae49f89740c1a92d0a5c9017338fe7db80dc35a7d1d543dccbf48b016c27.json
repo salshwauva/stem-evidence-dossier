@@ -1,0 +1,19 @@
+{
+  "subject": "MAPT knockdown",
+  "relationship": "increases",
+  "measurement": "neuronal survival",
+  "comparator": "a scrambled control",
+  "expected_direction": "INCREASED",
+  "search_terms": [
+    "tau knockdown",
+    "tau silencing",
+    "MAPT siRNA",
+    "MAPT shRNA",
+    "microtubule-associated protein tau",
+    "neuronal viability",
+    "neuron cell death",
+    "neuroprotection",
+    "scrambled siRNA",
+    "non-targeting control"
+  ]
+}
