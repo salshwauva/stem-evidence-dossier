@@ -1,0 +1,218 @@
+{
+  "research_work_id": "work_a1a0262a54cd0bbc",
+  "document_id": "work_a1a0262a54cd0bbc_v1",
+  "source_level": "ABSTRACT_ONLY",
+  "claims": [
+    {
+      "gold_key": "c1",
+      "research_work_id": "work_a1a0262a54cd0bbc",
+      "study_key": "transformer:tf-wmt-ende",
+      "claim_type": "PERFORMANCE",
+      "claim_text": "The Transformer achieves 28.4 BLEU on WMT 2014 English-to-German, over 2 BLEU above the best existing results.",
+      "subject": {
+        "original": "Transformer",
+        "canonical": "Transformer"
+      },
+      "predicate": "achieves",
+      "outcome": "BLEU",
+      "research_context": {
+        "domain": "COMPUTER_SCIENCE",
+        "system": "WMT 2014 English-to-German"
+      },
+      "method": {
+        "name": {
+          "original": "Transformer",
+          "canonical": "Transformer"
+        }
+      },
+      "comparator": {
+        "name": {
+          "original": "existing best results, including ensembles",
+          "canonical": "existing best results, including ensembles"
+        }
+      },
+      "measurement": {
+        "name": {
+          "original": "BLEU",
+          "canonical": "BLEU"
+        }
+      },
+      "result": {
+        "direction": "IMPROVED",
+        "value": 28.4,
+        "unit": {
+          "original": "BLEU"
+        }
+      },
+      "evidence_span": {
+        "research_work_id": "work_a1a0262a54cd0bbc",
+        "section_id": "work_a1a0262a54cd0bbc_v1_s0",
+        "start_offset": 563,
+        "end_offset": 720,
+        "source_text": "Our model achieves 28.4 BLEU on the WMT 2014 English-to-German translation task, improving over the existing best results, including ensembles by over 2 BLEU"
+      }
+    },
+    {
+      "gold_key": "c2",
+      "research_work_id": "work_a1a0262a54cd0bbc",
+      "study_key": "transformer:tf-wmt-enfr",
+      "claim_type": "PERFORMANCE",
+      "claim_text": "The Transformer sets a single-model state of the art of 41.8 BLEU on WMT 2014 English-to-French.",
+      "subject": {
+        "original": "Transformer",
+        "canonical": "Transformer"
+      },
+      "predicate": "establishes",
+      "outcome": "BLEU",
+      "research_context": {
+        "domain": "COMPUTER_SCIENCE",
+        "system": "WMT 2014 English-to-French"
+      },
+      "method": {
+        "name": {
+          "original": "Transformer",
+          "canonical": "Transformer"
+        }
+      },
+      "comparator": {
+        "name": {
+          "original": "previous single-model results",
+          "canonical": "previous single-model results"
+        }
+      },
+      "measurement": {
+        "name": {
+          "original": "BLEU",
+          "canonical": "BLEU"
+        }
+      },
+      "result": {
+        "direction": "IMPROVED",
+        "value": 41.8,
+        "unit": {
+          "original": "BLEU"
+        }
+      },
+      "evidence_span": {
+        "research_work_id": "work_a1a0262a54cd0bbc",
+        "section_id": "work_a1a0262a54cd0bbc_v1_s0",
+        "start_offset": 774,
+        "end_offset": 892,
+        "source_text": "our model establishes a new single-model state-of-the-art BLEU score of 41.8 after training for 3.5 days on eight GPUs"
+      }
+    },
+    {
+      "gold_key": "c3",
+      "research_work_id": "work_a1a0262a54cd0bbc",
+      "study_key": "transformer:tf-wmt-ende",
+      "claim_type": "COMPARISON",
+      "claim_text": "The Transformer requires significantly less time to train.",
+      "subject": {
+        "original": "Transformer",
+        "canonical": "Transformer"
+      },
+      "predicate": "requires less",
+      "outcome": "training time",
+      "research_context": {
+        "domain": "COMPUTER_SCIENCE",
+        "system": "machine translation"
+      },
+      "method": {
+        "name": {
+          "original": "Transformer",
+          "canonical": "Transformer"
+        }
+      },
+      "comparator": null,
+      "measurement": {
+        "name": {
+          "original": "training time",
+          "canonical": "training time"
+        }
+      },
+      "result": {
+        "direction": "DECREASED",
+        "value": null
+      },
+      "evidence_span": {
+        "research_work_id": "work_a1a0262a54cd0bbc",
+        "section_id": "work_a1a0262a54cd0bbc_v1_s0",
+        "start_offset": 519,
+        "end_offset": 561,
+        "source_text": "requiring significantly less time to train"
+      }
+    },
+    {
+      "gold_key": "c4",
+      "research_work_id": "work_a1a0262a54cd0bbc",
+      "study_key": "transformer:tf-wmt-ende",
+      "claim_type": "COMPARISON",
+      "claim_text": "The Transformer is more parallelizable.",
+      "subject": {
+        "original": "Transformer",
+        "canonical": "Transformer"
+      },
+      "predicate": "is more",
+      "outcome": "parallelizability",
+      "research_context": {
+        "domain": "COMPUTER_SCIENCE",
+        "system": "machine translation"
+      },
+      "method": {
+        "name": {
+          "original": "Transformer",
+          "canonical": "Transformer"
+        }
+      },
+      "comparator": null,
+      "measurement": null,
+      "result": {
+        "direction": "IMPROVED",
+        "value": null
+      },
+      "evidence_span": {
+        "research_work_id": "work_a1a0262a54cd0bbc",
+        "section_id": "work_a1a0262a54cd0bbc_v1_s0",
+        "start_offset": 489,
+        "end_offset": 514,
+        "source_text": "being more parallelizable"
+      }
+    },
+    {
+      "gold_key": "c5",
+      "research_work_id": "work_a1a0262a54cd0bbc",
+      "study_key": "transformer:tf-parsing",
+      "claim_type": "PERFORMANCE",
+      "claim_text": "The Transformer applies successfully to English constituency parsing with large and limited training data.",
+      "subject": {
+        "original": "Transformer",
+        "canonical": "Transformer"
+      },
+      "predicate": "applies successfully to",
+      "outcome": "English constituency parsing",
+      "research_context": {
+        "domain": "COMPUTER_SCIENCE",
+        "system": "English constituency parsing"
+      },
+      "method": {
+        "name": {
+          "original": "Transformer",
+          "canonical": "Transformer"
+        }
+      },
+      "comparator": null,
+      "measurement": null,
+      "result": {
+        "direction": "OBSERVED",
+        "value": null
+      },
+      "evidence_span": {
+        "research_work_id": "work_a1a0262a54cd0bbc",
+        "section_id": "work_a1a0262a54cd0bbc_v1_s0",
+        "start_offset": 1037,
+        "end_offset": 1135,
+        "source_text": "applying it successfully to English constituency parsing both with large and limited training data"
+      }
+    }
+  ]
+}

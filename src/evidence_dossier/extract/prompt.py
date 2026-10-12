@@ -1,4 +1,4 @@
-"""The extraction prompt, version "claims-v1" (plan sections 28, 31 and 51).
+"""The extraction prompt, version "claims-v2" (plan sections 28, 31 and 51).
 
 The prompt text lives here as plain constants. A later prompt version is a
 new set of constants and a new PROMPT_VERSION value. Every section of the
@@ -14,7 +14,7 @@ from evidence_dossier.extract.candidates import CandidateClaims
 from evidence_dossier.model import Section, SourceDocument
 from evidence_dossier.profiles import DomainProfile
 
-PROMPT_VERSION = "claims-v1"
+PROMPT_VERSION = "claims-v2"
 
 SECTION_BEGIN = "<<<BEGIN SECTION {section_id} type={section_type}>>>"
 SECTION_END = "<<<END SECTION {section_id}>>>"
@@ -33,6 +33,10 @@ several values in one field. Two models with two scores are two claims.
 - The evidence object names the section_id of one section below and copies \
 source_text from that section without any change. Choose a passage that occurs \
 once in its section.
+- The passage is the shortest run of text that states the finding. It is usually a \
+clause, not the whole sentence. It holds the direction of the result and the value \
+when the text gives one. It leaves out words that belong to another claim, so two \
+claims from one sentence get two passages that do not overlap.
 - Copy the names of subjects, methods, comparators, measurements and units as the \
 document writes them.
 - Leave a field null when the document does not state it. Do not invent values."""

@@ -1,0 +1,128 @@
+[
+  {
+    "query_id": "q1",
+    "claim_id": "work_f911b46a09ec5d13:c1",
+    "stance": "SUPPORTS",
+    "comparability": "EXACT"
+  },
+  {
+    "query_id": "q1",
+    "claim_id": "work_f911b46a09ec5d13:c2",
+    "stance": "SUPPORTS",
+    "comparability": "HIGH"
+  },
+  {
+    "query_id": "q1",
+    "claim_id": "work_f911b46a09ec5d13:c3",
+    "stance": "INDIRECT",
+    "comparability": "LOW"
+  },
+  {
+    "query_id": "q1",
+    "claim_id": "work_8c83c39cd1afa399:c1",
+    "stance": "INSUFFICIENTLY_COMPARABLE",
+    "comparability": "INCOMPATIBLE"
+  },
+  {
+    "query_id": "q2",
+    "claim_id": "work_4627097f8362928c:c1",
+    "stance": "INDIRECT",
+    "comparability": "LOW"
+  },
+  {
+    "query_id": "q2",
+    "claim_id": "work_4627097f8362928c:c3",
+    "stance": "INDIRECT",
+    "comparability": "LOW"
+  },
+  {
+    "query_id": "q2",
+    "claim_id": "work_4627097f8362928c:c4",
+    "stance": "SUPPORTS",
+    "comparability": "HIGH"
+  },
+  {
+    "query_id": "q2",
+    "claim_id": "work_6d41d2f09c026403:c1",
+    "stance": "INSUFFICIENTLY_COMPARABLE",
+    "comparability": "INCOMPATIBLE"
+  },
+  {
+    "query_id": "q3",
+    "claim_id": "work_a1a0262a54cd0bbc:c1",
+    "stance": "SUPPORTS",
+    "comparability": "HIGH"
+  },
+  {
+    "query_id": "q3",
+    "claim_id": "work_a1a0262a54cd0bbc:c2",
+    "stance": "SUPPORTS",
+    "comparability": "HIGH"
+  },
+  {
+    "query_id": "q3",
+    "claim_id": "work_a1a0262a54cd0bbc:c3",
+    "stance": "INDIRECT",
+    "comparability": "LOW"
+  },
+  {
+    "query_id": "q3",
+    "claim_id": "work_4627097f8362928c:c1",
+    "stance": "INSUFFICIENTLY_COMPARABLE",
+    "comparability": "INCOMPATIBLE"
+  },
+  {
+    "query_id": "q4",
+    "claim_id": "work_5c58342a230665a3:c1",
+    "stance": "SUPPORTS",
+    "comparability": "EXACT"
+  },
+  {
+    "query_id": "q4",
+    "claim_id": "work_5c58342a230665a3:c2",
+    "stance": "INDIRECT",
+    "comparability": "LOW"
+  },
+  {
+    "query_id": "q4",
+    "claim_id": "work_5c58342a230665a3:c6",
+    "stance": "INSUFFICIENTLY_COMPARABLE",
+    "comparability": "INCOMPATIBLE"
+  },
+  {
+    "query_id": "q5",
+    "claim_id": "work_8c83c39cd1afa399:c1",
+    "stance": "SUPPORTS",
+    "comparability": "EXACT"
+  },
+  {
+    "query_id": "q5",
+    "claim_id": "work_8c83c39cd1afa399:c2",
+    "stance": "INSUFFICIENTLY_COMPARABLE",
+    "comparability": "INCOMPATIBLE"
+  },
+  {
+    "query_id": "q5",
+    "claim_id": "work_f911b46a09ec5d13:c1",
+    "stance": "INSUFFICIENTLY_COMPARABLE",
+    "comparability": "INCOMPATIBLE"
+  },
+  {
+    "query_id": "q6",
+    "claim_id": "work_f911b46a09ec5d13:c3",
+    "stance": "NULL",
+    "comparability": "HIGH"
+  },
+  {
+    "query_id": "q6",
+    "claim_id": "work_f911b46a09ec5d13:c1",
+    "stance": "INSUFFICIENTLY_COMPARABLE",
+    "comparability": "LOW"
+  },
+  {
+    "query_id": "q6",
+    "claim_id": "work_8c83c39cd1afa399:c1",
+    "stance": "INSUFFICIENTLY_COMPARABLE",
+    "comparability": "INCOMPATIBLE"
+  }
+]

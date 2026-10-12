@@ -14,11 +14,12 @@ def test_prompt_states_the_version_the_schema_and_the_rules() -> None:
     with Store(":memory:") as store:
         corpus = paper_corpus(store)
 
-    assert PROMPT_VERSION == "claims-v1"
+    assert PROMPT_VERSION == "claims-v2"
     assert f"Prompt version: {PROMPT_VERSION}" in corpus.prompt
     assert json.dumps(CandidateClaims.model_json_schema(), sort_keys=True) in corpus.prompt
     assert TASK_TEXT in corpus.prompt
     assert DATA_TEXT in corpus.prompt
+    assert "shortest run of text that states the finding" in TASK_TEXT
 
 
 def test_prompt_wraps_every_section_as_data_in_document_order() -> None:

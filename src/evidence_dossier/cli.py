@@ -33,7 +33,13 @@ from evidence_dossier.ingest import (
 )
 from evidence_dossier.model import Domain, EvidenceClaim, Term
 from evidence_dossier.normalize import normalize_claim
-from evidence_dossier.query import EvidenceItem, EvidenceResults, search_evidence
+from evidence_dossier.query import (
+    EvidenceItem,
+    EvidenceResults,
+    ModelQueryExpander,
+    QueryExpander,
+    search_evidence,
+)
 from evidence_dossier.store import Store
 
 DEFAULT_DB = "dossier.db"
@@ -55,11 +61,14 @@ def run(
     err: TextIO = sys.stderr,
     http: HttpClient | None = None,
     provider: ExtractionProvider | None = None,
+    expander: QueryExpander | None = None,
 ) -> int:
     """Run one command and return its exit status.
 
     Without an http client, each source gets a live client paced to its rate
     limit. Without a provider, extract runs the claude command line tool.
+    Search expands its query only when --expand-model names a model, and
+    without an expander that flag runs the claude command line tool.
     """
     args = _parser().parse_args(argv)
     if args.command == "serve":
@@ -73,7 +82,11 @@ def run(
                 return _extract(store, args.document_ids, chosen, out)
             if args.command == "search":
                 domain = None if args.domain is None else Domain(args.domain)
-                results = search_evidence(store, args.text, domain=domain, limit=args.limit)
+                if expander is None and args.expand_model is not None:
+                    expander = _cli_expander(args.expand_model)
+                results = search_evidence(
+                    store, args.text, domain=domain, limit=args.limit, expander=expander
+                )
                 _print_results(store, results, out)
                 return 0
             return _print_claim(store, args.claim_id, out, err)
@@ -102,6 +115,10 @@ def _parser() -> argparse.ArgumentParser:
     search.add_argument("text")
     search.add_argument("--domain", choices=[domain.value for domain in Domain])
     search.add_argument("--limit", type=int, default=20)
+    search.add_argument(
+        "--expand-model",
+        help="model for the claude command line tool that adds related search terms",
+    )
 
     claim = commands.add_parser("claim", help="show one claim with its context and passage")
     claim.add_argument("claim_id")
@@ -109,6 +126,12 @@ def _parser() -> argparse.ArgumentParser:
     serve = commands.add_parser("serve", help="serve the API on http://127.0.0.1:8000")
     serve.add_argument("--gold", help="gold directory for GET /evaluation")
     return parser
+
+
+def _cli_expander(model: str) -> QueryExpander:
+    """Return an expander that asks the claude command line tool for related search terms."""
+    provider = ClaudeCliProvider(model)
+    return ModelQueryExpander(lambda prompt: provider.complete(prompt).text)
 
 
 def _adapter(source: str, http: HttpClient | None) -> LiteratureSourceAdapter:
